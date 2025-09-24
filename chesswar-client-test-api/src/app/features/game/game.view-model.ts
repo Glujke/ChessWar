@@ -16,6 +16,8 @@ export class GameViewModel {
   readonly highlightedAttacks = signal<PositionDto[]>([]);
   readonly selectedPiece = signal<PieceDto | null>(null);
   readonly selectedPieceId = signal<string | null>(null);
+  readonly evolutionChoice = signal<'Knight' | 'Bishop' | null>(null);
+  readonly isEvolutionDialogOpen = signal(false);
 
   readonly manaText = computed(() => {
     const s = this.session();
@@ -147,9 +149,13 @@ export class GameViewModel {
       this.session.set(updated);
       const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
       this.board.set({ pieces: playerPieces } as any);
+      // Проверяем необходимость эволюции сразу после перемещения
+      const moved = playerPieces.find(p => String(p.id) === String(pieceId)) ?? null;
+      this.checkEvolutionNeed(moved as any);
       this.highlighted.set([]);
-      this.selectedPiece.set(null);
-      this.selectedPieceId.set(null);
+      // Оставим выбранной фигуру, чтобы подтвердить эволюцию без повторного выбора
+      this.selectedPiece.set(moved ?? null);
+      this.selectedPieceId.set(String(pieceId));
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось переместить фигуру');
     }
@@ -170,6 +176,42 @@ export class GameViewModel {
       this.selectedPieceId.set(null);
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось выполнить атаку');
+    }
+  }
+
+  // Триггер показа диалога при достижении последней линии или XP-порога
+  checkEvolutionNeed(piece: PieceDto | null): void {
+    if (!piece) return;
+    const s = this.session();
+    if (!s) return;
+    const pos = (piece as any).position as PositionDto | undefined;
+    const xp = (piece as any).xp as number | undefined;
+    const xpToEvolve = (piece as any).xpToEvolve as number | undefined;
+    const isPawn = String((piece as any).type) === 'Pawn' || (piece as any).type === 0;
+    if (!isPawn) return;
+    const reachedLastRank = pos ? (pos.y === 7) : false; // для эльфов вершина по README — увеличить при инверсии оси при необходимости
+    const xpReady = xpToEvolve !== undefined && xp !== undefined && xp >= xpToEvolve;
+    if (reachedLastRank || xpReady) {
+      this.isEvolutionDialogOpen.set(true);
+    }
+  }
+
+  async confirmEvolution(gameId: string, choice: 'Knight' | 'Bishop'): Promise<void> {
+    const pieceId = this.selectedPieceId();
+    if (!pieceId) return;
+    this.isLoading.set(true);
+    this.error.set(null);
+    try {
+      const updated = await this.api.evolve(gameId, pieceId, choice);
+      this.session.set(updated);
+      const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+      this.board.set({ pieces } as any);
+      this.isEvolutionDialogOpen.set(false);
+      this.evolutionChoice.set(null);
+    } catch (e: any) {
+      this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось выполнить эволюцию');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 }

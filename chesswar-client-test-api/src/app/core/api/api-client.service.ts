@@ -18,6 +18,7 @@ export abstract class IApiClientService {
   abstract movePiece(gameId: string, pieceId: string, target: PositionDto): Promise<void>;
   abstract executeAction(gameId: string, type: 'Attack' | 'Ability', pieceId: string, target: PositionDto, description?: string): Promise<void>;
   abstract makeAiTurn(gameId: string): Promise<void>;
+  abstract evolve(gameId: string, pieceId: string, targetType: 'Knight' | 'Bishop' | 'Rook' | 'Queen'): Promise<GameSessionDto>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -71,6 +72,11 @@ export class ApiClientService implements IApiClientService {
   async makeAiTurn(gameId: string): Promise<void> {
     const url = `/api/v1/gamesession/${encodeURIComponent(gameId)}/turn/ai`;
     await firstValueFrom(this.http.post<void>(url, {}));
+  }
+
+  async evolve(gameId: string, pieceId: string, targetType: 'Knight' | 'Bishop' | 'Rook' | 'Queen'): Promise<GameSessionDto> {
+    const url = `/api/v1/gamesession/${encodeURIComponent(gameId)}/evolve`;
+    return await firstValueFrom(this.http.post<GameSessionDto>(url, { pieceId, targetType }));
   }
 }
 

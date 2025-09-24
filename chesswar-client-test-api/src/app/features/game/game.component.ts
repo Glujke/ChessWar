@@ -18,11 +18,22 @@ import { GameViewModel } from './game.view-model';
         <div style="display: grid; gap: 2px; width: fit-content;" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 40px)'">
           <ng-container *ngFor="let y of [].constructor(b.size || b.height || 8); let row = index">
             <ng-container *ngFor="let x of [].constructor(b.size || b.width || 8); let col = index">
-              <div (click)="onCellClick(col, row)" [style.width.px]="40" [style.height.px]="40" [style.display]="'flex'" [style.alignItems]="'center'" [style.justifyContent]="'center'" [style.background]="cellBg(col, row)" [style.cursor]="'pointer'">
+              <div (click)="onCellClick(col, row)" [style.width.px]="40" [style.height.px]="40" [style.display]="'flex'" [style.alignItems]="'center'" [style.justifyContent]="'center'" [style.background]="cellBg(col, row)" [style.cursor]="'pointer'" [style.color]="pieceColor(col, row)" [style.fontWeight]="pieceWeight(col, row)">
                 {{ pieceGlyph(col, row) }}
               </div>
             </ng-container>
           </ng-container>
+        </div>
+      </div>
+      <!-- Диалог эволюции -->
+      <div *ngIf="vm.isEvolutionDialogOpen()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+        <div style="background: #fff; padding: 16px; border-radius: 8px; min-width: 280px;">
+          <h3>Эволюция пешки</h3>
+          <p>Во что эволюционировать пешку?</p>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" (click)="vm.confirmEvolution(gameId(), 'Knight')" [disabled]="vm.isLoading()">Конь</button>
+            <button type="button" (click)="vm.confirmEvolution(gameId(), 'Bishop')" [disabled]="vm.isLoading()">Слон</button>
+          </div>
         </div>
       </div>
     </div>
@@ -58,6 +69,7 @@ export class GameComponent implements OnInit {
     const piece = b.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
     if (piece && this.vm.isPlayersPiece(piece as any)) {
       void this.vm.selectPiece(this.gameId(), String(piece.id));
+      this.vm.checkEvolutionNeed(piece as any);
     }
   }
 
@@ -86,6 +98,23 @@ export class GameComponent implements OnInit {
       case 'King': return 'K';
       default: return '?';
     }
+  }
+
+  pieceColor(x: number, y: number): string {
+    const b = this.vm.board();
+    const s = this.vm.session();
+    const piece = b?.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
+    if (!piece || !s) return '#111';
+    const isMine = this.vm.isPlayersPiece(piece as any);
+    return isMine ? '#1a73e8' : '#222';
+  }
+
+  pieceWeight(x: number, y: number): string {
+    const b = this.vm.board();
+    const piece = b?.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
+    if (!piece) return '400';
+    const isMine = this.vm.isPlayersPiece(piece as any);
+    return isMine ? '700' : '500';
   }
 
   private mapEnumToName(enumValue: number): string {
