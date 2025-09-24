@@ -20,6 +20,7 @@ export abstract class IApiClientService {
   abstract executeAction(gameId: string, type: 'Attack' | 'Ability', pieceId: string, target: PositionDto, description?: string): Promise<void>;
   abstract makeAiTurn(gameId: string): Promise<void>;
   abstract evolve(gameId: string, pieceId: string, targetType: 'Knight' | 'Bishop' | 'Rook' | 'Queen'): Promise<GameSessionDto>;
+  abstract tutorialTransition(gameId: string, action: 'replay' | 'next' | ''): Promise<{ gameSessionId?: string; _embedded?: any }>; 
 }
 
 @Injectable({ providedIn: 'root' })
@@ -83,6 +84,11 @@ export class ApiClientService implements IApiClientService {
   async evolve(gameId: string, pieceId: string, targetType: 'Knight' | 'Bishop' | 'Rook' | 'Queen'): Promise<GameSessionDto> {
     const url = `/api/v1/gamesession/${encodeURIComponent(gameId)}/evolve`;
     return await firstValueFrom(this.http.post<GameSessionDto>(url, { pieceId, targetType }));
+  }
+
+  async tutorialTransition(gameId: string, action: 'replay' | 'next' | ''): Promise<{ gameSessionId?: string; _embedded?: any }> {
+    const url = `/api/v1/gamesession/${encodeURIComponent(gameId)}/tutorial/transition?embed=(game)`;
+    return await firstValueFrom(this.http.post<any>(url, { action }));
   }
 }
 

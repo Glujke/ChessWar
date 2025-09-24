@@ -12,7 +12,7 @@ import { GameViewModel } from './game.view-model';
     <p *ngIf="vm.error()" style="color: red;">{{ vm.error() }}</p>
     <p *ngIf="vm.isLoading()">Загрузка...</p>
     <div *ngIf="vm.session() as s">
-      <div>Мана: {{ vm.manaText() }}</div>
+      <div>Ход: {{ s.currentTurn?.number ?? '?' }} | Чей ход: {{ vm.isMyTurn() ? 'Player' : 'AI' }} | Мана: {{ vm.manaText() }}</div>
       <button type="button" (click)="vm.endTurn(gameId())" [disabled]="vm.isLoading()">Завершить ход</button>
       <div *ngIf="vm.board() as b" style="margin-top: 12px; display: flex; gap: 16px; align-items: flex-start;">
         <div style="display: grid; gap: 2px; width: fit-content;" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 40px)'">
@@ -47,6 +47,38 @@ import { GameViewModel } from './game.view-model';
           </div>
         </div>
       </div>
+      <!-- Экран завершения игры -->
+      <div *ngIf="vm.isGameFinished()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:20px; border-radius:10px; min-width:320px; text-align:center;">
+          <h2>{{ vm.gameResult() === 'Player1Victory' ? 'Победа!' : 'Поражение' }}</h2>
+          <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
+            <a routerLink="/" style="padding:8px 12px; border:1px solid #ccc; border-radius:6px;">В меню</a>
+            <button type="button" (click)="onReplay()">Сыграть ещё раз</button>
+          </div>
+        </div>
+      </div>
+      <!-- Подсказки обучения -->
+      <div *ngIf="vm.showHints()" style="position:fixed; left:12px; bottom:12px; background:#fff; border:1px solid #ddd; padding:10px; border-radius:8px; max-width:320px;">
+        <div *ngIf="vm.tutorialStep() === 1">Выбери свою фигуру. Подсказка: свои отмечены синим.</div>
+        <div *ngIf="vm.tutorialStep() === 2">Сделай ход или атаку по подсветке. Цели атак красным, ходы зелёным.</div>
+        <div *ngIf="vm.tutorialStep() === 3">Заверши ход кнопкой «Завершить ход», затем дождись ИИ.</div>
+        <div *ngIf="vm.tutorialStep() === 4">Попробуй способность фигуры: выбери способность справа, затем цель.</div>
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          <button type="button" (click)="vm.nextHint()">Далее</button>
+          <button type="button" (click)="vm.skipHints()">Скрыть</button>
+        </div>
+      </div>
+      <!-- Лог-панель -->
+      <div style="position:fixed; right:12px; bottom:12px; width:360px; max-height:40vh; overflow:auto; background:#fff; border:1px solid #ddd; border-radius:8px;">
+        <div style="display:flex; justify-content:space-between; gap:8px; padding:6px 8px; background:#f7f7f7; border-bottom:1px solid #eee;">
+          <strong>Логи</strong>
+          <button type="button" (click)="vm.clearLogs()">Очистить</button>
+        </div>
+        <div *ngFor="let l of vm.logs()" style="padding:6px 8px; border-bottom:1px dashed #eee; font-family:ui-monospace, SFMono-Regular, Consolas, Menlo, monospace; font-size:12px;">
+          <span [style.color]="l.level === 'error' ? '#b00020' : (l.level === 'event' ? '#0a58ca' : '#444')">[{{ l.ts }}] {{ l.level.toUpperCase() }}</span>
+          <span> {{ l.source }} — {{ l.message }}</span>
+        </div>
+      </div>
     </div>
   `
 })
@@ -63,6 +95,7 @@ export class GameComponent implements OnInit {
   }
 
   onCellClick(x: number, y: number): void {
+    if (this.vm.isGameFinished()) return; // блокируем ввод после завершения
     // Если выбрана способность — используем её по клику на клетку
     if (this.vm.selectedAbility()) {
       void this.vm.useAbility(this.gameId(), { x, y });
@@ -86,6 +119,13 @@ export class GameComponent implements OnInit {
     if (piece && this.vm.isPlayersPiece(piece as any)) {
       void this.vm.selectPiece(this.gameId(), String(piece.id));
       this.vm.checkEvolutionNeed(piece as any);
+    }
+  }
+
+  async onReplay(): Promise<void> {
+    const id = await this.vm.replayTutorial(this.gameId());
+    if (id) {
+      location.href = `/#/gamesession/${id}`;
     }
   }
 

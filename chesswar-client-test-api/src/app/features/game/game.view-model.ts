@@ -20,6 +20,20 @@ export class GameViewModel {
   readonly selectedPieceId = signal<string | null>(null);
   readonly evolutionChoice = signal<'Knight' | 'Bishop' | null>(null);
   readonly isEvolutionDialogOpen = signal(false);
+  readonly isGameFinished = signal(false);
+  readonly gameResult = signal<string | null>(null);
+  // Tutorial hints
+  readonly tutorialStep = signal<1 | 2 | 3 | 4>(1); // 1: select, 2: move/attack, 3: end turn, 4: ability
+  readonly showHints = signal(true);
+  // Log panel
+  readonly logs = signal<{ ts: string; level: 'info' | 'error' | 'event'; source: string; message: string; data?: unknown }[]>([]);
+
+  private addLog(level: 'info' | 'error' | 'event', source: string, message: string, data?: unknown): void {
+    const ts = new Date().toLocaleTimeString();
+    const entry = { ts, level, source, message, data } as const;
+    this.logs.update(list => [entry, ...list].slice(0, 200));
+  }
+  clearLogs(): void { this.logs.set([]); }
 
   readonly manaText = computed(() => {
     const s = this.session();
@@ -51,6 +65,7 @@ export class GameViewModel {
     this.isLoading.set(true);
     this.error.set(null);
     try {
+      this.addLog('info', 'VM', 'Loading game session', { gameId });
       const data = await this.api.getGameSession(gameId);
       this.session.set(data);
       // Предпочтем доску из сессии (через фигуры игроков), fallback — бэкендовый /board
@@ -61,6 +76,10 @@ export class GameViewModel {
         const board = await this.api.getBoard();
         this.board.set(board);
       }
+      if ((data as any).status === 'Finished' || (data as any).status === 'finished') {
+        this.isGameFinished.set(true);
+        this.gameResult.set((data as any).result ?? null);
+      }
 
       // Подключение к SignalR и подписка на события
       await this.hub.connect(gameId);
@@ -70,18 +89,26 @@ export class GameViewModel {
         this.session.set(updated);
         const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
         this.board.set({ pieces } as any);
+        if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
+          this.isGameFinished.set(true);
+          this.gameResult.set((updated as any).result ?? null);
+        }
       };
       this.hub.on('AiMove', refresh);
       this.hub.on('GameEnded', async () => {
+        this.addLog('event', 'SignalR', 'GameEnded');
         await refresh();
       });
       // Универсальный слушатель: на любое событие обновляем сессию
-      (this.hub as any).onAny?.(async () => {
+      (this.hub as any).onAny?.(async (name: string, payload: unknown) => {
+        this.addLog('event', 'SignalR', String(name), payload);
         await refresh();
       });
+      this.addLog('info', 'VM', 'Game session loaded');
     } catch (e: any) {
       const msg = e?.problem?.title ?? e?.message ?? 'Не удалось загрузить сессию';
       this.error.set(msg);
+      this.addLog('error', 'VM', 'Load failed', e);
     } finally {
       this.isLoading.set(false);
     }
@@ -92,6 +119,7 @@ export class GameViewModel {
     this.error.set(null);
     try {
       await this.api.endTurn(gameId);
+      this.addLog('info', 'HTTP', 'POST /turn/end ok', { gameId });
       // После завершения хода сервер сам выполнит ход ИИ и восстановит ману.
       // Ждём, пока активный участник снова станет player1, с тайм‑аутом.
       const start = Date.now();
@@ -105,9 +133,32 @@ export class GameViewModel {
       this.session.set(updated);
       const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
       this.board.set({ pieces } as any);
+      if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
+        this.isGameFinished.set(true);
+        this.gameResult.set((updated as any).result ?? null);
+      }
     } catch (e: any) {
+      // Если сервер вернул ошибку, всё равно попробуем обновить сессию:
+      try {
+        const updated = await this.api.getGameSession(gameId);
+        this.session.set(updated);
+        const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+        this.board.set({ pieces } as any);
+        const finished = (updated as any).status === 'Finished' || (updated as any).status === 'finished';
+        if (finished) {
+          this.isGameFinished.set(true);
+          this.gameResult.set((updated as any).result ?? null);
+          // Ошибку не показываем, если игра реально завершена
+          this.error.set(null);
+          this.addLog('info', 'HTTP', 'POST /turn/end -> finished despite error', { gameId });
+          return;
+        }
+      } catch {
+        // ignore
+      }
       const msg = e?.problem?.title ?? e?.message ?? 'Не удалось завершить ход';
       this.error.set(msg);
+      this.addLog('error', 'HTTP', 'POST /turn/end failed', e);
     } finally {
       this.isLoading.set(false);
     }
@@ -124,10 +175,12 @@ export class GameViewModel {
       // Diagnostics: log request and responses for Move/Attack
       // eslint-disable-next-line no-console
       console.debug('[VM/selectPiece] pieceId=', pieceId);
+      this.addLog('info', 'HTTP', 'GET actions Move/Attack', { pieceId });
       const [moves, attacks] = await Promise.all([
         this.api.getAvailableActions(gameId, pieceId, 'Move'),
         this.api.getAvailableActions(gameId, pieceId, 'Attack')
       ]);
+      this.addLog('info', 'HTTP', 'actions received', { moves, attacks });
       // eslint-disable-next-line no-console
       console.debug('[VM/selectPiece] moves=', moves);
       // eslint-disable-next-line no-console
@@ -139,8 +192,13 @@ export class GameViewModel {
       // eslint-disable-next-line no-console
       console.debug('[VM/selectPiece] found piece on board =', found);
       this.selectedPiece.set(found);
+      // Hints: after selecting a piece, advance from step 1 to 2
+      if (this.showHints() && this.tutorialStep() === 1) {
+        this.tutorialStep.set(2);
+      }
     } catch (e) {
       // ignore highlighting errors for now
+      this.addLog('error', 'VM', 'selectPiece failed', e as any);
     }
   }
 
@@ -149,10 +207,15 @@ export class GameViewModel {
     if (!pieceId) return;
     try {
       await this.api.movePiece(gameId, pieceId, target);
+      this.addLog('info', 'HTTP', 'POST /move ok', { pieceId, target });
       const updated = await this.api.getGameSession(gameId);
       this.session.set(updated);
       const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
       this.board.set({ pieces: playerPieces } as any);
+      if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
+        this.isGameFinished.set(true);
+        this.gameResult.set((updated as any).result ?? null);
+      }
       // Проверяем необходимость эволюции сразу после перемещения
       const moved = playerPieces.find(p => String(p.id) === String(pieceId)) ?? null;
       this.checkEvolutionNeed(moved as any);
@@ -160,8 +223,12 @@ export class GameViewModel {
       // Оставим выбранной фигуру, чтобы подтвердить эволюцию без повторного выбора
       this.selectedPiece.set(moved ?? null);
       this.selectedPieceId.set(String(pieceId));
+      if (this.showHints() && this.tutorialStep() === 2) {
+        this.tutorialStep.set(3);
+      }
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось переместить фигуру');
+      this.addLog('error', 'HTTP', 'POST /move failed', e);
     }
   }
 
@@ -170,18 +237,27 @@ export class GameViewModel {
     if (!pieceId) return;
     try {
       await this.api.executeAction(gameId, 'Attack', pieceId, target);
+      this.addLog('info', 'HTTP', 'POST /turn/action Attack ok', { pieceId, target });
       const updated = await this.api.getGameSession(gameId);
       this.session.set(updated);
       const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
       this.board.set({ pieces: playerPieces } as any);
+      if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
+        this.isGameFinished.set(true);
+        this.gameResult.set((updated as any).result ?? null);
+      }
       this.highlighted.set([]);
       this.highlightedAttacks.set([]);
       this.selectedAbility.set(null);
       this.abilityTargets.set([]);
       this.selectedPiece.set(null);
       this.selectedPieceId.set(null);
+      if (this.showHints() && this.tutorialStep() === 2) {
+        this.tutorialStep.set(3);
+      }
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось выполнить атаку');
+      this.addLog('error', 'HTTP', 'POST /turn/action Attack failed', e);
     }
   }
 
@@ -234,9 +310,14 @@ export class GameViewModel {
       const targets = await this.api.getAbilityTargets(gameId, pieceId, abilityName);
       this.abilityTargets.set(targets ?? []);
       this.highlightedAttacks.set(targets ?? []); // используем красную подсветку для целей способности
+      this.addLog('info', 'HTTP', 'GET actions Ability targets', { abilityName, targets });
     } catch {
       this.abilityTargets.set([]);
       this.highlightedAttacks.set([]);
+      this.addLog('error', 'HTTP', 'GET actions Ability targets failed', { abilityName });
+    }
+    if (this.showHints() && this.tutorialStep() < 4) {
+      this.tutorialStep.set(4);
     }
   }
 
@@ -246,14 +327,29 @@ export class GameViewModel {
     if (!pieceId || !ability) return;
     try {
       await this.api.executeAction(gameId, 'Ability', pieceId, target, ability);
+      this.addLog('info', 'HTTP', 'POST /turn/action Ability ok', { ability, pieceId, target });
       const updated = await this.api.getGameSession(gameId);
       this.session.set(updated);
       const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
       this.board.set({ pieces: playerPieces } as any);
+      if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
+        this.isGameFinished.set(true);
+        this.gameResult.set((updated as any).result ?? null);
+      }
     } finally {
       this.selectedAbility.set(null);
       this.abilityTargets.set([]);
       this.highlightedAttacks.set([]);
+    }
+  }
+
+  async replayTutorial(gameId: string): Promise<string | null> {
+    try {
+      const res: any = await (this.api as any).tutorialTransition(gameId, 'replay');
+      const nextId: string | undefined = res?.gameSessionId ?? res?._embedded?.game?.id;
+      return nextId ?? null;
+    } catch {
+      return null;
     }
   }
 
@@ -286,6 +382,7 @@ export class GameViewModel {
     this.error.set(null);
     try {
       const updated = await this.api.evolve(gameId, pieceId, choice);
+      this.addLog('info', 'HTTP', 'POST /evolve ok', { pieceId, choice });
       this.session.set(updated);
       const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
       this.board.set({ pieces } as any);
@@ -293,9 +390,19 @@ export class GameViewModel {
       this.evolutionChoice.set(null);
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось выполнить эволюцию');
+      this.addLog('error', 'HTTP', 'POST /evolve failed', e);
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  // Tutorial hint helpers
+  nextHint(): void {
+    const s = this.tutorialStep();
+    if (s < 4) this.tutorialStep.set((s + 1) as any);
+  }
+  skipHints(): void {
+    this.showHints.set(false);
   }
 }
 
