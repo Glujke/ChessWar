@@ -1,0 +1,269 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "BalanceConfig",
+  "description": "Configuration for game balance including pieces, abilities, evolution rules and AI settings",
+  "required": ["globals", "playerMana", "pieces", "abilities", "evolution", "ai"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Version of the configuration"
+    },
+    "globals": {
+      "type": "object",
+      "required": ["mpRegenPerTurn", "cooldownTickPhase"],
+      "properties": {
+        "mpRegenPerTurn": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "MP regeneration per turn"
+        },
+        "cooldownTickPhase": {
+          "type": "string",
+          "enum": ["EndTurn", "StartTurn"],
+          "description": "When cooldowns are ticked"
+        }
+      },
+      "additionalProperties": false
+    },
+    "playerMana": {
+      "type": "object",
+      "required": ["initialMana", "maxMana", "manaRegenPerTurn", "mandatoryAction", "attackCost", "movementCosts"],
+      "properties": {
+        "initialMana": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Initial mana for players"
+        },
+        "maxMana": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum mana for players"
+        },
+        "manaRegenPerTurn": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Mana regeneration per turn"
+        },
+        "mandatoryAction": {
+          "type": "boolean",
+          "description": "Player must perform at least one action per turn"
+        },
+        "attackCost": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Mana cost for basic attack"
+        },
+        "movementCosts": {
+          "type": "object",
+          "patternProperties": {
+            "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Mana cost for movement"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "pieces": {
+      "type": "object",
+      "description": "Piece statistics",
+      "patternProperties": {
+        "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+          "type": "object",
+          "required": ["hp", "atk", "range", "movement", "xpToEvolve"],
+          "properties": {
+            "hp": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Health points"
+            },
+            "atk": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Attack power"
+            },
+            "range": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Attack range"
+            },
+            "movement": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Movement range"
+            },
+            "xpToEvolve": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "XP required to evolve"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "abilities": {
+      "type": "object",
+      "description": "Ability specifications",
+      "patternProperties": {
+        "^[A-Za-z]+\\.[A-Za-z]+$": {
+          "type": "object",
+          "required": ["mpCost", "cooldown", "range", "isAoe"],
+          "properties": {
+            "mpCost": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Mana cost"
+            },
+            "cooldown": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Cooldown turns"
+            },
+            "range": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Ability range"
+            },
+            "isAoe": {
+              "type": "boolean",
+              "description": "Is area of effect"
+            },
+            "damage": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Damage dealt"
+            },
+            "heal": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Healing amount"
+            },
+            "hits": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of hits"
+            },
+            "damagePerHit": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Damage per hit"
+            },
+            "tempHpMultiplier": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Temporary HP multiplier"
+            },
+            "durationTurns": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Effect duration in turns"
+            },
+            "grantsExtraTurn": {
+              "type": "boolean",
+              "description": "Grants extra turn"
+            },
+            "diagonalOnly": {
+              "type": "boolean",
+              "description": "Only works diagonally"
+            },
+            "restoreHpPercent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "HP restoration percentage"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "evolution": {
+      "type": "object",
+      "required": ["xpThresholds", "rules"],
+      "properties": {
+        "xpThresholds": {
+          "type": "object",
+          "patternProperties": {
+            "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "rules": {
+          "type": "object",
+          "patternProperties": {
+            "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["Pawn", "Knight", "Bishop", "Rook", "Queen", "King"]
+              },
+              "uniqueItems": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "immediateOnLastRank": {
+          "type": "object",
+          "patternProperties": {
+            "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ai": {
+      "type": "object",
+      "required": ["nearEvolutionXp"],
+      "properties": {
+        "nearEvolutionXp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "XP threshold for near evolution"
+        },
+        "lastRankEdgeY": {
+          "type": "object",
+          "patternProperties": {
+            "^(Elves|Orcs)$": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 7
+            }
+          },
+          "additionalProperties": false
+        },
+        "kingAura": {
+          "type": "object",
+          "required": ["radius", "atkBonus"],
+          "properties": {
+            "radius": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Aura radius"
+            },
+            "atkBonus": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Attack bonus"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

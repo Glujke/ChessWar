@@ -1,0 +1,736 @@
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using FluentAssertions;
+using Moq;
+using ChessWar.Application.Services.AI;
+using ChessWar.Domain.Interfaces.AI;
+using ChessWar.Domain.Interfaces.GameLogic;
+using ChessWar.Domain.Interfaces.TurnManagement;
+using ChessWar.Domain.Entities;
+using ChessWar.Domain.Enums;
+using ChessWar.Domain.ValueObjects;
+
+namespace ChessWar.Tests.Integration.E2E;
+
+/// <summary>
+/// E2E тесты для полного прохождения Tutorial
+/// </summary>
+public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly HttpClient _client;
+    private readonly ILogger<CompleteTutorialE2ETests> _logger;
+    private ProbabilisticAIService? _hardAI;
+
+    public CompleteTutorialE2ETests(WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+        _logger = factory.Services.GetRequiredService<ILogger<CompleteTutorialE2ETests>>();
+        _logger.LogInformation("=== КОНСТРУКТОР CompleteTutorialE2ETests ===");
+        // Hard AI больше не нужен - используем реальные ходы игрока
+        _logger.LogInformation("=== КОНСТРУКТОР ЗАВЕРШЕН ===");
+    }
+
+    private void InitializeHardAI()
+    {
+        try
+        {
+            _logger.LogInformation("=== ИНИЦИАЛИЗАЦИЯ HARD AI ===");
+            
+            // Создаем моки для зависимостей Hard AI
+            var probabilityMatrixMock = new Mock<IProbabilityMatrix>();
+            var gameStateEvaluatorMock = new Mock<IGameStateEvaluator>();
+            var difficultyProviderMock = new Mock<IAIDifficultyLevel>();
+            var turnServiceMock = new Mock<ITurnService>();
+            var abilityServiceMock = new Mock<IAbilityService>();
+            var loggerMock = new Mock<ILogger<ProbabilisticAIService>>();
+
+            // Настраиваем Hard AI
+            difficultyProviderMock.Setup(x => x.GetDifficultyLevel(It.IsAny<Player>())).Returns(AIDifficultyLevel.Hard);
+            
+            // НАСТРАИВАЕМ МОКИ ДЛЯ РАБОТЫ
+            // Настраиваем TurnService для выполнения ходов
+            turnServiceMock.Setup(x => x.ExecuteMove(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
+                .Returns(true);
+            
+            // Настраиваем TurnService для выполнения атак
+            turnServiceMock.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
+                .Returns(true);
+            
+            // Настраиваем TurnService для получения доступных ходов
+            turnServiceMock.Setup(x => x.GetAvailableMoves(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>()))
+                .Returns(new List<Position> { new Position(0, 2), new Position(1, 2), new Position(2, 2) });
+            
+            // Настраиваем TurnService для получения доступных атак
+            turnServiceMock.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
+                .Returns(new List<Position> { new Position(0, 3), new Position(1, 3) });
+            
+            // Настраиваем AbilityService для использования способностей
+            abilityServiceMock.Setup(x => x.UseAbility(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
+                .Returns(true);
+            
+            // Настраиваем GameStateEvaluator для оценки позиции
+            gameStateEvaluatorMock.Setup(x => x.EvaluateGameState(It.IsAny<GameSession>(), It.IsAny<Player>()))
+                .Returns(0.5);
+            
+            // Настраиваем ProbabilityMatrix для выбора действий
+            probabilityMatrixMock.Setup(x => x.GetActionProbability(It.IsAny<GameSession>(), It.IsAny<GameAction>()))
+                .Returns(0.8);
+            
+            _hardAI = new ProbabilisticAIService(
+                probabilityMatrixMock.Object,
+                gameStateEvaluatorMock.Object,
+                difficultyProviderMock.Object,
+                turnServiceMock.Object,
+                abilityServiceMock.Object,
+                loggerMock.Object
+            );
+            
+            _logger.LogInformation("=== HARD AI ИНИЦИАЛИЗИРОВАН УСПЕШНО ===");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"ОШИБКА ИНИЦИАЛИЗАЦИИ HARD AI: {ex.Message}");
+            _hardAI = null;
+        }
+    }
+
+    private static StringContent Json(object obj) => new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json");
+
+    private async Task<GameSession?> GetGameSession(string gameId)
+    {
+        try
+        {
+            var response = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var players = new List<Player>();
+            if (root.TryGetProperty("players", out var playersElement))
+            {
+                foreach (var playerElement in playersElement.EnumerateArray())
+                {
+                    players.Add(ParsePlayer(playerElement));
+                }
+            }
+
+            var currentTurn = root.TryGetProperty("currentTurn", out var turnElement) ? turnElement.GetInt32() : 1;
+
+            // Создаем GameSession с правильным конструктором
+            var player1 = players.FirstOrDefault(p => p.Name.Contains("Player1") || p.Name.Contains("1"));
+            var player2 = players.FirstOrDefault(p => p.Name.Contains("Player2") || p.Name.Contains("2"));
+            
+            if (player1 == null || player2 == null)
+            {
+                return null;
+            }
+
+            return new GameSession(player1, player2, "Tutorial");
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private Player ParsePlayer(JsonElement playerElement)
+    {
+        var name = playerElement.GetProperty("name").GetString() ?? "Unknown";
+        var pieces = new List<Piece>();
+
+        if (playerElement.TryGetProperty("pieces", out var piecesElement))
+        {
+            foreach (var pieceElement in piecesElement.EnumerateArray())
+            {
+                var piece = new Piece
+                {
+                    Id = pieceElement.GetProperty("id").GetInt32(),
+                    Type = (PieceType)pieceElement.GetProperty("type").GetInt32(),
+                    Team = (Team)pieceElement.GetProperty("team").GetInt32(),
+                    Position = new Position(
+                        pieceElement.GetProperty("position").GetProperty("x").GetInt32(),
+                        pieceElement.GetProperty("position").GetProperty("y").GetInt32()
+                    )
+                };
+                pieces.Add(piece);
+            }
+        }
+
+        return new Player(name, pieces);
+    }
+
+    private async Task LogBoard(string gameId, string context)
+    {
+        try
+        {
+            var boardResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}/board");
+            if (boardResponse.IsSuccessStatusCode)
+            {
+                var boardJson = await boardResponse.Content.ReadAsStringAsync();
+                _logger.LogInformation($"=== ДОСКА {context} ===");
+                _logger.LogInformation(boardJson);
+                _logger.LogInformation("=== КОНЕЦ ДОСКИ ===");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning($"Не удалось получить доску {context}: {ex.Message}");
+        }
+    }
+
+    [Fact]
+    public async Task CompleteTutorial_FromStartToFinish_ShouldWork()
+    {
+        // === ЭТАП 1: СОЗДАНИЕ TUTORIAL ===
+        var startResponse = await _client.PostAsync("/api/v1/game/tutorial?embed=(game)", Json(new { playerId = "player-e2e-test" }));
+        startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var startJson = await startResponse.Content.ReadAsStringAsync();
+        using var startDoc = JsonDocument.Parse(startJson);
+        var gameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
+        gameId.Should().NotBeNullOrEmpty();
+
+        // Проверяем, что создался Battle1 preset
+        var game = startDoc.RootElement.GetProperty("_embedded").GetProperty("game");
+        var player2Pieces = game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
+        
+        // Должен быть король на (4,7) и пешки на y=6
+        var king = player2Pieces.FirstOrDefault(p => 
+        {
+            var typeElement = p.GetProperty("type");
+            return typeElement.ValueKind == JsonValueKind.String ? 
+                typeElement.GetString() == "King" : 
+                typeElement.GetInt32() == 5; // King = 5 в enum
+        });
+        king.Should().NotBeNull();
+        king.GetProperty("position").GetProperty("x").GetInt32().Should().Be(4);
+        king.GetProperty("position").GetProperty("y").GetInt32().Should().Be(7);
+
+        var pawns = player2Pieces.Where(p => 
+        {
+            var typeElement = p.GetProperty("type");
+            var isPawn = typeElement.ValueKind == JsonValueKind.String ? 
+                typeElement.GetString() == "Pawn" : 
+                typeElement.GetInt32() == 0; // Pawn = 0 в enum
+            return isPawn && p.GetProperty("position").GetProperty("y").GetInt32() == 6;
+        }).Count();
+        pawns.Should().BeGreaterOrEqualTo(6);
+
+        // === ЭТАП 2: ПРОХОЖДЕНИЕ BATTLE1 ===
+        try
+        {
+            _logger.LogInformation("=== ВЫЗЫВАЕМ PlayTutorialBattle ===");
+            await PlayTutorialBattle(gameId!, "Battle1");
+            _logger.LogInformation("=== PlayTutorialBattle ЗАВЕРШЕН ===");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"ОШИБКА В PlayTutorialBattle: {ex.Message}");
+            _logger.LogError($"StackTrace: {ex.StackTrace}");
+            throw;
+        }
+
+        // === ЭТАП 3: ПЕРЕХОД К BATTLE2 ===
+        var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition?embed=(game)", 
+            Json(new { action = "advance" }));
+        advanceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var advanceJson = await advanceResponse.Content.ReadAsStringAsync();
+        using var advanceDoc = JsonDocument.Parse(advanceJson);
+        var battle2GameId = advanceDoc.RootElement.GetProperty("gameSessionId").GetString();
+        battle2GameId.Should().NotBeNullOrEmpty();
+
+        // Проверяем Battle2 preset (должен содержать коня и слона)
+        var battle2Game = advanceDoc.RootElement.GetProperty("_embedded").GetProperty("game");
+        var battle2Pieces = battle2Game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
+        
+        var knight = battle2Pieces.FirstOrDefault(p => 
+        {
+            var typeElement = p.GetProperty("type");
+            return typeElement.ValueKind == JsonValueKind.String ? 
+                typeElement.GetString() == "Knight" : 
+                typeElement.GetInt32() == 2; // Knight = 2 в enum
+        });
+        knight.Should().NotBeNull();
+        var bishop = battle2Pieces.FirstOrDefault(p => 
+        {
+            var typeElement = p.GetProperty("type");
+            return typeElement.ValueKind == JsonValueKind.String ? 
+                typeElement.GetString() == "Bishop" : 
+                typeElement.GetInt32() == 3; // Bishop = 3 в enum
+        });
+        bishop.Should().NotBeNull();
+
+        // === ЭТАП 4: ПРОХОЖДЕНИЕ BATTLE2 ===
+        await PlayTutorialBattle(battle2GameId!, "Battle2");
+
+        // === ЭТАП 5: ПЕРЕХОД К BOSS ===
+        var advanceToBossResponse = await _client.PostAsync($"/api/v1/gamesession/{battle2GameId}/tutorial/transition?embed=(game)", 
+            Json(new { action = "advance" }));
+        advanceToBossResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var bossJson = await advanceToBossResponse.Content.ReadAsStringAsync();
+        using var bossDoc = JsonDocument.Parse(bossJson);
+        var bossGameId = bossDoc.RootElement.GetProperty("gameSessionId").GetString();
+        bossGameId.Should().NotBeNullOrEmpty();
+
+        // Проверяем Boss preset (должен содержать ферзя)
+        var bossGame = bossDoc.RootElement.GetProperty("_embedded").GetProperty("game");
+        var bossPieces = bossGame.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
+        
+        var queen = bossPieces.FirstOrDefault(p => 
+        {
+            var typeElement = p.GetProperty("type");
+            return typeElement.ValueKind == JsonValueKind.String ? 
+                typeElement.GetString() == "Queen" : 
+                typeElement.GetInt32() == 4; // Queen = 4 в enum
+        });
+        queen.Should().NotBeNull();
+
+        // === ЭТАП 6: ПРОХОЖДЕНИЕ BOSS ===
+        await PlayTutorialBattle(bossGameId!, "Boss");
+
+        // === ЭТАП 7: ЗАВЕРШЕНИЕ TUTORIAL ===
+        // После победы игра уже завершена. Пытаемся сделать advance — ожидаем 409 (tutorial завершён)
+        var finalAdvanceResponse = await _client.PostAsync($"/api/v1/gamesession/{bossGameId}/tutorial/transition?embed=(game)", 
+            Json(new { action = "advance" }));
+        finalAdvanceResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // Проверяем, что Tutorial завершен
+        var finalGameResponse = await _client.GetAsync($"/api/v1/gamesession/{bossGameId}");
+        finalGameResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var finalStatus = await GetGameStatus(bossGameId!);
+        finalStatus.Should().BeOneOf("Finished", "Player1Victory");
+    }
+
+    [Fact]
+    public async Task TutorialReplay_ShouldCreateNewGameSession()
+    {
+        // Создаем Tutorial
+        var startResponse = await _client.PostAsync("/api/v1/game/tutorial", Json(new { playerId = "player-replay-test" }));
+        startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var startJson = await startResponse.Content.ReadAsStringAsync();
+        using var startDoc = JsonDocument.Parse(startJson);
+        var originalGameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
+
+        // Делаем replay
+        var replayResponse = await _client.PostAsync($"/api/v1/gamesession/{originalGameId}/tutorial/transition", 
+            Json(new { action = "replay" }));
+        replayResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var replayJson = await replayResponse.Content.ReadAsStringAsync();
+        using var replayDoc = JsonDocument.Parse(replayJson);
+        var newGameId = replayDoc.RootElement.GetProperty("gameSessionId").GetString();
+
+        // Проверяем, что создался новый game session
+        newGameId.Should().NotBeNullOrEmpty();
+        newGameId.Should().NotBe(originalGameId);
+
+        // Проверяем, что новый game session работает
+        var newGameResponse = await _client.GetAsync($"/api/v1/gamesession/{newGameId}");
+        newGameResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task TutorialAdvance_WithoutVictory_ShouldReturn409()
+    {
+        // Создаем Tutorial
+        var startResponse = await _client.PostAsync("/api/v1/game/tutorial", Json(new { playerId = "player-advance-test" }));
+        startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var startJson = await startResponse.Content.ReadAsStringAsync();
+        using var startDoc = JsonDocument.Parse(startJson);
+        var gameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
+
+        // Пытаемся advance без победы
+        var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition", 
+            Json(new { action = "advance" }));
+        advanceResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // Проверяем ProblemDetails
+        var problemJson = await advanceResponse.Content.ReadAsStringAsync();
+        using var problemDoc = JsonDocument.Parse(problemJson);
+        var title = problemDoc.RootElement.GetProperty("title").GetString();
+        title.Should().Be("StageNotCompleted");
+    }
+
+    /// <summary>
+    /// Играет Tutorial battle - простые ходы до победы (максимум 300 ходов)
+    /// </summary>
+    private async Task PlayTutorialBattle(string gameId, string battleName)
+    {
+        _logger.LogInformation($"=== Начинаем игру в {battleName} ===");
+        
+        // Показываем начальную доску
+        await LogBoard(gameId, $"НАЧАЛО {battleName}");
+
+        // Играем до победы (максимум 300 ходов)
+        for (int move = 1; move <= 300; move++)
+        {
+            _logger.LogInformation($"=== Ход {move} ===");
+            _logger.LogInformation($"ВХОДИМ В ЦИКЛ ХОДА {move}");
+
+            // Проверяем статус игры
+            var gameStatus = await GetGameStatus(gameId);
+            if (gameStatus != "Active")
+            {
+                _logger.LogInformation($"Игра {battleName} завершена со статусом: {gameStatus} на ходу {move}");
+                break;
+            }
+
+            // РЕАЛЬНЫЙ ХОД ИГРОКА (Player1) - через API
+            _logger.LogInformation($"ВЫЗЫВАЕМ MakeRealPlayerMove для хода {move}");
+            await MakeRealPlayerMove(gameId, move);
+            _logger.LogInformation($"MakeRealPlayerMove завершен для хода {move}");
+
+            // Завершаем ход игрока
+            var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/end", null);
+            endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK, $"Завершение хода игрока в {battleName} должно быть успешным");
+
+            // Проверяем статус после хода игрока
+            var statusAfterPlayer = await GetGameStatus(gameId);
+            if (statusAfterPlayer != "Active")
+            {
+                _logger.LogInformation($"Игрок победил в {battleName} на ходу {move}!");
+                break;
+            }
+
+            // AI ход за Player2 (Medium) - через TurnOrchestrator
+            var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/ai", null);
+            if (aiTurnResponse.StatusCode == HttpStatusCode.OK)
+            {
+                _logger.LogInformation($"AI сделал ход {move}");
+            }
+
+            // Проверяем статус после хода AI
+            var statusAfterAI = await GetGameStatus(gameId);
+            if (statusAfterAI != "Active")
+            {
+                _logger.LogInformation($"AI победил в {battleName} на ходу {move}!");
+                break;
+            }
+        }
+
+        // Показываем финальную доску
+        await LogBoard(gameId, $"ФИНАЛ {battleName}");
+
+        // Проверяем финальный статус
+        var finalStatus = await GetGameStatus(gameId);
+        finalStatus.Should().NotBe("Active", $"Игра {battleName} должна быть завершена за 300 ходов");
+    }
+
+    private async Task MakeSimplePlayerMove(string gameId, int moveNumber)
+    {
+        // Получаем текущее состояние игры
+        var gameResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+        gameResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var gameJson = await gameResponse.Content.ReadAsStringAsync();
+        using var gameDoc = JsonDocument.Parse(gameJson);
+        var game = gameDoc.RootElement;
+
+        // Находим пешку игрока для хода
+        var player1Pieces = game.GetProperty("player1").GetProperty("pieces").EnumerateArray().ToList();
+        var pawn = player1Pieces.FirstOrDefault(p => 
+        {
+            var typeElement = p.GetProperty("type");
+            return typeElement.ValueKind == JsonValueKind.String ? 
+                typeElement.GetString() == "Pawn" : 
+                typeElement.GetInt32() == 0; // Pawn = 0 в enum
+        });
+        
+        if (pawn.ValueKind == JsonValueKind.Undefined)
+        {
+            _logger.LogWarning($"Пешка не найдена на ходу {moveNumber}");
+            return;
+        }
+
+        var pawnIdElement = pawn.GetProperty("id");
+        var pawnId = pawnIdElement.ValueKind == JsonValueKind.String ? 
+            pawnIdElement.GetString() : 
+            pawnIdElement.GetInt32().ToString();
+        var pawnPosition = pawn.GetProperty("position");
+        var pawnX = pawnPosition.GetProperty("x").GetInt32();
+        var pawnY = pawnPosition.GetProperty("y").GetInt32();
+
+        // Делаем ход пешкой вперед
+        var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+            Json(new 
+            { 
+                pieceId = pawnId,
+                targetPosition = new { x = pawnX, y = pawnY + 1 }  // ВПЕРЁД
+            }));
+        
+        if (moveResponse.StatusCode == HttpStatusCode.OK)
+        {
+            _logger.LogInformation($"Ход {moveNumber}: пешка с ({pawnX},{pawnY}) на ({pawnX},{pawnY + 1})");
+        }
+        else
+        {
+            _logger.LogWarning($"Ход {moveNumber} не удался: {moveResponse.StatusCode}");
+        }
+    }
+
+    private async Task MakeRealPlayerMove(string gameId, int moveNumber)
+    {
+        try
+        {
+            _logger.LogInformation($"=== УМНЫЙ ХОД ИГРОКА {moveNumber} ===");
+            
+            // Получаем текущее состояние игры
+            var gameResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+            if (!gameResponse.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"Не удалось получить GameSession на ходу {moveNumber}");
+                return;
+            }
+
+            var gameJson = await gameResponse.Content.ReadAsStringAsync();
+            using var gameDoc = JsonDocument.Parse(gameJson);
+            var game = gameDoc.RootElement;
+
+            // Получаем фигуры игрока и ИИ
+            var player1Pieces = game.GetProperty("player1").GetProperty("pieces").EnumerateArray().ToList();
+            var player2Pieces = game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
+            
+            // Находим живые фигуры
+            var alivePlayerPieces = player1Pieces.Where(p => p.GetProperty("isAlive").GetBoolean()).ToList();
+            var aliveEnemyPieces = player2Pieces.Where(p => p.GetProperty("isAlive").GetBoolean()).ToList();
+
+            _logger.LogInformation($"У игрока {alivePlayerPieces.Count} живых фигур, у ИИ {aliveEnemyPieces.Count}");
+
+            // Стратегия 1: Атакуем вражеские фигуры в радиусе атаки
+            var attackMade = await TryAttackEnemy(gameId, alivePlayerPieces, aliveEnemyPieces, moveNumber);
+            if (attackMade) return;
+
+            // Стратегия 2: Защищаем короля от угроз
+            var defenseMade = await TryDefendKing(gameId, alivePlayerPieces, aliveEnemyPieces, moveNumber);
+            if (defenseMade) return;
+
+            // Стратегия 3: Продвигаем центральные пешки
+            var advanceMade = await TryAdvanceCenterPawns(gameId, alivePlayerPieces, moveNumber);
+            if (advanceMade) return;
+
+            // Стратегия 4: Используем способности
+            var abilityUsed = await TryUseAbilities(gameId, alivePlayerPieces, aliveEnemyPieces, moveNumber);
+            if (abilityUsed) return;
+
+            // Стратегия 5: Простое продвижение пешек (fallback)
+            await TrySimplePawnAdvance(gameId, alivePlayerPieces, moveNumber);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Ошибка умного хода игрока на ходу {moveNumber}: {ex.Message}");
+            _logger.LogError($"StackTrace: {ex.StackTrace}");
+        }
+    }
+
+    private async Task<bool> TryAttackEnemy(string gameId, List<JsonElement> playerPieces, List<JsonElement> enemyPieces, int moveNumber)
+    {
+        foreach (var piece in playerPieces)
+        {
+            var pieceId = piece.GetProperty("id").GetInt32();
+            var pieceType = piece.GetProperty("type").GetInt32();
+            var currentPos = piece.GetProperty("position");
+            var currentX = currentPos.GetProperty("x").GetInt32();
+            var currentY = currentPos.GetProperty("y").GetInt32();
+
+            // Ищем вражеские фигуры в радиусе атаки
+            foreach (var enemy in enemyPieces)
+            {
+                var enemyPos = enemy.GetProperty("position");
+                var enemyX = enemyPos.GetProperty("x").GetInt32();
+                var enemyY = enemyPos.GetProperty("y").GetInt32();
+                
+                // Расстояние Чебышёва
+                var distance = Math.Max(Math.Abs(enemyX - currentX), Math.Abs(enemyY - currentY));
+                
+                // Радиус атаки зависит от типа фигуры
+                var attackRange = pieceType == 0 ? 1 : 1; // Пешка и король = 1
+                
+                if (distance <= attackRange)
+                {
+                    _logger.LogInformation($"Атакуем врага с ({currentX},{currentY}) на ({enemyX},{enemyY})");
+                    
+                    var attackRequest = new
+                    {
+                        pieceId = pieceId.ToString(),
+                        targetPosition = new { x = enemyX, y = enemyY }
+                    };
+
+                    var attackResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/attack", 
+                        Json(attackRequest));
+                    
+                    if (attackResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation($"Атака фигурой {pieceId} выполнена успешно");
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private async Task<bool> TryDefendKing(string gameId, List<JsonElement> playerPieces, List<JsonElement> enemyPieces, int moveNumber)
+    {
+        // Находим короля игрока
+        var king = playerPieces.FirstOrDefault(p => p.GetProperty("type").GetInt32() == 5); // King = 5
+        if (king.ValueKind == JsonValueKind.Undefined) return false;
+
+        var kingPos = king.GetProperty("position");
+        var kingX = kingPos.GetProperty("x").GetInt32();
+        var kingY = kingPos.GetProperty("y").GetInt32();
+
+        // Проверяем, есть ли враги рядом с королем
+        var threatsNearKing = enemyPieces.Where(enemy =>
+        {
+            var enemyPos = enemy.GetProperty("position");
+            var enemyX = enemyPos.GetProperty("x").GetInt32();
+            var enemyY = enemyPos.GetProperty("y").GetInt32();
+            var distance = Math.Max(Math.Abs(enemyX - kingX), Math.Abs(enemyY - kingY));
+            return distance <= 2; // Враги в радиусе 2 от короля
+        }).ToList();
+
+        if (threatsNearKing.Any())
+        {
+            _logger.LogInformation($"Король под угрозой! Перемещаем короля");
+            
+            // Перемещаем короля в безопасное место
+            var safeX = Math.Max(0, Math.Min(7, kingX + 1));
+            var safeY = Math.Max(0, Math.Min(7, kingY + 1));
+            
+            var moveRequest = new
+            {
+                pieceId = king.GetProperty("id").GetInt32().ToString(),
+                targetPosition = new { x = safeX, y = safeY }
+            };
+
+            var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+                Json(moveRequest));
+            
+            if (moveResponse.IsSuccessStatusCode)
+            {
+                _logger.LogInformation($"Король перемещен в безопасное место");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async Task<bool> TryAdvanceCenterPawns(string gameId, List<JsonElement> playerPieces, int moveNumber)
+    {
+        // Находим центральные пешки (x = 3, 4, 5)
+        var centerPawns = playerPieces.Where(p => 
+        {
+            var type = p.GetProperty("type").GetInt32();
+            var pos = p.GetProperty("position");
+            var x = pos.GetProperty("x").GetInt32();
+            return type == 0 && x >= 3 && x <= 5; // Пешки в центре
+        }).ToList();
+
+        foreach (var pawn in centerPawns)
+        {
+            var pieceId = pawn.GetProperty("id").GetInt32();
+            var currentPos = pawn.GetProperty("position");
+            var currentX = currentPos.GetProperty("x").GetInt32();
+            var currentY = currentPos.GetProperty("y").GetInt32();
+
+            // Продвигаем пешку вперед на 2 клетки (первый ход) или 1 клетку
+            var targetY = currentY + (currentY == 1 ? 2 : 1); // Первый ход = +2, остальные = +1
+            if (targetY > 7) targetY = 7;
+
+            _logger.LogInformation($"Продвигаем центральную пешку {pieceId} с ({currentX},{currentY}) на ({currentX},{targetY})");
+
+            var moveRequest = new
+            {
+                pieceId = pieceId.ToString(),
+                targetPosition = new { x = currentX, y = targetY }
+            };
+
+            var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+                Json(moveRequest));
+            
+            if (moveResponse.IsSuccessStatusCode)
+            {
+                _logger.LogInformation($"Центральная пешка {pieceId} продвинута успешно");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async Task<bool> TryUseAbilities(string gameId, List<JsonElement> playerPieces, List<JsonElement> enemyPieces, int moveNumber)
+    {
+        // Пока что просто возвращаем false - способности требуют более сложной логики
+        return false;
+    }
+
+    private async Task<bool> TrySimplePawnAdvance(string gameId, List<JsonElement> playerPieces, int moveNumber)
+    {
+        // Находим первую живую пешку
+        var pawn = playerPieces.FirstOrDefault(p => p.GetProperty("type").GetInt32() == 0);
+        if (pawn.ValueKind == JsonValueKind.Undefined) return false;
+
+        var pieceId = pawn.GetProperty("id").GetInt32();
+        var currentPos = pawn.GetProperty("position");
+        var currentX = currentPos.GetProperty("x").GetInt32();
+        var currentY = currentPos.GetProperty("y").GetInt32();
+
+        // Простое продвижение пешки вперед
+        var targetY = currentY + 1;
+        if (targetY > 7) targetY = 7;
+
+        _logger.LogInformation($"Простое продвижение пешки {pieceId} с ({currentX},{currentY}) на ({currentX},{targetY})");
+
+        var moveRequest = new
+        {
+            pieceId = pieceId.ToString(),
+            targetPosition = new { x = currentX, y = targetY }
+        };
+
+        var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+            Json(moveRequest));
+        
+        if (moveResponse.IsSuccessStatusCode)
+        {
+            _logger.LogInformation($"Простое продвижение пешки {pieceId} выполнено успешно");
+            return true;
+        }
+        return false;
+    }
+
+    private async Task<string> GetGameStatus(string gameId)
+    {
+        var response = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var statusElement = doc.RootElement.GetProperty("status");
+        
+        return statusElement.ValueKind == JsonValueKind.String ? 
+            statusElement.GetString() ?? "Unknown" : 
+            ConvertStatusToString(statusElement.GetInt32());
+    }
+
+    private string ConvertStatusToString(int status)
+    {
+        return status switch
+        {
+            0 => "Waiting",
+            1 => "Active", 
+            2 => "Player1Victory",
+            3 => "Player2Victory",
+            _ => "Unknown"
+        };
+    }
+}
