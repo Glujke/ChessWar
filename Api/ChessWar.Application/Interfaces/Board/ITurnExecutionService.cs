@@ -27,7 +27,7 @@ public interface ITurnExecutionService
     /// <summary>
     /// Получает доступные действия для фигуры
     /// </summary>
-    Task<List<PositionDto>> GetAvailableActionsAsync(GameSession gameSession, string pieceId, string actionType, CancellationToken cancellationToken = default);
+    Task<List<PositionDto>> GetAvailableActionsAsync(GameSession gameSession, string pieceId, string actionType, string? abilityName = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Выполняет движение фигуры

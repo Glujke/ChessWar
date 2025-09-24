@@ -14,7 +14,7 @@ import { GameViewModel } from './game.view-model';
     <div *ngIf="vm.session() as s">
       <div>Мана: {{ vm.manaText() }}</div>
       <button type="button" (click)="vm.endTurn(gameId())" [disabled]="vm.isLoading()">Завершить ход</button>
-      <div *ngIf="vm.board() as b" style="margin-top: 12px;">
+      <div *ngIf="vm.board() as b" style="margin-top: 12px; display: flex; gap: 16px; align-items: flex-start;">
         <div style="display: grid; gap: 2px; width: fit-content;" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 40px)'">
           <ng-container *ngFor="let y of [].constructor(b.size || b.height || 8); let row = index">
             <ng-container *ngFor="let x of [].constructor(b.size || b.width || 8); let col = index">
@@ -23,6 +23,17 @@ import { GameViewModel } from './game.view-model';
               </div>
             </ng-container>
           </ng-container>
+        </div>
+        <div style="min-width: 220px;">
+          <h4>Способности</h4>
+          <div *ngIf="vm.selectedPiece() as p; else noPiece">
+            <button *ngFor="let a of vm.getAbilitiesForSelected()" type="button" style="display:block; margin:4px 0;" (click)="vm.showAbilityTargets(gameId(), a.name)" [disabled]="vm.isLoading() || (a.cooldown ?? 0) > 0">
+              {{ a.name }} ({{ a.manaCost }} MP) <span *ngIf="(a.cooldown ?? 0) > 0">CD {{ a.cooldown }}</span>
+            </button>
+          </div>
+          <ng-template #noPiece>
+            <div style="color:#666;">Выберите фигуру</div>
+          </ng-template>
         </div>
       </div>
       <!-- Диалог эволюции -->
@@ -52,6 +63,11 @@ export class GameComponent implements OnInit {
   }
 
   onCellClick(x: number, y: number): void {
+    // Если выбрана способность — используем её по клику на клетку
+    if (this.vm.selectedAbility()) {
+      void this.vm.useAbility(this.gameId(), { x, y });
+      return;
+    }
     const attacks = this.vm.highlightedAttacks();
     const isAttack = attacks.some(c => c.x === x && c.y === y);
     if (isAttack) {

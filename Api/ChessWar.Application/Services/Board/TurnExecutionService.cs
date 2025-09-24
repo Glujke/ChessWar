@@ -52,9 +52,9 @@ public class TurnExecutionService : ITurnExecutionService
         return await _aiTurnService.MakeAiTurnAsync(gameSession, cancellationToken);
     }
 
-    public async Task<List<PositionDto>> GetAvailableActionsAsync(GameSession gameSession, string pieceId, string actionType, CancellationToken cancellationToken = default)
+    public async Task<List<PositionDto>> GetAvailableActionsAsync(GameSession gameSession, string pieceId, string actionType, string? abilityName = null, CancellationToken cancellationToken = default)
     {
-        return await _actionQueryService.GetAvailableActionsAsync(gameSession, pieceId, actionType, cancellationToken);
+        return await _actionQueryService.GetAvailableActionsAsync(gameSession, pieceId, actionType, abilityName, cancellationToken);
     }
 
     public async Task<bool> ExecuteMoveAsync(GameSession gameSession, int pieceId, Position targetPosition, CancellationToken cancellationToken = default)

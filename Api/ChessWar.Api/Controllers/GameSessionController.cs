@@ -355,7 +355,8 @@ public class GameSessionController : BaseController
     public async Task<ActionResult<List<PositionDto>>> GetAvailableActions(
         Guid gameSessionId, 
         string pieceId, 
-        [FromQuery] string actionType)
+        [FromQuery] string actionType,
+        [FromQuery(Name = "ability")] string? abilityName = null)
     {
         var session = await _sessionManagementService.GetSessionAsync(gameSessionId);
         if (session == null)
@@ -363,7 +364,7 @@ public class GameSessionController : BaseController
             return NotFound();
         }
         
-        var actions = await _turnExecutionService.GetAvailableActionsAsync(session, pieceId, actionType);
+        var actions = await _turnExecutionService.GetAvailableActionsAsync(session, pieceId, actionType, abilityName);
         LogInformation("Retrieved available actions for piece {PieceId} in game session {GameSessionId}", 
             pieceId, gameSessionId);
         

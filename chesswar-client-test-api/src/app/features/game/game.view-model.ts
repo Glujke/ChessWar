@@ -14,6 +14,8 @@ export class GameViewModel {
   readonly board = signal<GameBoardDto | null>(null);
   readonly highlighted = signal<PositionDto[]>([]); // moves
   readonly highlightedAttacks = signal<PositionDto[]>([]);
+  readonly selectedAbility = signal<string | null>(null);
+  readonly abilityTargets = signal<PositionDto[]>([]);
   readonly selectedPiece = signal<PieceDto | null>(null);
   readonly selectedPieceId = signal<string | null>(null);
   readonly evolutionChoice = signal<'Knight' | 'Bishop' | null>(null);
@@ -115,6 +117,8 @@ export class GameViewModel {
     this.selectedPiece.set(null as any);
     this.highlighted.set([]);
     this.highlightedAttacks.set([]);
+    this.selectedAbility.set(null);
+    this.abilityTargets.set([]);
     try {
       this.selectedPieceId.set(pieceId);
       // Diagnostics: log request and responses for Move/Attack
@@ -172,11 +176,90 @@ export class GameViewModel {
       this.board.set({ pieces: playerPieces } as any);
       this.highlighted.set([]);
       this.highlightedAttacks.set([]);
+      this.selectedAbility.set(null);
+      this.abilityTargets.set([]);
       this.selectedPiece.set(null);
       this.selectedPieceId.set(null);
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось выполнить атаку');
     }
+  }
+
+  getAbilitiesForSelected(): { name: string; manaCost: number; range?: number; cooldown?: number }[] {
+    const piece = this.selectedPiece();
+    if (!piece) return [];
+    const type = typeof (piece as any).type === 'number' ? this.mapEnumToName((piece as any).type as number) : String((piece as any).type);
+    const cooldowns = (piece as any).abilityCooldowns as Record<string, number> | undefined;
+    const cd = (name: string) => (cooldowns?.[name] ?? 0);
+    switch (type) {
+      case 'Pawn':
+        return [
+          { name: 'ShieldBash', manaCost: 2, range: 1, cooldown: cd('ShieldBash') },
+          { name: 'Breakthrough', manaCost: 2, range: 1, cooldown: cd('Breakthrough') }
+        ];
+      case 'Knight':
+        return [
+          { name: 'DoubleStrike', manaCost: 5, range: 1, cooldown: cd('DoubleStrike') },
+          { name: 'IronStance', manaCost: 4, range: 0, cooldown: cd('IronStance') }
+        ];
+      case 'Bishop':
+        return [
+          { name: 'LightArrow', manaCost: 3, range: 4, cooldown: cd('LightArrow') },
+          { name: 'Heal', manaCost: 6, range: 2, cooldown: cd('Heal') }
+        ];
+      case 'Rook':
+        return [
+          { name: 'ArrowVolley', manaCost: 7, range: 8, cooldown: cd('ArrowVolley') },
+          { name: 'Fortress', manaCost: 8, range: 0, cooldown: cd('Fortress') }
+        ];
+      case 'Queen':
+        return [
+          { name: 'MagicBurst', manaCost: 10, range: 3, cooldown: cd('MagicBurst') },
+          { name: 'Resurrection', manaCost: 12, range: 0, cooldown: cd('Resurrection') }
+        ];
+      case 'King':
+        return [
+          { name: 'RoyalDecree', manaCost: 10, range: 0, cooldown: cd('RoyalDecree') }
+        ];
+      default:
+        return [];
+    }
+  }
+
+  async showAbilityTargets(gameId: string, abilityName: string): Promise<void> {
+    const pieceId = this.selectedPieceId();
+    if (!pieceId) return;
+    this.selectedAbility.set(abilityName);
+    try {
+      const targets = await this.api.getAbilityTargets(gameId, pieceId, abilityName);
+      this.abilityTargets.set(targets ?? []);
+      this.highlightedAttacks.set(targets ?? []); // используем красную подсветку для целей способности
+    } catch {
+      this.abilityTargets.set([]);
+      this.highlightedAttacks.set([]);
+    }
+  }
+
+  async useAbility(gameId: string, target: PositionDto): Promise<void> {
+    const pieceId = this.selectedPieceId();
+    const ability = this.selectedAbility();
+    if (!pieceId || !ability) return;
+    try {
+      await this.api.executeAction(gameId, 'Ability', pieceId, target, ability);
+      const updated = await this.api.getGameSession(gameId);
+      this.session.set(updated);
+      const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+      this.board.set({ pieces: playerPieces } as any);
+    } finally {
+      this.selectedAbility.set(null);
+      this.abilityTargets.set([]);
+      this.highlightedAttacks.set([]);
+    }
+  }
+
+  private mapEnumToName(enumValue: number): string {
+    const map: Record<number, string> = { 0: 'Pawn', 1: 'Knight', 2: 'Bishop', 3: 'Rook', 4: 'Queen', 5: 'King' };
+    return map[enumValue] ?? String(enumValue);
   }
 
   // Триггер показа диалога при достижении последней линии или XP-порога

@@ -15,6 +15,7 @@ export abstract class IApiClientService {
   abstract endTurn(gameId: string): Promise<void>;
   abstract getBoard(): Promise<GameBoardDto>;
   abstract getAvailableActions(gameId: string, pieceId: string, actionType: string): Promise<PositionDto[]>;
+  abstract getAbilityTargets(gameId: string, pieceId: string, abilityName: string): Promise<PositionDto[]>;
   abstract movePiece(gameId: string, pieceId: string, target: PositionDto): Promise<void>;
   abstract executeAction(gameId: string, type: 'Attack' | 'Ability', pieceId: string, target: PositionDto, description?: string): Promise<void>;
   abstract makeAiTurn(gameId: string): Promise<void>;
@@ -56,6 +57,11 @@ export class ApiClientService implements IApiClientService {
 
   async getAvailableActions(gameId: string, pieceId: string, actionType: string): Promise<PositionDto[]> {
     const url = `/api/v1/gamesession/${encodeURIComponent(gameId)}/piece/${encodeURIComponent(pieceId)}/actions?actionType=${encodeURIComponent(actionType)}`;
+    return await firstValueFrom(this.http.get<PositionDto[]>(url));
+  }
+
+  async getAbilityTargets(gameId: string, pieceId: string, abilityName: string): Promise<PositionDto[]> {
+    const url = `/api/v1/gamesession/${encodeURIComponent(gameId)}/piece/${encodeURIComponent(pieceId)}/actions?actionType=Ability&ability=${encodeURIComponent(abilityName)}`;
     return await firstValueFrom(this.http.get<PositionDto[]>(url));
   }
 

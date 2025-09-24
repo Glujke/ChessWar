@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IGameModeRepository, GameModeRepository>();
         
         services.AddScoped<IAttackRulesService, AttackRulesService>();
+        services.AddScoped<IAbilityTargetService, AbilityTargetService>();
         services.AddScoped<IMovementRulesService>(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<MovementRulesService>>();
