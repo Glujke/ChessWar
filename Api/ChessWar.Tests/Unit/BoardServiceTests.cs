@@ -2,6 +2,7 @@ using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.Configuration;
 using ChessWar.Application.Interfaces.Board;
 using ChessWar.Application.Services.Board;
 using FluentAssertions;
@@ -12,12 +13,14 @@ namespace ChessWar.Tests.Unit;
 public class BoardServiceTests
 {
     private readonly Mock<IPieceRepository> _pieceRepositoryMock;
+    private readonly Mock<IPieceFactory> _pieceFactoryMock;
     private readonly IBoardService _boardService;
 
     public BoardServiceTests()
     {
         _pieceRepositoryMock = new Mock<IPieceRepository>();
-        _boardService = new BoardService(_pieceRepositoryMock.Object);
+        _pieceFactoryMock = new Mock<IPieceFactory>();
+        _boardService = new BoardService(_pieceRepositoryMock.Object, _pieceFactoryMock.Object);
     }
 
     [Fact]
@@ -26,8 +29,8 @@ public class BoardServiceTests
         // Arrange
         var pieces = new List<Piece>
         {
-            new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)),
-            new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2))
+            new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 },
+            new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2)) { HP = 10 }
         };
         
         _pieceRepositoryMock
@@ -49,8 +52,8 @@ public class BoardServiceTests
         // Arrange
         var pieces = new List<Piece>
         {
-            new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)),
-            new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2))
+            new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 },
+            new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2)) { HP = 10 }
         };
         
         _pieceRepositoryMock
@@ -72,6 +75,10 @@ public class BoardServiceTests
             .Setup(x => x.AddAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        _pieceFactoryMock
+            .Setup(x => x.CreatePiece(It.IsAny<PieceType>(), It.IsAny<Team>(), It.IsAny<Position>(), It.IsAny<Player>()))
+            .Returns(new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0)) { HP = 10 });
+
         // Act
         await _boardService.SetupInitialPositionAsync();
 
@@ -87,6 +94,7 @@ public class BoardServiceTests
         var type = PieceType.Pawn;
         var team = Team.Elves;
         var position = new Position(1, 1);
+        var expectedPiece = new Piece(type, team, position) { HP = 10 };
         
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
@@ -95,6 +103,10 @@ public class BoardServiceTests
         _pieceRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+
+        _pieceFactoryMock
+            .Setup(x => x.CreatePiece(type, team, position, It.IsAny<Player>()))
+            .Returns(expectedPiece);
 
         // Act
         var result = await _boardService.PlacePieceAsync(type, team, position);
@@ -144,7 +156,7 @@ public class BoardServiceTests
         // Arrange
         var pieceId = 1;
         var newPosition = new Position(3, 3);
-        var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
+        var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 };
         
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
@@ -172,7 +184,7 @@ public class BoardServiceTests
         // Arrange
         var pieceId = 1;
         var invalidPosition = new Position(10, 10);
-        var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
+        var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 };
         
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
@@ -189,8 +201,8 @@ public class BoardServiceTests
         // Arrange
         var pieceId = 1;
         var occupiedPosition = new Position(2, 2);
-        var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
-        var pieceAtPosition = new Piece(PieceType.Knight, Team.Orcs, occupiedPosition);
+        var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 };
+        var pieceAtPosition = new Piece(PieceType.Knight, Team.Orcs, occupiedPosition) { HP = 10 };
         
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
@@ -226,7 +238,7 @@ public class BoardServiceTests
     {
         // Arrange
         var position = new Position(1, 1);
-        var expectedPiece = new Piece(PieceType.Pawn, Team.Elves, position);
+        var expectedPiece = new Piece(PieceType.Pawn, Team.Elves, position) { HP = 10 };
         
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
@@ -279,7 +291,7 @@ public class BoardServiceTests
     {
         // Arrange
         var position = new Position(1, 1);
-        var piece = new Piece(PieceType.Pawn, Team.Elves, position);
+        var piece = new Piece(PieceType.Pawn, Team.Elves, position) { HP = 10 };
         
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))

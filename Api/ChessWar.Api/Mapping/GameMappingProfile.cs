@@ -16,7 +16,7 @@ public class GameMappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
             .ForMember(dest => dest.Team, opt => opt.MapFrom(src => src.Team))
-            .ForMember(dest => dest.Position, opt => opt.MapFrom(src => new PositionDto { X = src.Position.X, Y = src.Position.Y }))
+            .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.IsAlive ? new PositionDto { X = src.Position.X, Y = src.Position.Y } : null))
             .ForMember(dest => dest.HP, opt => opt.MapFrom(src => src.HP))
             .ForMember(dest => dest.ATK, opt => opt.MapFrom(src => src.ATK))
             .ForMember(dest => dest.Range, opt => opt.MapFrom(src => src.Range))

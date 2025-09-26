@@ -3,17 +3,20 @@ using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.Configuration;
 
 namespace ChessWar.Application.Services.Board;
 
 public class BoardService : IBoardService
 {
     private readonly IPieceRepository _pieceRepository;
+    private readonly IPieceFactory _pieceFactory;
     private const int BoardSize = 8;
 
-    public BoardService(IPieceRepository pieceRepository)
+    public BoardService(IPieceRepository pieceRepository, IPieceFactory pieceFactory)
     {
         _pieceRepository = pieceRepository;
+        _pieceFactory = pieceFactory;
     }
 
     public async Task<GameBoard> GetBoardAsync(CancellationToken cancellationToken = default)
@@ -23,7 +26,7 @@ public class BoardService : IBoardService
         
         foreach (var piece in pieces)
         {
-            if (piece.Position != null)
+            if (piece.IsAlive && piece.Position != null)
             {
                 gameBoard.SetPieceAt(piece.Position, piece);
             }
@@ -47,15 +50,15 @@ public class BoardService : IBoardService
         
         for (int i = 0; i < 8; i++)
         {
-            pieces.Add(new Piece(PieceType.Pawn, Team.Elves, new Position(i, 1)));
+            pieces.Add(_pieceFactory.CreatePiece(PieceType.Pawn, Team.Elves, new Position(i, 1)));
         }
-        pieces.Add(new Piece(PieceType.King, Team.Elves, new Position(4, 0)));
+        pieces.Add(_pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 0)));
         
         for (int i = 0; i < 8; i++)
         {
-            pieces.Add(new Piece(PieceType.Pawn, Team.Orcs, new Position(i, 6)));
+            pieces.Add(_pieceFactory.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(i, 6)));
         }
-        pieces.Add(new Piece(PieceType.King, Team.Orcs, new Position(4, 7)));
+        pieces.Add(_pieceFactory.CreatePiece(PieceType.King, Team.Orcs, new Position(4, 7)));
 
         foreach (var piece in pieces)
         {
@@ -71,7 +74,7 @@ public class BoardService : IBoardService
         if (!await IsPositionFreeAsync(position, cancellationToken))
             throw new InvalidOperationException("Position is occupied");
 
-        var piece = new Piece(type, team, position);
+        var piece = _pieceFactory.CreatePiece(type, team, position);
         await _pieceRepository.AddAsync(piece, cancellationToken);
         return piece;
     }

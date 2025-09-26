@@ -3,6 +3,7 @@ using ChessWar.Domain.Enums;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.Interfaces.Configuration;
+using ChessWar.Domain.Interfaces.Configuration;
 
 namespace ChessWar.Domain.Services.GameLogic;
 
@@ -10,11 +11,13 @@ public class EvolutionService : IEvolutionService
 {
     private readonly IBalanceConfigProvider _configProvider;
     private readonly List<EvolutionRecord> _evolutionHistory;
+    private readonly IPieceFactory? _pieceFactory;
 
-    public EvolutionService(IBalanceConfigProvider configProvider)
+    public EvolutionService(IBalanceConfigProvider configProvider, IPieceFactory? pieceFactory = null)
     {
         _configProvider = configProvider;
         _evolutionHistory = new List<EvolutionRecord>();
+        _pieceFactory = pieceFactory;
     }
 
     public bool CanEvolve(Piece piece)
@@ -85,6 +88,10 @@ public class EvolutionService : IEvolutionService
 
     private Piece CreateEvolvedPiece(PieceType newType, Team team, Position position)
     {
+        if (_pieceFactory != null)
+        {
+            return _pieceFactory.CreatePiece(newType, team, position);
+        }
         return new Piece(newType, team, position);
     }
 

@@ -1,19 +1,23 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { NgIf, NgFor } from '@angular/common';
+import { GameStatusComponent } from './game-status.component';
+import { PieceContextComponent } from './piece-context.component';
+import { ResultOverlayComponent } from './result-overlay.component';
 import { ActivatedRoute } from '@angular/router';
 import { GameViewModel } from './game.view-model';
 
 @Component({
   selector: 'app-game',
   standalone: true,
-  imports: [NgIf, NgFor],
+  imports: [NgIf, NgFor, GameStatusComponent, PieceContextComponent, ResultOverlayComponent],
   template: `
     <h2>Game Session: {{ gameId() }}</h2>
     <p *ngIf="vm.error()" style="color: red;">{{ vm.error() }}</p>
     <p *ngIf="vm.isLoading()">Загрузка...</p>
     <div *ngIf="vm.session() as s">
-      <div>Ход: {{ s.currentTurn?.number ?? '?' }} | Чей ход: {{ vm.isMyTurn() ? 'Player' : 'AI' }} | Мана: {{ vm.manaText() }}</div>
+      <app-game-status [gameId]="gameId()" />
       <button type="button" (click)="vm.endTurn(gameId())" [disabled]="vm.isLoading()">Завершить ход</button>
+        <button type="button" (click)="vm.enableHints(true)" [disabled]="vm.isLoading()" style="margin-left:8px;">Показать подсказки</button>
       <div *ngIf="vm.board() as b" style="margin-top: 12px; display: flex; gap: 16px; align-items: flex-start;">
         <div style="display: grid; gap: 2px; width: fit-content;" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 40px)'">
           <ng-container *ngFor="let y of [].constructor(b.size || b.height || 8); let row = index">
@@ -25,15 +29,7 @@ import { GameViewModel } from './game.view-model';
           </ng-container>
         </div>
         <div style="min-width: 220px;">
-          <h4>Способности</h4>
-          <div *ngIf="vm.selectedPiece() as p; else noPiece">
-            <button *ngFor="let a of vm.getAbilitiesForSelected()" type="button" style="display:block; margin:4px 0;" (click)="vm.showAbilityTargets(gameId(), a.name)" [disabled]="vm.isLoading() || (a.cooldown ?? 0) > 0">
-              {{ a.name }} ({{ a.manaCost }} MP) <span *ngIf="(a.cooldown ?? 0) > 0">CD {{ a.cooldown }}</span>
-            </button>
-          </div>
-          <ng-template #noPiece>
-            <div style="color:#666;">Выберите фигуру</div>
-          </ng-template>
+          <app-piece-context [gameId]="gameId()" />
         </div>
       </div>
       <!-- Диалог эволюции -->
@@ -47,16 +43,7 @@ import { GameViewModel } from './game.view-model';
           </div>
         </div>
       </div>
-      <!-- Экран завершения игры -->
-      <div *ngIf="vm.isGameFinished()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;">
-        <div style="background:#fff; padding:20px; border-radius:10px; min-width:320px; text-align:center;">
-          <h2>{{ vm.gameResult() === 'Player1Victory' ? 'Победа!' : 'Поражение' }}</h2>
-          <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
-            <a routerLink="/" style="padding:8px 12px; border:1px solid #ccc; border-radius:6px;">В меню</a>
-            <button type="button" (click)="onReplay()">Сыграть ещё раз</button>
-          </div>
-        </div>
-      </div>
+      <app-result-overlay [visible]="vm.isGameFinished()" [isWin]="vm.gameResult() === 'Player1Victory'" (toMenu)="toMenu()" (replay)="onReplay()" />
       <!-- Подсказки обучения -->
       <div *ngIf="vm.showHints()" style="position:fixed; left:12px; bottom:12px; background:#fff; border:1px solid #ddd; padding:10px; border-radius:8px; max-width:320px;">
         <div *ngIf="vm.tutorialStep() === 1">Выбери свою фигуру. Подсказка: свои отмечены синим.</div>
@@ -92,6 +79,10 @@ export class GameComponent implements OnInit {
     if (id) {
       void this.vm.load(id);
     }
+  }
+
+  toMenu(): void {
+    location.href = '/';
   }
 
   onCellClick(x: number, y: number): void {

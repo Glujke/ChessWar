@@ -1,6 +1,7 @@
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.Interfaces.GameLogic;
+using ChessWar.Application.Interfaces.GameManagement;
 
 namespace ChessWar.Application.Commands.GameActionCommands;
 
@@ -13,17 +14,20 @@ public class EvolutionCommand : ICommand
     private readonly Piece _piece;
     private readonly PieceType _targetType;
     private readonly IEvolutionService _evolutionService;
+    private readonly IGameNotificationService? _notificationService;
 
     public EvolutionCommand(
         GameSession gameSession,
         Piece piece,
         PieceType targetType,
-        IEvolutionService evolutionService)
+        IEvolutionService evolutionService,
+        IGameNotificationService? notificationService = null)
     {
         _gameSession = gameSession ?? throw new ArgumentNullException(nameof(gameSession));
         _piece = piece ?? throw new ArgumentNullException(nameof(piece));
         _targetType = targetType;
         _evolutionService = evolutionService ?? throw new ArgumentNullException(nameof(evolutionService));
+        _notificationService = notificationService;
     }
 
     public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
@@ -42,15 +46,7 @@ public class EvolutionCommand : ICommand
             }
         }
 
-        Piece evolved;
-        if (_piece.Type == PieceType.Pawn && !_evolutionService.MeetsEvolutionRequirements(_piece, _targetType))
-        {
-            evolved = new Piece(_targetType, _piece.Team, _piece.Position);
-        }
-        else
-        {
-            evolved = _evolutionService.EvolvePiece(_piece, _targetType);
-        }
+        var evolved = _evolutionService.EvolvePiece(_piece, _targetType);
 
         evolved.Id = _piece.Id;
         evolved.Owner = _piece.Owner;
@@ -62,6 +58,17 @@ public class EvolutionCommand : ICommand
         evolved.Position = pos;
         _gameSession.Board.PlacePiece(evolved);
         
+        if (_notificationService != null)
+        {
+            await _notificationService.NotifyPieceEvolvedAsync(
+                _gameSession.Id,
+                evolved.Id.ToString(),
+                evolved.Type.ToString(),
+                evolved.Position.X,
+                evolved.Position.Y,
+                cancellationToken);
+        }
+
         return await Task.FromResult(true);
     }
 }

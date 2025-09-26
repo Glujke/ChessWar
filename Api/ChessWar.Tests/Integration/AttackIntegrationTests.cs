@@ -104,7 +104,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
             
             // Проверяем, убита ли цель
             var currentState = await GetGameState(session.Id);
-            var targetPiece = currentState.Player2.Pieces.FirstOrDefault(p => p.Position.X == 1 && p.Position.Y == 6);
+            var targetPiece = currentState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
             
             if (targetPiece == null || targetPiece.HP <= 0)
             {
@@ -126,7 +126,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         var finalAttacker = finalState.Player1.Pieces.First(p => p.Id == attacker.Id);
         
         // Ищем пешку на позиции (1,6) - ту, которую мы атаковали
-        var attackedPawn = finalState.Player2.Pieces.FirstOrDefault(p => p.Position.X == 1 && p.Position.Y == 6);
+        var attackedPawn = finalState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
 
         // Отладочная информация
         Console.WriteLine($"Final attacker XP: {finalAttacker.XP}, Initial: {initialAttackerXP}");
@@ -144,7 +144,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         else
         {
             // Если фигура удалена с доски, это тоже нормально
-            finalState.Player2.Pieces.Should().NotContain(p => p.Position.X == 1 && p.Position.Y == 6, "Убитая фигура должна быть удалена с доски");
+            finalState.Player2.Pieces.Should().NotContain(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6, "Убитая фигура должна быть удалена с доски");
         }
 
         // Проверяем, что атакующий получил опыт за убийство (основная цель теста)

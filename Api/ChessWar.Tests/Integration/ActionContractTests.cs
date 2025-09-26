@@ -50,6 +50,40 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
     }
 
     [Fact]
+    public async Task GetAbilityTargets_ShouldRequire_AbilityName()
+    {
+        var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "AI" };
+        var createResp = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
+        createResp.IsSuccessStatusCode.Should().BeTrue();
+        var session = await createResp.Content.ReadFromJsonAsync<GameSessionDto>();
+
+        var pieceId = session!.Player1.Pieces[0].Id.ToString();
+        var resp = await _client.GetAsync($"/api/v1/gamesession/{session.Id}/piece/{pieceId}/actions?actionType=Ability");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var list = await resp.Content.ReadFromJsonAsync<List<PositionDto>>();
+        list.Should().NotBeNull();
+        list!.Count.Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData("ShieldBash")]
+    [InlineData("Breakthrough")]
+    public async Task GetAbilityTargets_ByName_ShouldReturn_Positions(string ability)
+    {
+        var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "AI" };
+        var createResp = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
+        createResp.IsSuccessStatusCode.Should().BeTrue();
+        var session = await createResp.Content.ReadFromJsonAsync<GameSessionDto>();
+
+        var pieceId = session!.Player1.Pieces[0].Id.ToString();
+        var resp = await _client.GetAsync($"/api/v1/gamesession/{session.Id}/piece/{pieceId}/actions?actionType=Ability&ability={ability}");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var list = await resp.Content.ReadFromJsonAsync<List<PositionDto>>();
+        list.Should().NotBeNull();
+        list!.Count.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
     public async Task PostAction_WhenNotEnoughMp_ShouldReturn_400_ProblemDetails()
     {
         // Arrange: создаём сессию

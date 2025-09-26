@@ -6,6 +6,7 @@ using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Services.TurnManagement;
+using ChessWar.Application.Interfaces.GameManagement;
 
 namespace ChessWar.Application.Commands;
 
@@ -17,15 +18,18 @@ public class CommandFactory : ICommandFactory
     private readonly ITurnService _turnService;
     private readonly IAbilityService _abilityService;
     private readonly IEvolutionService _evolutionService;
+    private readonly IGameNotificationService _notificationService;
 
     public CommandFactory(
         ITurnService turnService,
         IAbilityService abilityService,
-        IEvolutionService evolutionService)
+        IEvolutionService evolutionService,
+        IGameNotificationService notificationService)
     {
         _turnService = turnService ?? throw new ArgumentNullException(nameof(turnService));
         _abilityService = abilityService ?? throw new ArgumentNullException(nameof(abilityService));
         _evolutionService = evolutionService ?? throw new ArgumentNullException(nameof(evolutionService));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
 
     public ICommand? CreateCommand(string actionType, GameSession gameSession, Turn turn, Piece piece, PositionDto? targetPosition, string? description)
@@ -69,6 +73,6 @@ public class CommandFactory : ICommandFactory
     {
         if (string.IsNullOrWhiteSpace(description)) return null;
         if (!Enum.TryParse<PieceType>(description, out var targetType)) return null;
-        return new EvolutionCommand(gameSession, piece, targetType, _evolutionService);
+        return new EvolutionCommand(gameSession, piece, targetType, _evolutionService, _notificationService);
     }
 }

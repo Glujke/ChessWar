@@ -34,7 +34,7 @@ describe('MenuViewModel (TDD)', () => {
     await vm.onClickTutorial();
 
     expect(startTutorial).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith(['/game', 'g-777']);
+    expect(navigate).toHaveBeenCalledWith(['/gamesession', 'g-777']);
   });
 });
 

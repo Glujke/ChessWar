@@ -27,6 +27,8 @@ export class GameViewModel {
   readonly showHints = signal(true);
   // Log panel
   readonly logs = signal<{ ts: string; level: 'info' | 'error' | 'event'; source: string; message: string; data?: unknown }[]>([]);
+  // Одноразовое исключение для только что эволюционировавшей фигуры
+  private justEvolvedPieceId: string | null = null;
 
   private addLog(level: 'info' | 'error' | 'event', source: string, message: string, data?: unknown): void {
     const ts = new Date().toLocaleTimeString();
@@ -34,6 +36,82 @@ export class GameViewModel {
     this.logs.update(list => [entry, ...list].slice(0, 200));
   }
   clearLogs(): void { this.logs.set([]); }
+
+  private logAttackDetails(beforePieces: PieceDto[], afterPieces: PieceDto[], attackerId: string, target: PositionDto): void {
+    // Находим атакующую фигуру
+    const attacker = afterPieces.find(p => String(p.id) === String(attackerId));
+    if (!attacker) return;
+
+    // Находим цель атаки по позиции
+    const targetPiece = beforePieces.find(p => 
+      (p as any).position?.x === target.x && (p as any).position?.y === target.y
+    );
+    
+    if (!targetPiece) return;
+
+    const targetAfter = afterPieces.find(p => String(p.id) === String(targetPiece.id));
+    const targetHpBefore = (targetPiece as any).hp ?? 0;
+    const targetHpAfter = targetAfter ? ((targetAfter as any).hp ?? 0) : 0;
+    const damage = targetHpBefore - targetHpAfter;
+    const isDead = !targetAfter || targetHpAfter <= 0;
+
+    if (damage > 0) {
+      const attackerName = typeof (attacker as any).type === 'number' ? 
+        this.mapEnumToName((attacker as any).type as number) : 
+        String((attacker as any).type);
+      const targetName = typeof (targetPiece as any).type === 'number' ? 
+        this.mapEnumToName((targetPiece as any).type as number) : 
+        String((targetPiece as any).type);
+
+      if (isDead) {
+        this.addLog('event', 'COMBAT', `💀 ${attackerName} убил ${targetName} (урон: ${damage})`);
+      } else {
+        this.addLog('event', 'COMBAT', `⚔️ ${attackerName} атаковал ${targetName}: урон ${damage}, HP ${targetHpAfter}/${targetHpBefore}`);
+      }
+    }
+  }
+
+  private logAbilityDetails(beforePieces: PieceDto[], afterPieces: PieceDto[], casterId: string, ability: string, target: PositionDto): void {
+    // Находим кастера
+    const caster = afterPieces.find(p => String(p.id) === String(casterId));
+    if (!caster) return;
+
+    // Находим цель способности по позиции
+    const targetPiece = beforePieces.find(p => 
+      (p as any).position?.x === target.x && (p as any).position?.y === target.y
+    );
+    
+    if (!targetPiece) return;
+
+    const targetAfter = afterPieces.find(p => String(p.id) === String(targetPiece.id));
+    const targetHpBefore = (targetPiece as any).hp ?? 0;
+    const targetHpAfter = targetAfter ? ((targetAfter as any).hp ?? 0) : 0;
+    const damage = targetHpBefore - targetHpAfter;
+    const isDead = !targetAfter || targetHpAfter <= 0;
+
+    const casterName = typeof (caster as any).type === 'number' ? 
+      this.mapEnumToName((caster as any).type as number) : 
+      String((caster as any).type);
+    const targetName = typeof (targetPiece as any).type === 'number' ? 
+      this.mapEnumToName((targetPiece as any).type as number) : 
+      String((targetPiece as any).type);
+
+    if (damage > 0) {
+      // Атакующая способность
+      if (isDead) {
+        this.addLog('event', 'ABILITY', `💀 ${casterName} использовал ${ability} и убил ${targetName} (урон: ${damage})`);
+      } else {
+        this.addLog('event', 'ABILITY', `✨ ${casterName} использовал ${ability} на ${targetName}: урон ${damage}, HP ${targetHpAfter}/${targetHpBefore}`);
+      }
+    } else if (targetHpAfter > targetHpBefore) {
+      // Лечащая способность
+      const healing = targetHpAfter - targetHpBefore;
+      this.addLog('event', 'ABILITY', `💚 ${casterName} использовал ${ability} на ${targetName}: лечение +${healing}, HP ${targetHpAfter}/${targetHpBefore}`);
+    } else {
+      // Другие способности (бафы, дебафы и т.д.)
+      this.addLog('event', 'ABILITY', `✨ ${casterName} использовал ${ability} на ${targetName}`);
+    }
+  }
 
   readonly manaText = computed(() => {
     const s = this.session();
@@ -50,6 +128,28 @@ export class GameViewModel {
     const activeId = s.currentTurn?.activeParticipant?.id ?? s.player1?.id;
     return activeId === s.player1?.id;
   });
+
+  // Собираем фигуры для отображения на доске
+  private getLivePieces(snapshot: GameSessionDto): PieceDto[] {
+    const all = [...(snapshot.player1?.pieces ?? []), ...(snapshot.player2?.pieces ?? [])];
+    return all.filter(p => {
+      const hasPos = Boolean((p as any).position);
+      if (!hasPos) return false;
+      const isCorpse = ((p as any).isAlive === false) && (((p as any).hp ?? 0) <= 0);
+      // одноразовое послабление для только что эволюционировавшей фигуры
+      if (isCorpse && this.justEvolvedPieceId && String((p as any).id) === String(this.justEvolvedPieceId)) {
+        return true;
+      }
+      return !isCorpse;
+    });
+  }
+
+  enableHints(reset: boolean = false): void {
+    this.showHints.set(true);
+    if (reset) {
+      this.tutorialStep.set(1);
+    }
+  }
 
   readonly isPlayersPiece = (piece: PieceDto | null): boolean => {
     const s = this.session();
@@ -69,9 +169,9 @@ export class GameViewModel {
       const data = await this.api.getGameSession(gameId);
       this.session.set(data);
       // Предпочтем доску из сессии (через фигуры игроков), fallback — бэкендовый /board
-      const playerPieces = [...(data.player1?.pieces ?? []), ...(data.player2?.pieces ?? [])];
-      if (playerPieces.length > 0) {
-        this.board.set({ pieces: playerPieces } as any);
+      const live = this.getLivePieces(data);
+      if (live.length > 0) {
+        this.board.set({ pieces: live } as any);
       } else {
         const board = await this.api.getBoard();
         this.board.set(board);
@@ -87,7 +187,7 @@ export class GameViewModel {
       const refresh = async () => {
         const updated = await this.api.getGameSession(gameId);
         this.session.set(updated);
-        const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+        const pieces = this.getLivePieces(updated);
         this.board.set({ pieces } as any);
         if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
           this.isGameFinished.set(true);
@@ -98,6 +198,29 @@ export class GameViewModel {
       this.hub.on('GameEnded', async () => {
         this.addLog('event', 'SignalR', 'GameEnded');
         await refresh();
+      });
+      // PieceEvolved: точечное обновление фигуры
+      this.hub.on('PieceEvolved', (payload: any) => {
+        try {
+          const s = this.session();
+          if (!s) return;
+          const { pieceId, newType, position } = payload ?? {};
+          this.justEvolvedPieceId = String(pieceId ?? '');
+          const updateList = (list: PieceDto[]) => list.map(p => String(p.id) === String(pieceId) ? ({ ...p, type: newType, position } as any) : p);
+          const updated = {
+            ...s,
+            player1: { ...(s as any).player1, pieces: updateList((s as any).player1?.pieces ?? []) },
+            player2: { ...(s as any).player2, pieces: updateList((s as any).player2?.pieces ?? []) }
+          } as any;
+          this.session.set(updated);
+          const live = this.getLivePieces(updated);
+          this.board.set({ pieces: live } as any);
+          this.addLog('event', 'SignalR', 'PieceEvolved', payload);
+          // после первого применения исключения — снимаем флаг
+          this.justEvolvedPieceId = null;
+        } catch {
+          // ignore
+        }
       });
       // Универсальный слушатель: на любое событие обновляем сессию
       (this.hub as any).onAny?.(async (name: string, payload: unknown) => {
@@ -131,18 +254,22 @@ export class GameViewModel {
         updated = await this.api.getGameSession(gameId);
       }
       this.session.set(updated);
-      const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+      const pieces = this.getLivePieces(updated);
       this.board.set({ pieces } as any);
       if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
         this.isGameFinished.set(true);
         this.gameResult.set((updated as any).result ?? null);
+      }
+      // После возвращения хода игроку — вернуть подсказки к первому шагу
+      if (this.showHints() && this.tutorialStep() === 3) {
+        this.tutorialStep.set(1);
       }
     } catch (e: any) {
       // Если сервер вернул ошибку, всё равно попробуем обновить сессию:
       try {
         const updated = await this.api.getGameSession(gameId);
         this.session.set(updated);
-        const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+        const pieces = this.getLivePieces(updated);
         this.board.set({ pieces } as any);
         const finished = (updated as any).status === 'Finished' || (updated as any).status === 'finished';
         if (finished) {
@@ -210,7 +337,7 @@ export class GameViewModel {
       this.addLog('info', 'HTTP', 'POST /move ok', { pieceId, target });
       const updated = await this.api.getGameSession(gameId);
       this.session.set(updated);
-      const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+      const playerPieces = this.getLivePieces(updated);
       this.board.set({ pieces: playerPieces } as any);
       if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
         this.isGameFinished.set(true);
@@ -235,13 +362,33 @@ export class GameViewModel {
   async attackTarget(gameId: string, target: PositionDto): Promise<void> {
     const pieceId = this.selectedPieceId();
     if (!pieceId) return;
+    
+    // Сохраняем состояние до атаки для анализа урона
+    const beforeAttack = this.session();
+    const beforePieces = beforeAttack ? this.getLivePieces(beforeAttack) : [];
+    
+    // Диагностика: проверяем, что находится на целевой позиции
+    const targetPiece = beforePieces.find(p => 
+      (p as any).position?.x === target.x && (p as any).position?.y === target.y
+    );
+    const attacker = beforePieces.find(p => String(p.id) === String(pieceId));
+    
+    this.addLog('info', 'DEBUG', `Атака: ${attacker ? (attacker as any).type : '?'} (${pieceId}) -> (${target.x},${target.y})`, {
+      attacker: attacker ? { type: (attacker as any).type, position: (attacker as any).position } : null,
+      target: targetPiece ? { type: (targetPiece as any).type, position: (targetPiece as any).position, isAlive: (targetPiece as any).isAlive } : 'пустая клетка'
+    });
+    
     try {
       await this.api.executeAction(gameId, 'Attack', pieceId, target);
       this.addLog('info', 'HTTP', 'POST /turn/action Attack ok', { pieceId, target });
       const updated = await this.api.getGameSession(gameId);
       this.session.set(updated);
-      const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+      const playerPieces = this.getLivePieces(updated);
       this.board.set({ pieces: playerPieces } as any);
+      
+      // Анализируем изменения для логирования урона
+      this.logAttackDetails(beforePieces, playerPieces, pieceId, target);
+      
       if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
         this.isGameFinished.set(true);
         this.gameResult.set((updated as any).result ?? null);
@@ -330,7 +477,7 @@ export class GameViewModel {
       this.addLog('info', 'HTTP', 'POST /turn/action Ability ok', { ability, pieceId, target });
       const updated = await this.api.getGameSession(gameId);
       this.session.set(updated);
-      const playerPieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
+      const playerPieces = this.getLivePieces(updated);
       this.board.set({ pieces: playerPieces } as any);
       if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
         this.isGameFinished.set(true);
@@ -378,16 +525,21 @@ export class GameViewModel {
   async confirmEvolution(gameId: string, choice: 'Knight' | 'Bishop'): Promise<void> {
     const pieceId = this.selectedPieceId();
     if (!pieceId) return;
+    const prevPos = (this.selectedPiece() as any)?.position as PositionDto | undefined;
     this.isLoading.set(true);
     this.error.set(null);
     try {
-      const updated = await this.api.evolve(gameId, pieceId, choice);
+      let updated = await this.api.evolve(gameId, pieceId, choice);
       this.addLog('info', 'HTTP', 'POST /evolve ok', { pieceId, choice });
+      // Ставим одноразовый флаг для evolved piece — чтобы не скрыть её, если в первом снапшоте corpse-флаги
+      this.justEvolvedPieceId = String(pieceId);
       this.session.set(updated);
-      const pieces = [...(updated.player1?.pieces ?? []), ...(updated.player2?.pieces ?? [])];
-      this.board.set({ pieces } as any);
+      const finalPieces = this.getLivePieces(updated);
+      this.board.set({ pieces: finalPieces } as any);
       this.isEvolutionDialogOpen.set(false);
       this.evolutionChoice.set(null);
+      // сразу после первого апдейта снимаем флаг
+      this.justEvolvedPieceId = null;
     } catch (e: any) {
       this.error.set(e?.problem?.title ?? e?.message ?? 'Не удалось выполнить эволюцию');
       this.addLog('error', 'HTTP', 'POST /evolve failed', e);

@@ -42,4 +42,10 @@ public class GameNotificationService : IGameNotificationService
         _logger.LogInformation("Notified clients about tutorial advancement in session {TutorialId} to stage {Stage}", tutorialId, stage);
         await _hubClient.SendToGroupAsync(tutorialId.ToString(), "TutorialAdvanced", new { TutorialId = tutorialId, Stage = stage, Timestamp = DateTime.UtcNow }, cancellationToken);
     }
+
+    public async Task NotifyPieceEvolvedAsync(Guid sessionId, string pieceId, string newType, int x, int y, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Notified clients about piece evolution in session {SessionId}: {PieceId} -> {NewType} at ({X},{Y})", sessionId, pieceId, newType, x, y);
+        await _hubClient.SendToGroupAsync(sessionId.ToString(), "PieceEvolved", new { SessionId = sessionId, PieceId = pieceId, NewType = newType, Position = new { X = x, Y = y }, Timestamp = DateTime.UtcNow }, cancellationToken);
+    }
 }

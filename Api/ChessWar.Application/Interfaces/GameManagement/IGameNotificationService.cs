@@ -24,4 +24,9 @@ public interface IGameNotificationService
     /// Уведомляет о переходе стадии в туториале
     /// </summary>
     Task NotifyTutorialAdvancedAsync(Guid tutorialId, string stage, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Уведомляет об эволюции фигуры
+    /// </summary>
+    Task NotifyPieceEvolvedAsync(Guid sessionId, string pieceId, string newType, int x, int y, CancellationToken cancellationToken = default);
 }
