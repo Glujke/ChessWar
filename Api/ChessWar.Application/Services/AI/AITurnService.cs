@@ -23,7 +23,7 @@ public class AITurnService : IAITurnService
 
     public async Task<bool> MakeAiTurnAsync(GameSession gameSession, CancellationToken cancellationToken = default)
     {
-        if (gameSession.Mode != "AI") return false;
+        if (gameSession.Mode != "AI" && gameSession.Mode != "Tutorial" && gameSession.Mode != "Test") return false;
         
         var success = await _aiService.MakeAiTurnAsync(gameSession, cancellationToken);
         

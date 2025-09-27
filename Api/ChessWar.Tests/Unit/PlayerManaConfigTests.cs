@@ -11,10 +11,8 @@ public class PlayerManaConfigTests
     [Fact]
     public void PlayerManaSection_ShouldHaveDefaultValues()
     {
-        // Arrange & Act
         var config = new PlayerManaSection();
 
-        // Assert
         config.InitialMana.Should().Be(10);
         config.MaxMana.Should().Be(50);
         config.ManaRegenPerTurn.Should().Be(10);
@@ -32,7 +30,6 @@ public class PlayerManaConfigTests
     [Fact]
     public void PlayerManaSection_ShouldAllowCustomValues()
     {
-        // Arrange & Act
         var config = new PlayerManaSection
         {
             InitialMana = 20,
@@ -50,7 +47,6 @@ public class PlayerManaConfigTests
             }
         };
 
-        // Assert
         config.InitialMana.Should().Be(20);
         config.MaxMana.Should().Be(100);
         config.ManaRegenPerTurn.Should().Be(15);
@@ -62,7 +58,6 @@ public class PlayerManaConfigTests
     [Fact]
     public void BalanceConfig_ShouldIncludePlayerManaSection()
     {
-        // Arrange & Act
         var config = new BalanceConfig
         {
             Globals = new GlobalsSection { MpRegenPerTurn = 5, CooldownTickPhase = "EndTurn" },
@@ -80,10 +75,18 @@ public class PlayerManaConfigTests
                 NearEvolutionXp = 19,
                 LastRankEdgeY = new Dictionary<string, int>(),
                 KingAura = new KingAuraConfig { Radius = 3, AtkBonus = 1 }
+            },
+            KillRewards = new KillRewardsSection
+            {
+                Pawn = 10,
+                Knight = 20,
+                Bishop = 20,
+                Rook = 30,
+                Queen = 50,
+                King = 100
             }
         };
 
-        // Assert
         config.PlayerMana.Should().NotBeNull();
         config.PlayerMana.InitialMana.Should().Be(10);
         config.PlayerMana.MaxMana.Should().Be(50);

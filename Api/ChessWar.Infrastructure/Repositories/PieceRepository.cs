@@ -131,7 +131,6 @@ public class PieceRepository : IPieceRepository
             IsFirstMove = dto.IsFirstMove
         };
         
-        // Десериализуем кулдауны
         try
         {
             piece.AbilityCooldowns = JsonSerializer.Deserialize<Dictionary<string, int>>(dto.AbilityCooldownsJson) ?? new();

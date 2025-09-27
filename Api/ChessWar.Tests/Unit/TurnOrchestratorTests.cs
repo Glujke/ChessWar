@@ -39,7 +39,6 @@ public class TurnOrchestratorTests
         _configProviderMock = new Mock<IBalanceConfigProvider>();
         _loggerMock = new Mock<ILogger<TurnOrchestrator>>();
 
-        // Настраиваем мок конфигурации
         _configProviderMock
             .Setup(x => x.GetActive())
             .Returns(new BalanceConfig
@@ -59,6 +58,15 @@ public class TurnOrchestratorTests
                     NearEvolutionXp = 19,
                     LastRankEdgeY = new Dictionary<string, int>(),
                     KingAura = new KingAuraConfig { Radius = 3, AtkBonus = 1 }
+                },
+                KillRewards = new KillRewardsSection
+                {
+                    Pawn = 10,
+                    Knight = 20,
+                    Bishop = 20,
+                    Rook = 30,
+                    Queen = 50,
+                    King = 100
                 }
             });
 
@@ -75,18 +83,15 @@ public class TurnOrchestratorTests
     [Fact]
     public async Task EndTurnAsync_ShouldSwitchTurnBackToPlayer_AfterAiTurn()
     {
-        // Arrange: создаем игровую сессию в режиме AI
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new Player("AI", new List<Piece>());
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
-        // Настраиваем моки
         _turnCompletionServiceMock
             .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
             .Callback<GameSession, CancellationToken>((session, ct) =>
             {
-                // Симулируем переключение хода на ИИ после завершения хода игрока
                 var nextTurn = new Turn(2, aiPlayer);
                 session.SetCurrentTurn(nextTurn);
             });
@@ -99,17 +104,13 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
-        // Act: завершаем ход игрока
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // Assert: ход должен переключиться обратно на игрока после хода ИИ
         var finalActivePlayer = gameSession.GetCurrentTurn().ActiveParticipant;
         finalActivePlayer.Should().Be(player1, "ход должен переключиться обратно на игрока после хода ИИ");
         
-        // Проверяем, что ИИ сделал ход
         _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Once);
         
-        // Проверяем, что отправлено уведомление
         _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(
             gameSession.Id, 
             It.IsAny<object>(), 
@@ -119,7 +120,6 @@ public class TurnOrchestratorTests
     [Fact]
     public async Task EndTurnAsync_ShouldNotExecuteAiTurn_WhenNotAiMode()
     {
-        // Arrange: создаем игровую сессию в режиме LocalCoop
         var player1 = new Player("Player1", new List<Piece>());
         var player2 = new Player("Player2", new List<Piece>());
         var gameSession = new GameSession(player1, player2, "LocalCoop");
@@ -133,10 +133,8 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
-        // Act: завершаем ход
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // Assert: ИИ не должен делать ход в режиме LocalCoop
         _aiServiceMock.Verify(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()), Times.Never);
         _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(It.IsAny<Guid>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -144,7 +142,6 @@ public class TurnOrchestratorTests
     [Fact]
     public async Task EndTurnAsync_ShouldNotExecuteAiTurn_WhenPlayer1Turn()
     {
-        // Arrange: создаем игровую сессию в режиме AI, но ход Player1
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new Player("AI", new List<Piece>());
         var gameSession = new GameSession(player1, aiPlayer, "AI");
@@ -158,17 +155,14 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
-        // Act: завершаем ход (Player1 остается активным)
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // Assert: ИИ не должен делать ход, если активен Player1
         _aiServiceMock.Verify(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task EndTurnAsync_ShouldSendNotificationWithAiMoveDetails()
     {
-        // Arrange: создаем игровую сессию в режиме AI
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new Player("AI", new List<Piece>());
         var gameSession = new GameSession(player1, aiPlayer, "AI");
@@ -190,10 +184,8 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
-        // Act: завершаем ход
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // Assert: проверяем, что уведомление отправлено
         _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(
             gameSession.Id,
             It.IsAny<object>(),
@@ -203,7 +195,6 @@ public class TurnOrchestratorTests
     [Fact]
     public async Task EndTurnAsync_ShouldRestorePlayerMana_AfterAiTurn()
     {
-        // Arrange: создаем игровую сессию в режиме AI
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new Player("AI", new List<Piece>());
         
@@ -232,10 +223,8 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
-        // Act: завершаем ход игрока
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // Assert: проверяем, что мана игрока восстановлена после хода ИИ
         var finalActivePlayer = gameSession.GetCurrentTurn().ActiveParticipant;
         finalActivePlayer.Should().Be(player1, "ход должен переключиться обратно на игрока после хода ИИ");
         

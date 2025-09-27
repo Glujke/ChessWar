@@ -29,9 +29,9 @@ public enum AIDifficultyLevel
 public interface IAIDifficultyLevel
 {
     /// <summary>
-    /// Получить уровень сложности для игрока
+    /// Получить уровень сложности для участника
     /// </summary>
-    AIDifficultyLevel GetDifficultyLevel(Player player);
+    AIDifficultyLevel GetDifficultyLevel(Participant participant);
     
     /// <summary>
     /// Получить температуру для softmax (τ)

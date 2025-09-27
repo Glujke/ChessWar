@@ -9,4 +9,5 @@ public class ExecuteActionDto
     public string PieceId { get; set; } = string.Empty;
     public PositionDto? TargetPosition { get; set; }
     public string? Description { get; set; }
+    public string? AbilityName { get; set; }
 }

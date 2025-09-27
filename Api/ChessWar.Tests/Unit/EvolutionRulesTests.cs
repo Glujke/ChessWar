@@ -33,11 +33,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Pawn_WithEnoughXP_CanEvolveToKnightOrBishop()
     {
-        // Arrange
         var pawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
         pawn.XP = 20; // Достаточно XP для эволюции
 
-        // Act & Assert
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Pawn);
         
         Assert.Contains(PieceType.Knight, possibleEvolutions);
@@ -49,11 +47,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Pawn_WithEnoughXP_CannotEvolveToQueen()
     {
-        // Arrange
         var pawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
         pawn.XP = 20; // Достаточно XP для эволюции
 
-        // Act & Assert
         var canEvolveToQueen = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Queen);
         
         Assert.False(canEvolveToQueen);
@@ -62,11 +58,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Pawn_WithEnoughXP_CannotEvolveToRook()
     {
-        // Arrange
         var pawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
         pawn.XP = 20; // Достаточно XP для эволюции
 
-        // Act & Assert
         var canEvolveToRook = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Rook);
         
         Assert.False(canEvolveToRook);
@@ -75,11 +69,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Knight_WithEnoughXP_CanEvolveToRook()
     {
-        // Arrange
         var knight = new Piece(PieceType.Knight, Team.Orcs, new Position(0, 0));
         knight.XP = 40; // Достаточно XP для эволюции
 
-        // Act & Assert
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Knight);
         
         Assert.Contains(PieceType.Rook, possibleEvolutions);
@@ -89,11 +81,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Bishop_WithEnoughXP_CanEvolveToRook()
     {
-        // Arrange
         var bishop = new Piece(PieceType.Bishop, Team.Orcs, new Position(0, 0));
         bishop.XP = 40; // Достаточно XP для эволюции
 
-        // Act & Assert
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Bishop);
         
         Assert.Contains(PieceType.Rook, possibleEvolutions);
@@ -103,11 +93,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Rook_WithEnoughXP_CanEvolveToQueen()
     {
-        // Arrange
         var rook = new Piece(PieceType.Rook, Team.Orcs, new Position(0, 0));
         rook.XP = 60; // Достаточно XP для эволюции
 
-        // Act & Assert
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Rook);
         
         Assert.Contains(PieceType.Queen, possibleEvolutions);
@@ -116,11 +104,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Queen_CannotEvolve()
     {
-        // Arrange
         var queen = new Piece(PieceType.Queen, Team.Orcs, new Position(0, 0));
         queen.XP = 100; // Много XP, но не должно помочь
 
-        // Act & Assert
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Queen);
         
         Assert.Empty(possibleEvolutions);
@@ -129,11 +115,9 @@ public class EvolutionRulesTests
     [Fact]
     public void King_CannotEvolve()
     {
-        // Arrange
         var king = new Piece(PieceType.King, Team.Orcs, new Position(0, 0));
         king.XP = 100; // Много XP, но не должно помочь
 
-        // Act & Assert
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.King);
         
         Assert.Empty(possibleEvolutions);
@@ -142,11 +126,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Pawn_WithInsufficientXP_CannotEvolve()
     {
-        // Arrange
         var pawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
         pawn.XP = 19; // Недостаточно XP для эволюции
 
-        // Act & Assert
         var canEvolveToKnight = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Knight);
         var canEvolveToBishop = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Bishop);
         
@@ -157,11 +139,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Pawn_OnLastRank_CanEvolveImmediately()
     {
-        // Arrange - пешка орков на последней линии (y=0)
         var pawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
         pawn.XP = 0; // Без XP, но на последней линии
 
-        // Act & Assert
         var canEvolve = _evolutionService.CanEvolve(pawn);
         Assert.True(canEvolve);
     }
@@ -169,12 +149,9 @@ public class EvolutionRulesTests
     [Fact]
     public void Pawn_OnLastRank_CanEvolveToKnightOrBishop()
     {
-        // Arrange - пешка эльфов на последней линии (y=7)
         var pawn = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 7));
         pawn.XP = 0; // Без XP, но на последней линии
 
-        // Act & Assert
-        // На последней линии пешка может эволюционировать без XP через CanEvolve + EvolvePiece
         _evolutionService.CanEvolve(pawn).Should().BeTrue();
         var evolvedKnight = _evolutionService.EvolvePiece(pawn, PieceType.Knight);
         evolvedKnight.Type.Should().Be(PieceType.Knight);

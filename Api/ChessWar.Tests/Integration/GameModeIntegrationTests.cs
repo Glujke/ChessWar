@@ -20,7 +20,6 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task StartTutorial_ShouldReturnOk()
     {
-        // Arrange
         var request = new CreateTutorialSessionDto
         {
             PlayerId = "player123"
@@ -28,10 +27,8 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
         var json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // Act
         var response = await _client.PostAsync("/api/v1/game/tutorial", content);
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
         
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -48,7 +45,6 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task StartOnlineGame_ShouldReturnNotImplemented()
     {
-        // Arrange
         var request = new CreateOnlineSessionDto
         {
             HostPlayerId = "host123",
@@ -57,17 +53,14 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
         var json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // Act
         var response = await _client.PostAsync("/api/v1/game/online", content);
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotImplemented, response.StatusCode);
     }
 
     [Fact]
     public async Task StartLocalGame_ShouldReturnNotImplemented()
     {
-        // Arrange
         var request = new CreateLocalSessionDto
         {
             Player1Name = "Player1",
@@ -76,17 +69,14 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
         var json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // Act
         var response = await _client.PostAsync("/api/v1/game/local", content);
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotImplemented, response.StatusCode);
     }
 
     [Fact]
     public async Task StartAiGame_ShouldReturnNotImplemented()
     {
-        // Arrange
         var request = new CreateAiSessionDto
         {
             PlayerId = "player123",
@@ -95,33 +85,26 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
         var json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // Act
         var response = await _client.PostAsync("/api/v1/game/ai", content);
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotImplemented, response.StatusCode);
     }
 
     [Fact]
     public async Task GetPlayerStats_ShouldReturnNotImplemented()
     {
-        // Arrange
         var playerId = "player123";
 
-        // Act
         var response = await _client.GetAsync($"/api/v1/game/stats/{playerId}");
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.NotImplemented, response.StatusCode);
     }
 
     [Fact]
     public async Task GetAvailableModes_ShouldReturnOk()
     {
-        // Act
         var response = await _client.GetAsync("/api/v1/game/modes");
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
         
         var content = await response.Content.ReadAsStringAsync();

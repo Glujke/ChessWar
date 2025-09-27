@@ -25,17 +25,14 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_InsufficientMpException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var requiredMp = 5;
         var availableMp = 3;
         var pieceId = Guid.NewGuid();
         var exception = new InsufficientMpException(requiredMp, availableMp, pieceId);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -53,17 +50,14 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_AbilityOnCooldownException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var abilityName = "DoubleStrike";
         var remainingCooldown = 2;
         var pieceId = Guid.NewGuid();
         var exception = new AbilityOnCooldownException(abilityName, remainingCooldown, pieceId);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -78,17 +72,14 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_OutOfRangeException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var maxRange = 3;
         var actualDistance = 5;
         var pieceId = Guid.NewGuid();
         var exception = new OutOfRangeException(maxRange, actualDistance, pieceId);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -103,16 +94,13 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_LineOfSightBlockedException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var pieceId = Guid.NewGuid();
         var blockingPieceId = Guid.NewGuid();
         var exception = new LineOfSightBlockedException(pieceId, blockingPieceId);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -127,16 +115,13 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_PieceSwitchForbiddenException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var pieceId = Guid.NewGuid();
         var reason = "Turn already started";
         var exception = new PieceSwitchForbiddenException(pieceId, reason);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -151,16 +136,13 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_StageNotCompletedException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var stageName = "Battle1";
         var requiredCondition = "Defeat all enemies";
         var exception = new StageNotCompletedException(stageName, requiredCondition);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -175,15 +157,12 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_TutorialNotFoundException_With_Correct_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var tutorialId = Guid.NewGuid();
         var exception = new TutorialNotFoundException(tutorialId);
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.NotFound);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -197,14 +176,11 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Handle_Generic_Exception_With_Default_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var exception = new InvalidOperationException("Something went wrong");
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         context.Response.StatusCode.Should().Be((int)HttpStatusCode.InternalServerError);
         context.Response.ContentType.Should().Be("application/problem+json");
 
@@ -218,16 +194,13 @@ public class ProblemDetailsMiddlewareTests
     [Fact]
     public async Task Should_Include_TraceId_In_ProblemDetails()
     {
-        // Arrange
         var context = CreateHttpContext();
         var traceId = "test-trace-id";
         context.TraceIdentifier = traceId;
         var exception = new InsufficientMpException(5, 3, Guid.NewGuid());
 
-        // Act
         await _middleware.HandleExceptionAsync(context, exception);
 
-        // Assert
         var problemDetails = await GetProblemDetailsFromResponse(context);
         problemDetails.Extensions.Should().ContainKey("traceId");
         problemDetails.Extensions["traceId"]!.ToString().Should().Be(traceId);

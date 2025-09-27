@@ -57,7 +57,7 @@ public class BattlePresetService : IBattlePresetService
         return Task.CompletedTask;
     }
 
-    private void PresetAddPlayerCore(List<Piece> pieces, Team team, Player owner)
+    private void PresetAddPlayerCore(List<Piece> pieces, Team team, Participant owner)
     {
         for (int x = 0; x < 8; x++)
         {
@@ -70,7 +70,7 @@ public class BattlePresetService : IBattlePresetService
         pieces.Add(king);
     }
 
-    private void PresetAddEnemyBattle1(List<Piece> pieces, Team team, Player owner)
+    private void PresetAddEnemyBattle1(List<Piece> pieces, Team team, Participant owner)
     {
         for (int x = 0; x < 8; x++)
         {
@@ -83,7 +83,7 @@ public class BattlePresetService : IBattlePresetService
         pieces.Add(king);
     }
 
-    private void PresetAddEnemyBattle2(List<Piece> pieces, Team team, Player owner)
+    private void PresetAddEnemyBattle2(List<Piece> pieces, Team team, Participant owner)
     {
         for (int x = 0; x < 8; x++)
         {
@@ -105,7 +105,7 @@ public class BattlePresetService : IBattlePresetService
         pieces.Add(king);
     }
 
-    private void PresetAddEnemyBoss(List<Piece> pieces, Team team, Player owner)
+    private void PresetAddEnemyBoss(List<Piece> pieces, Team team, Participant owner)
     {
         var queen = _pieceFactory.CreatePiece(PieceType.Queen, team, new Position(3, 6), owner);
         queen.Id = _pieceIdGenerator.GetNextId();

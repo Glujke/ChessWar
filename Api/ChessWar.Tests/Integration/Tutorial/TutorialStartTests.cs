@@ -38,7 +38,6 @@ public class TutorialStartTests : IClassFixture<WebApplicationFactory<Program>>
         }
         else
         {
-            // embed requested => _embedded must be present
             Assert.Fail("_embedded expected when embed=(game)");
         }
     }

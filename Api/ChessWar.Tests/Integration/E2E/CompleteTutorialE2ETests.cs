@@ -23,14 +23,13 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 {
     private readonly HttpClient _client;
     private readonly ILogger<CompleteTutorialE2ETests> _logger;
-    private ProbabilisticAIService? _hardAI;
+    private ChessWar.Domain.Services.AI.AIService? _hardAI;
 
     public CompleteTutorialE2ETests(WebApplicationFactory<Program> factory)
     {
         _client = factory.CreateClient();
         _logger = factory.Services.GetRequiredService<ILogger<CompleteTutorialE2ETests>>();
         _logger.LogInformation("=== КОНСТРУКТОР CompleteTutorialE2ETests ===");
-        // Hard AI больше не нужен - используем реальные ходы игрока
         _logger.LogInformation("=== КОНСТРУКТОР ЗАВЕРШЕН ===");
     }
 
@@ -40,52 +39,44 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         {
             _logger.LogInformation("=== ИНИЦИАЛИЗАЦИЯ HARD AI ===");
             
-            // Создаем моки для зависимостей Hard AI
             var probabilityMatrixMock = new Mock<IProbabilityMatrix>();
             var gameStateEvaluatorMock = new Mock<IGameStateEvaluator>();
             var difficultyProviderMock = new Mock<IAIDifficultyLevel>();
             var turnServiceMock = new Mock<ITurnService>();
             var abilityServiceMock = new Mock<IAbilityService>();
-            var loggerMock = new Mock<ILogger<ProbabilisticAIService>>();
+            var loggerMock = new Mock<ILogger<ChessWar.Domain.Services.AI.AIService>>();
 
-            // Настраиваем Hard AI
-            difficultyProviderMock.Setup(x => x.GetDifficultyLevel(It.IsAny<Player>())).Returns(AIDifficultyLevel.Hard);
+            difficultyProviderMock.Setup(x => x.GetDifficultyLevel(It.IsAny<ChessWar.Domain.Entities.AI>())).Returns(AIDifficultyLevel.Hard);
             
-            // НАСТРАИВАЕМ МОКИ ДЛЯ РАБОТЫ
-            // Настраиваем TurnService для выполнения ходов
             turnServiceMock.Setup(x => x.ExecuteMove(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
                 .Returns(true);
             
-            // Настраиваем TurnService для выполнения атак
             turnServiceMock.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
                 .Returns(true);
             
-            // Настраиваем TurnService для получения доступных ходов
             turnServiceMock.Setup(x => x.GetAvailableMoves(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>()))
                 .Returns(new List<Position> { new Position(0, 2), new Position(1, 2), new Position(2, 2) });
             
-            // Настраиваем TurnService для получения доступных атак
             turnServiceMock.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
                 .Returns(new List<Position> { new Position(0, 3), new Position(1, 3) });
             
-            // Настраиваем AbilityService для использования способностей
             abilityServiceMock.Setup(x => x.UseAbility(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
                 .Returns(true);
             
-            // Настраиваем GameStateEvaluator для оценки позиции
             gameStateEvaluatorMock.Setup(x => x.EvaluateGameState(It.IsAny<GameSession>(), It.IsAny<Player>()))
                 .Returns(0.5);
             
-            // Настраиваем ProbabilityMatrix для выбора действий
             probabilityMatrixMock.Setup(x => x.GetActionProbability(It.IsAny<GameSession>(), It.IsAny<GameAction>()))
                 .Returns(0.8);
             
-            _hardAI = new ProbabilisticAIService(
-                probabilityMatrixMock.Object,
-                gameStateEvaluatorMock.Object,
-                difficultyProviderMock.Object,
-                turnServiceMock.Object,
-                abilityServiceMock.Object,
+            var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnServiceMock.Object, abilityServiceMock.Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
+            var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrixMock.Object, gameStateEvaluatorMock.Object, difficultyProviderMock.Object);
+            var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnServiceMock.Object, abilityServiceMock.Object);
+            
+            _hardAI = new ChessWar.Domain.Services.AI.AIService(
+                actionGenerator,
+                actionSelector,
+                actionExecutor,
                 loggerMock.Object
             );
             
@@ -122,7 +113,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
             var currentTurn = root.TryGetProperty("currentTurn", out var turnElement) ? turnElement.GetInt32() : 1;
 
-            // Создаем GameSession с правильным конструктором
             var player1 = players.FirstOrDefault(p => p.Name.Contains("Player1") || p.Name.Contains("1"));
             var player2 = players.FirstOrDefault(p => p.Name.Contains("Player2") || p.Name.Contains("2"));
             
@@ -187,7 +177,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task CompleteTutorial_FromStartToFinish_ShouldWork()
     {
-        // === ЭТАП 1: СОЗДАНИЕ TUTORIAL ===
         var startResponse = await _client.PostAsync("/api/v1/game/tutorial?embed=(game)", Json(new { playerId = "player-e2e-test" }));
         startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -196,11 +185,9 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var gameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
         gameId.Should().NotBeNullOrEmpty();
 
-        // Проверяем, что создался Battle1 preset
         var game = startDoc.RootElement.GetProperty("_embedded").GetProperty("game");
         var player2Pieces = game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
         
-        // Должен быть король на (4,7) и пешки на y=6
         var king = player2Pieces.FirstOrDefault(p => 
         {
             var typeElement = p.GetProperty("type");
@@ -222,7 +209,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         }).Count();
         pawns.Should().BeGreaterOrEqualTo(6);
 
-        // === ЭТАП 2: ПРОХОЖДЕНИЕ BATTLE1 ===
         try
         {
             _logger.LogInformation("=== ВЫЗЫВАЕМ PlayTutorialBattle ===");
@@ -236,7 +222,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             throw;
         }
 
-        // === ЭТАП 3: ПЕРЕХОД К BATTLE2 ===
         var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition?embed=(game)", 
             Json(new { action = "advance" }));
         advanceResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -246,7 +231,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var battle2GameId = advanceDoc.RootElement.GetProperty("gameSessionId").GetString();
         battle2GameId.Should().NotBeNullOrEmpty();
 
-        // Проверяем Battle2 preset (должен содержать коня и слона)
         var battle2Game = advanceDoc.RootElement.GetProperty("_embedded").GetProperty("game");
         var battle2Pieces = battle2Game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
         
@@ -267,10 +251,8 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         });
         bishop.Should().NotBeNull();
 
-        // === ЭТАП 4: ПРОХОЖДЕНИЕ BATTLE2 ===
         await PlayTutorialBattle(battle2GameId!, "Battle2");
 
-        // === ЭТАП 5: ПЕРЕХОД К BOSS ===
         var advanceToBossResponse = await _client.PostAsync($"/api/v1/gamesession/{battle2GameId}/tutorial/transition?embed=(game)", 
             Json(new { action = "advance" }));
         advanceToBossResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -280,7 +262,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var bossGameId = bossDoc.RootElement.GetProperty("gameSessionId").GetString();
         bossGameId.Should().NotBeNullOrEmpty();
 
-        // Проверяем Boss preset (должен содержать ферзя)
         var bossGame = bossDoc.RootElement.GetProperty("_embedded").GetProperty("game");
         var bossPieces = bossGame.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
         
@@ -293,16 +274,12 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         });
         queen.Should().NotBeNull();
 
-        // === ЭТАП 6: ПРОХОЖДЕНИЕ BOSS ===
         await PlayTutorialBattle(bossGameId!, "Boss");
 
-        // === ЭТАП 7: ЗАВЕРШЕНИЕ TUTORIAL ===
-        // После победы игра уже завершена. Пытаемся сделать advance — ожидаем 409 (tutorial завершён)
         var finalAdvanceResponse = await _client.PostAsync($"/api/v1/gamesession/{bossGameId}/tutorial/transition?embed=(game)", 
             Json(new { action = "advance" }));
         finalAdvanceResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
-        // Проверяем, что Tutorial завершен
         var finalGameResponse = await _client.GetAsync($"/api/v1/gamesession/{bossGameId}");
         finalGameResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         
@@ -313,7 +290,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task TutorialReplay_ShouldCreateNewGameSession()
     {
-        // Создаем Tutorial
         var startResponse = await _client.PostAsync("/api/v1/game/tutorial", Json(new { playerId = "player-replay-test" }));
         startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -321,7 +297,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         using var startDoc = JsonDocument.Parse(startJson);
         var originalGameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
 
-        // Делаем replay
         var replayResponse = await _client.PostAsync($"/api/v1/gamesession/{originalGameId}/tutorial/transition", 
             Json(new { action = "replay" }));
         replayResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -330,11 +305,9 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         using var replayDoc = JsonDocument.Parse(replayJson);
         var newGameId = replayDoc.RootElement.GetProperty("gameSessionId").GetString();
 
-        // Проверяем, что создался новый game session
         newGameId.Should().NotBeNullOrEmpty();
         newGameId.Should().NotBe(originalGameId);
 
-        // Проверяем, что новый game session работает
         var newGameResponse = await _client.GetAsync($"/api/v1/gamesession/{newGameId}");
         newGameResponse.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -342,7 +315,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task TutorialAdvance_WithoutVictory_ShouldReturn409()
     {
-        // Создаем Tutorial
         var startResponse = await _client.PostAsync("/api/v1/game/tutorial", Json(new { playerId = "player-advance-test" }));
         startResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -350,12 +322,10 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         using var startDoc = JsonDocument.Parse(startJson);
         var gameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
 
-        // Пытаемся advance без победы
         var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition", 
             Json(new { action = "advance" }));
         advanceResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
-        // Проверяем ProblemDetails
         var problemJson = await advanceResponse.Content.ReadAsStringAsync();
         using var problemDoc = JsonDocument.Parse(problemJson);
         var title = problemDoc.RootElement.GetProperty("title").GetString();
@@ -369,16 +339,13 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
     {
         _logger.LogInformation($"=== Начинаем игру в {battleName} ===");
         
-        // Показываем начальную доску
         await LogBoard(gameId, $"НАЧАЛО {battleName}");
 
-        // Играем до победы (максимум 300 ходов)
         for (int move = 1; move <= 300; move++)
         {
             _logger.LogInformation($"=== Ход {move} ===");
             _logger.LogInformation($"ВХОДИМ В ЦИКЛ ХОДА {move}");
 
-            // Проверяем статус игры
             var gameStatus = await GetGameStatus(gameId);
             if (gameStatus != "Active")
             {
@@ -386,16 +353,13 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                 break;
             }
 
-            // РЕАЛЬНЫЙ ХОД ИГРОКА (Player1) - через API
             _logger.LogInformation($"ВЫЗЫВАЕМ MakeRealPlayerMove для хода {move}");
             await MakeRealPlayerMove(gameId, move);
             _logger.LogInformation($"MakeRealPlayerMove завершен для хода {move}");
 
-            // Завершаем ход игрока
             var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/end", null);
             endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK, $"Завершение хода игрока в {battleName} должно быть успешным");
 
-            // Проверяем статус после хода игрока
             var statusAfterPlayer = await GetGameStatus(gameId);
             if (statusAfterPlayer != "Active")
             {
@@ -403,14 +367,12 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                 break;
             }
 
-            // AI ход за Player2 (Medium) - через TurnOrchestrator
             var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/ai", null);
             if (aiTurnResponse.StatusCode == HttpStatusCode.OK)
             {
                 _logger.LogInformation($"AI сделал ход {move}");
             }
 
-            // Проверяем статус после хода AI
             var statusAfterAI = await GetGameStatus(gameId);
             if (statusAfterAI != "Active")
             {
@@ -419,17 +381,14 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             }
         }
 
-        // Показываем финальную доску
         await LogBoard(gameId, $"ФИНАЛ {battleName}");
 
-        // Проверяем финальный статус
         var finalStatus = await GetGameStatus(gameId);
         finalStatus.Should().NotBe("Active", $"Игра {battleName} должна быть завершена за 300 ходов");
     }
 
     private async Task MakeSimplePlayerMove(string gameId, int moveNumber)
     {
-        // Получаем текущее состояние игры
         var gameResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
         gameResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -437,7 +396,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         using var gameDoc = JsonDocument.Parse(gameJson);
         var game = gameDoc.RootElement;
 
-        // Находим пешку игрока для хода
         var player1Pieces = game.GetProperty("player1").GetProperty("pieces").EnumerateArray().ToList();
         var pawn = player1Pieces.FirstOrDefault(p => 
         {
@@ -461,7 +419,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var pawnX = pawnPosition.GetProperty("x").GetInt32();
         var pawnY = pawnPosition.GetProperty("y").GetInt32();
 
-        // Делаем ход пешкой вперед
         var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
             Json(new 
             { 
@@ -485,7 +442,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         {
             _logger.LogInformation($"=== УМНЫЙ ХОД ИГРОКА {moveNumber} ===");
             
-            // Получаем текущее состояние игры
             var gameResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
             if (!gameResponse.IsSuccessStatusCode)
             {
@@ -497,33 +453,26 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             using var gameDoc = JsonDocument.Parse(gameJson);
             var game = gameDoc.RootElement;
 
-            // Получаем фигуры игрока и ИИ
             var player1Pieces = game.GetProperty("player1").GetProperty("pieces").EnumerateArray().ToList();
             var player2Pieces = game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
             
-            // Находим живые фигуры
             var alivePlayerPieces = player1Pieces.Where(p => p.GetProperty("isAlive").GetBoolean()).ToList();
             var aliveEnemyPieces = player2Pieces.Where(p => p.GetProperty("isAlive").GetBoolean()).ToList();
 
             _logger.LogInformation($"У игрока {alivePlayerPieces.Count} живых фигур, у ИИ {aliveEnemyPieces.Count}");
 
-            // Стратегия 1: Атакуем вражеские фигуры в радиусе атаки
             var attackMade = await TryAttackEnemy(gameId, alivePlayerPieces, aliveEnemyPieces, moveNumber);
             if (attackMade) return;
 
-            // Стратегия 2: Защищаем короля от угроз
             var defenseMade = await TryDefendKing(gameId, alivePlayerPieces, aliveEnemyPieces, moveNumber);
             if (defenseMade) return;
 
-            // Стратегия 3: Продвигаем центральные пешки
             var advanceMade = await TryAdvanceCenterPawns(gameId, alivePlayerPieces, moveNumber);
             if (advanceMade) return;
 
-            // Стратегия 4: Используем способности
             var abilityUsed = await TryUseAbilities(gameId, alivePlayerPieces, aliveEnemyPieces, moveNumber);
             if (abilityUsed) return;
 
-            // Стратегия 5: Простое продвижение пешек (fallback)
             await TrySimplePawnAdvance(gameId, alivePlayerPieces, moveNumber);
         }
         catch (Exception ex)
@@ -543,17 +492,14 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var currentX = currentPos.GetProperty("x").GetInt32();
             var currentY = currentPos.GetProperty("y").GetInt32();
 
-            // Ищем вражеские фигуры в радиусе атаки
             foreach (var enemy in enemyPieces)
             {
                 var enemyPos = enemy.GetProperty("position");
                 var enemyX = enemyPos.GetProperty("x").GetInt32();
                 var enemyY = enemyPos.GetProperty("y").GetInt32();
                 
-                // Расстояние Чебышёва
                 var distance = Math.Max(Math.Abs(enemyX - currentX), Math.Abs(enemyY - currentY));
                 
-                // Радиус атаки зависит от типа фигуры
                 var attackRange = pieceType == 0 ? 1 : 1; // Пешка и король = 1
                 
                 if (distance <= attackRange)
@@ -582,7 +528,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
     private async Task<bool> TryDefendKing(string gameId, List<JsonElement> playerPieces, List<JsonElement> enemyPieces, int moveNumber)
     {
-        // Находим короля игрока
         var king = playerPieces.FirstOrDefault(p => p.GetProperty("type").GetInt32() == 5); // King = 5
         if (king.ValueKind == JsonValueKind.Undefined) return false;
 
@@ -590,7 +535,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var kingX = kingPos.GetProperty("x").GetInt32();
         var kingY = kingPos.GetProperty("y").GetInt32();
 
-        // Проверяем, есть ли враги рядом с королем
         var threatsNearKing = enemyPieces.Where(enemy =>
         {
             var enemyPos = enemy.GetProperty("position");
@@ -604,7 +548,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         {
             _logger.LogInformation($"Король под угрозой! Перемещаем короля");
             
-            // Перемещаем короля в безопасное место
             var safeX = Math.Max(0, Math.Min(7, kingX + 1));
             var safeY = Math.Max(0, Math.Min(7, kingY + 1));
             
@@ -628,7 +571,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
     private async Task<bool> TryAdvanceCenterPawns(string gameId, List<JsonElement> playerPieces, int moveNumber)
     {
-        // Находим центральные пешки (x = 3, 4, 5)
         var centerPawns = playerPieces.Where(p => 
         {
             var type = p.GetProperty("type").GetInt32();
@@ -644,7 +586,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var currentX = currentPos.GetProperty("x").GetInt32();
             var currentY = currentPos.GetProperty("y").GetInt32();
 
-            // Продвигаем пешку вперед на 2 клетки (первый ход) или 1 клетку
             var targetY = currentY + (currentY == 1 ? 2 : 1); // Первый ход = +2, остальные = +1
             if (targetY > 7) targetY = 7;
 
@@ -670,13 +611,11 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
     private async Task<bool> TryUseAbilities(string gameId, List<JsonElement> playerPieces, List<JsonElement> enemyPieces, int moveNumber)
     {
-        // Пока что просто возвращаем false - способности требуют более сложной логики
         return false;
     }
 
     private async Task<bool> TrySimplePawnAdvance(string gameId, List<JsonElement> playerPieces, int moveNumber)
     {
-        // Находим первую живую пешку
         var pawn = playerPieces.FirstOrDefault(p => p.GetProperty("type").GetInt32() == 0);
         if (pawn.ValueKind == JsonValueKind.Undefined) return false;
 
@@ -685,7 +624,6 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var currentX = currentPos.GetProperty("x").GetInt32();
         var currentY = currentPos.GetProperty("y").GetInt32();
 
-        // Простое продвижение пешки вперед
         var targetY = currentY + 1;
         if (targetY > 7) targetY = 7;
 

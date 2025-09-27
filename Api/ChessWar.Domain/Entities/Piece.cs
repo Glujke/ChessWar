@@ -12,7 +12,7 @@ public class Piece
     public PieceType Type { get; set; }
     public Team Team { get; set; }
     public Position Position { get; set; } = new(0, 0);
-    public Player? Owner { get; set; }
+    public Participant? Owner { get; set; }
     
     public int HP { get; set; }
     public int ATK { get; set; }
@@ -43,7 +43,7 @@ public class Piece
     /// <summary>
     /// Создает новую фигуру с указанным ID и владельцем
     /// </summary>
-    public Piece(string id, PieceType type, Team team, Position position, Player owner)
+    public Piece(string id, PieceType type, Team team, Position position, Participant owner)
     {
         Id = int.TryParse(id, out var parsedId) ? parsedId : 0;
         Type = type;

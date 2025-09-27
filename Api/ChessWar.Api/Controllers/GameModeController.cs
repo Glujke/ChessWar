@@ -45,7 +45,7 @@ public class GameModeController : BaseController
         {
             Player1Name = string.IsNullOrWhiteSpace(dto.PlayerId) ? "P1" : dto.PlayerId!,
             Player2Name = "AI",
-            Mode = "AI",
+            Mode = "Tutorial",
             TutorialSessionId = session.SessionId 
         });
         await _sessionManagementService.StartGameAsync(game);

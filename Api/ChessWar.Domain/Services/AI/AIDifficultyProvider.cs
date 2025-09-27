@@ -10,9 +10,9 @@ public class AIDifficultyProvider : IAIDifficultyLevel
 {
     private readonly Dictionary<Guid, AIDifficultyLevel> _playerDifficulties = new();
     
-    public AIDifficultyLevel GetDifficultyLevel(Player player)
+    public AIDifficultyLevel GetDifficultyLevel(Participant participant)
     {
-        return _playerDifficulties.GetValueOrDefault(player.Id, AIDifficultyLevel.Medium);
+        return _playerDifficulties.GetValueOrDefault(participant.Id, AIDifficultyLevel.Medium);
     }
     
     public double GetTemperature(AIDifficultyLevel level)
@@ -49,11 +49,11 @@ public class AIDifficultyProvider : IAIDifficultyLevel
     }
     
     /// <summary>
-    /// Установить уровень сложности для игрока
+    /// Установить уровень сложности для участника
     /// </summary>
-    public void SetDifficultyLevel(Player player, AIDifficultyLevel level)
+    public void SetDifficultyLevel(Participant participant, AIDifficultyLevel level)
     {
-        _playerDifficulties[player.Id] = level;
+        _playerDifficulties[participant.Id] = level;
     }
     
     /// <summary>

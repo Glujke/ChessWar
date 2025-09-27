@@ -20,7 +20,6 @@ public class AbilityServiceTests
 
     public AbilityServiceTests()
     {
-        // Реальный провайдер конфига с мок-репозиториями → embedded default
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
         versionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -28,18 +27,17 @@ public class AbilityServiceTests
         var logger = Mock.Of<ILogger<BalanceConfigProvider>>();
         var provider = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
         
-        // Создаем реальный DomainEventDispatcher с реальными обработчиками
+        var pieceDomainService = new Mock<IPieceDomainService>();
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(x => x.GetService(typeof(IEnumerable<IDomainEventHandler<PieceKilledEvent>>)))
             .Returns(new List<IDomainEventHandler<PieceKilledEvent>>
             {
-                new ExperienceAwardHandler(),
+                new ExperienceAwardHandler(pieceDomainService.Object, provider),
                 new BoardCleanupHandler(),
                 new PositionSwapHandler()
             });
         
         var eventDispatcher = new DomainEventDispatcher(serviceProviderMock.Object);
-        var pieceDomainService = new Mock<IPieceDomainService>();
         
         _abilityService = new AbilityService(provider, eventDispatcher, pieceDomainService.Object);
     }
@@ -47,24 +45,20 @@ public class AbilityServiceTests
     [Fact]
     public void UseAbility_ShouldFail_WhenNotEnoughMp()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(0, 50); // У игрока нет маны
         var piece = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
         piece.Owner = owner;
         owner.Pieces.Add(piece);
 
-        // Act
         var canUse = _abilityService.CanUseAbility(piece, "LightArrow", new Position(4, 4), owner.Pieces);
 
-        // Assert
         canUse.Should().BeFalse();
     }
 
     [Fact]
     public void UseAbility_ShouldSetCooldown_AndSpendMp_OnSuccess()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50); // У игрока есть мана
         var piece = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
@@ -72,21 +66,16 @@ public class AbilityServiceTests
         owner.Pieces.Add(piece);
         var target = new Position(4, 4); // в радиусе 4
 
-        // добавим цель-врага в список фигур
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, target.X, target.Y);
         enemy.Owner = enemyOwner;
         var allPieces = owner.Pieces.Concat(new[] { enemy }).ToList();
 
-        // Создаем AbilityService с настроенным моком для этого теста
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
-        // Act
         var result = testAbilityService.UseAbility(piece, "LightArrow", target, allPieces);
 
-        // Assert
         result.Should().BeTrue();
-        // MP теперь у игрока, а не у фигуры
         owner.MP.Should().BeLessThan(50); // Игрок потратил ману
         piece.AbilityCooldowns.GetValueOrDefault("LightArrow").Should().BeGreaterThan(0);
         enemy.HP.Should().BeLessThan(10); // нанесён урон
@@ -95,7 +84,6 @@ public class AbilityServiceTests
     [Fact]
     public void Heal_ShouldIncreaseHp_WithinRange()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50); // У игрока есть мана
         var bishop = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
@@ -105,13 +93,10 @@ public class AbilityServiceTests
         owner.Pieces.Add(ally);
         TestHelpers.TakeDamage(ally, 5);
 
-        // Создаем AbilityService с настроенным моком для этого теста
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { ally });
 
-        // Act
         var ok = testAbilityService.UseAbility(bishop, "Heal", ally.Position, owner.Pieces);
 
-        // Assert
         ok.Should().BeTrue();
         ally.HP.Should().BeGreaterThan(5);
     }
@@ -119,7 +104,6 @@ public class AbilityServiceTests
     [Fact]
     public void UseAbility_ShouldFail_WhenOnCooldown()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50); // У игрока есть мана
         var piece = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
@@ -127,17 +111,14 @@ public class AbilityServiceTests
         owner.Pieces.Add(piece);
         TestHelpers.SetAbilityCooldown(piece, "LightArrow", 1);
 
-        // Act
         var canUse = _abilityService.CanUseAbility(piece, "LightArrow", new Position(3, 3), owner.Pieces);
 
-        // Assert
         canUse.Should().BeFalse();
     }
 
     [Fact]
     public void UseAbility_Aoe_ShouldIgnoreLineOfSight()
     {
-        // Arrange (ферзь AOE: MagicExplosion)
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50); // У игрока есть мана
         var queen = TestHelpers.CreatePiece(PieceType.Queen, Team.Elves, 3, 3);
@@ -151,10 +132,8 @@ public class AbilityServiceTests
             TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 5, 3)   // цель за блокером
         };
 
-        // Act
         var result = _abilityService.UseAbility(queen, "MagicExplosion", new Position(5, 3), blockers);
 
-        // Assert: AOE проходит сквозь препятствия
         result.Should().BeTrue();
     }
 
@@ -163,7 +142,6 @@ public class AbilityServiceTests
     [Fact]
     public void UseAbility_ShieldBash_WhenKillingEnemy_ShouldMoveAttackerToKilledPosition()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50);
         var pawn = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 2, 2);
@@ -177,13 +155,10 @@ public class AbilityServiceTests
         
         var allPieces = new List<Piece> { pawn, enemy };
         
-        // Создаем AbilityService с настроенным моком для этого теста
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
-        // Act
         var result = testAbilityService.UseAbility(pawn, "ShieldBash", enemy.Position, allPieces);
 
-        // Assert
         result.Should().BeTrue();
         pawn.Position.Should().Be(enemy.Position, "Attacker should move to killed enemy position");
         enemy.IsAlive.Should().BeFalse("Target should be dead");
@@ -192,7 +167,6 @@ public class AbilityServiceTests
     [Fact]
     public void UseAbility_LightArrow_WhenKillingEnemy_ShouldMoveAttackerToKilledPosition()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50);
         var bishop = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
@@ -206,13 +180,10 @@ public class AbilityServiceTests
         
         var allPieces = new List<Piece> { bishop, enemy };
         
-        // Создаем AbilityService с настроенным моком для этого теста
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
-        // Act
         var result = testAbilityService.UseAbility(bishop, "LightArrow", enemy.Position, allPieces);
 
-        // Assert
         result.Should().BeTrue();
         bishop.Position.Should().Be(enemy.Position, "Attacker should move to killed enemy position");
         enemy.IsAlive.Should().BeFalse("Target should be dead");
@@ -221,7 +192,6 @@ public class AbilityServiceTests
     [Fact]
     public void UseAbility_MagicExplosion_WhenKillingEnemies_ShouldNotMoveAttacker()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50);
         var queen = TestHelpers.CreatePiece(PieceType.Queen, Team.Elves, 3, 3);
@@ -239,13 +209,10 @@ public class AbilityServiceTests
         
         var allPieces = new List<Piece> { queen, enemy1, enemy2 };
         
-        // Создаем AbilityService с настроенным моком для этого теста
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy1, enemy2 });
 
-        // Act
         var result = testAbilityService.UseAbility(queen, "MagicExplosion", new Position(4, 4), allPieces);
 
-        // Assert
         result.Should().BeTrue();
         queen.Position.Should().Be(originalPosition, "AOE abilities should NOT move attacker");
         enemy1.IsAlive.Should().BeFalse("Enemy1 should be dead");
@@ -255,7 +222,6 @@ public class AbilityServiceTests
     [Fact]
     public void UseAbility_WhenNotKillingEnemy_ShouldNotMoveAttacker()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50);
         var pawn = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 2, 2);
@@ -270,13 +236,10 @@ public class AbilityServiceTests
         
         var allPieces = new List<Piece> { pawn, enemy };
         
-        // Создаем AbilityService с настроенным моком для этого теста
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
-        // Act
         var result = testAbilityService.UseAbility(pawn, "ShieldBash", enemy.Position, allPieces);
 
-        // Assert
         result.Should().BeTrue();
         pawn.Position.Should().Be(originalPosition, "Attacker should stay in original position when not killing");
         enemy.IsAlive.Should().BeTrue("Target should be alive");
@@ -286,7 +249,6 @@ public class AbilityServiceTests
 
     private AbilityService CreateAbilityServiceWithMockedPieceDomainService()
     {
-        // Реальный провайдер конфига с мок-репозиториями → embedded default
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
         versionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -294,18 +256,17 @@ public class AbilityServiceTests
         var logger = Mock.Of<ILogger<BalanceConfigProvider>>();
         var provider = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
         
-        // Создаем реальный DomainEventDispatcher с реальными обработчиками
+        var pieceDomainService = new Mock<IPieceDomainService>();
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(x => x.GetService(typeof(IEnumerable<IDomainEventHandler<PieceKilledEvent>>)))
             .Returns(new List<IDomainEventHandler<PieceKilledEvent>>
             {
-                new ExperienceAwardHandler(),
+                new ExperienceAwardHandler(pieceDomainService.Object, provider),
                 new BoardCleanupHandler(),
                 new PositionSwapHandler()
             });
         
         var eventDispatcher = new DomainEventDispatcher(serviceProviderMock.Object);
-        var pieceDomainService = new Mock<IPieceDomainService>();
         
         return new AbilityService(provider, eventDispatcher, pieceDomainService.Object);
     }
@@ -315,7 +276,6 @@ public class AbilityServiceTests
         var abilityService = CreateAbilityServiceWithMockedPieceDomainService();
         var pieceDomainServiceMock = new Mock<IPieceDomainService>();
         
-        // Настраиваем мок для всех фигур, которые должны быть убиты
         foreach (var piece in piecesToKill)
         {
             pieceDomainServiceMock
@@ -345,7 +305,6 @@ public class AbilityServiceTests
                 _ => 10
             });
         
-        // Создаем новый AbilityService с настроенным моком
         var configProvider = abilityService.GetType().GetField("_configProvider", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(abilityService) as IBalanceConfigProvider;
         var eventDispatcher = abilityService.GetType().GetField("_eventDispatcher", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(abilityService) as IDomainEventDispatcher;
         

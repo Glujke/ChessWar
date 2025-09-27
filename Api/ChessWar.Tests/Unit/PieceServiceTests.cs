@@ -24,7 +24,6 @@ public class PieceServiceTests
     [Fact]
     public async Task CreatePieceAsync_WithValidData_ShouldCreatePiece()
     {
-        // Arrange
         var type = PieceType.Pawn;
         var team = Team.Elves;
         var position = new Position(1, 1);
@@ -34,10 +33,8 @@ public class PieceServiceTests
             .Setup(x => x.AddAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _pieceService.CreatePieceAsync(type, team, position);
 
-        // Assert
         result.Should().NotBeNull();
         result.Type.Should().Be(type);
         result.Team.Should().Be(team);
@@ -51,12 +48,10 @@ public class PieceServiceTests
     [Fact]
     public async Task CreatePieceAsync_WithInvalidPosition_ShouldThrowArgumentException()
     {
-        // Arrange
         var type = PieceType.Pawn;
         var team = Team.Elves;
         var invalidPosition = new Position(-1, 1); // Invalid X coordinate
 
-        // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() => 
             _pieceService.CreatePieceAsync(type, team, invalidPosition));
     }
@@ -64,7 +59,6 @@ public class PieceServiceTests
     [Fact]
     public async Task GetPieceByIdAsync_WithExistingId_ShouldReturnPiece()
     {
-        // Arrange
         var pieceId = 1;
         var expectedPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
         
@@ -72,10 +66,8 @@ public class PieceServiceTests
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPiece);
 
-        // Act
         var result = await _pieceService.GetPieceByIdAsync(pieceId);
 
-        // Assert
         result.Should().NotBeNull();
         result.Should().Be(expectedPiece);
     }
@@ -83,24 +75,20 @@ public class PieceServiceTests
     [Fact]
     public async Task GetPieceByIdAsync_WithNonExistingId_ShouldReturnNull()
     {
-        // Arrange
         var pieceId = 999;
         
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
 
-        // Act
         var result = await _pieceService.GetPieceByIdAsync(pieceId);
 
-        // Assert
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task GetAllPiecesAsync_ShouldReturnAllPieces()
     {
-        // Arrange
         var expectedPieces = new List<Piece>
         {
             new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)),
@@ -111,10 +99,8 @@ public class PieceServiceTests
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPieces);
 
-        // Act
         var result = await _pieceService.GetAllPiecesAsync();
 
-        // Assert
         result.Should().HaveCount(2);
         result.Should().BeEquivalentTo(expectedPieces);
     }
@@ -122,7 +108,6 @@ public class PieceServiceTests
     [Fact]
     public async Task GetPiecesByTeamAsync_WithValidTeam_ShouldReturnTeamPieces()
     {
-        // Arrange
         var team = Team.Elves;
         var expectedPieces = new List<Piece>
         {
@@ -134,10 +119,8 @@ public class PieceServiceTests
             .Setup(x => x.GetByTeamAsync(team, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPieces);
 
-        // Act
         var result = await _pieceService.GetPiecesByTeamAsync(team);
 
-        // Assert
         result.Should().HaveCount(2);
         result.Should().AllSatisfy(p => p.Team.Should().Be(team));
     }
@@ -145,7 +128,6 @@ public class PieceServiceTests
     [Fact]
     public async Task GetAlivePiecesAsync_ShouldReturnOnlyAlivePieces()
     {
-        // Arrange
         var pieces = new List<Piece>
         {
             new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 },
@@ -156,10 +138,8 @@ public class PieceServiceTests
             .Setup(x => x.GetAlivePiecesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(pieces.Where(p => p.IsAlive).ToList());
 
-        // Act
         var result = await _pieceService.GetAlivePiecesAsync();
 
-        // Assert
         result.Should().HaveCount(1);
         result.Should().AllSatisfy(p => p.IsAlive.Should().BeTrue());
     }
@@ -167,7 +147,6 @@ public class PieceServiceTests
     [Fact]
     public async Task UpdatePiecePositionAsync_WithValidData_ShouldUpdatePosition()
     {
-        // Arrange
         var pieceId = 1;
         var newPosition = new Position(3, 3);
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
@@ -180,10 +159,8 @@ public class PieceServiceTests
             .Setup(x => x.UpdateAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _pieceService.UpdatePiecePositionAsync(pieceId, newPosition);
 
-        // Assert
         result.Position.Should().Be(newPosition);
         _pieceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -191,7 +168,6 @@ public class PieceServiceTests
     [Fact]
     public async Task UpdatePiecePositionAsync_WithInvalidPosition_ShouldThrowArgumentException()
     {
-        // Arrange
         var pieceId = 1;
         var invalidPosition = new Position(10, 10); // Outside board
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
@@ -200,7 +176,6 @@ public class PieceServiceTests
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
 
-        // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() => 
             _pieceService.UpdatePiecePositionAsync(pieceId, invalidPosition));
     }
@@ -208,7 +183,6 @@ public class PieceServiceTests
     [Fact]
     public async Task UpdatePiecePositionAsync_WithOccupiedPosition_ShouldThrowInvalidOperationException()
     {
-        // Arrange
         var pieceId = 1;
         var occupiedPosition = new Position(2, 2);
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
@@ -221,7 +195,6 @@ public class PieceServiceTests
             .Setup(x => x.GetByPositionAsync(occupiedPosition, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Piece(PieceType.Knight, Team.Orcs, occupiedPosition));
 
-        // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => 
             _pieceService.UpdatePiecePositionAsync(pieceId, occupiedPosition));
     }
@@ -229,7 +202,6 @@ public class PieceServiceTests
     [Fact]
     public async Task UpdatePieceStatsAsync_WithValidData_ShouldUpdateStats()
     {
-        // Arrange
         var pieceId = 1;
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
         
@@ -241,13 +213,10 @@ public class PieceServiceTests
             .Setup(x => x.UpdateAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         var result = await _pieceService.UpdatePieceStatsAsync(pieceId, hp: 15, atk: 5, mp: 8, xp: 10);
 
-        // Assert
         result.HP.Should().Be(15);
         result.ATK.Should().Be(5);
-        // MP теперь у игрока, а не у фигуры - параметр mp игнорируется
         result.XP.Should().Be(10);
         _pieceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -255,14 +224,12 @@ public class PieceServiceTests
     [Fact]
     public async Task UpdatePieceStatsAsync_WithNonExistingPiece_ShouldThrowInvalidOperationException()
     {
-        // Arrange
         var pieceId = 999;
         
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
 
-        // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => 
             _pieceService.UpdatePieceStatsAsync(pieceId, hp: 15));
     }
@@ -270,7 +237,6 @@ public class PieceServiceTests
     [Fact]
     public async Task DeletePieceAsync_WithExistingPiece_ShouldDeletePiece()
     {
-        // Arrange
         var pieceId = 1;
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
         
@@ -282,24 +248,20 @@ public class PieceServiceTests
             .Setup(x => x.DeleteAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        // Act
         await _pieceService.DeletePieceAsync(pieceId);
 
-        // Assert
         _pieceRepositoryMock.Verify(x => x.DeleteAsync(existingPiece, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task DeletePieceAsync_WithNonExistingPiece_ShouldThrowInvalidOperationException()
     {
-        // Arrange
         var pieceId = 999;
         
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
 
-        // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => 
             _pieceService.DeletePieceAsync(pieceId));
     }
@@ -307,24 +269,20 @@ public class PieceServiceTests
     [Fact]
     public async Task IsPositionFreeAsync_WithFreePosition_ShouldReturnTrue()
     {
-        // Arrange
         var position = new Position(1, 1);
         
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
 
-        // Act
         var result = await _pieceService.IsPositionFreeAsync(position);
 
-        // Assert
         result.Should().BeTrue();
     }
 
     [Fact]
     public async Task IsPositionFreeAsync_WithOccupiedPosition_ShouldReturnFalse()
     {
-        // Arrange
         var position = new Position(1, 1);
         var piece = new Piece(PieceType.Pawn, Team.Elves, position);
         
@@ -332,10 +290,8 @@ public class PieceServiceTests
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync(piece);
 
-        // Act
         var result = await _pieceService.IsPositionFreeAsync(position);
 
-        // Assert
         result.Should().BeFalse();
     }
 
@@ -350,13 +306,10 @@ public class PieceServiceTests
     [InlineData(10, 10, false)]
     public void IsPositionOnBoard_WithVariousPositions_ShouldReturnCorrectResult(int x, int y, bool expected)
     {
-        // Arrange
         var position = new Position(x, y);
 
-        // Act
         var result = _pieceService.IsPositionOnBoard(position);
 
-        // Assert
         result.Should().Be(expected);
     }
 }

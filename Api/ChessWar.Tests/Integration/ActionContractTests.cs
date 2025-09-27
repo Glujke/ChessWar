@@ -13,14 +13,12 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
     [Fact]
     public async Task PostAction_ShouldReturn_GameSessionDto()
     {
-        // Arrange: создать игровую сессию (AI режим по умолчанию из DTO)
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "AI" };
         var createResp = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResp.IsSuccessStatusCode.Should().BeTrue();
         var session = await createResp.Content.ReadFromJsonAsync<GameSessionDto>();
         session.Should().NotBeNull();
 
-        // Получаем доступные ходы для первой фигуры и берём первый допустимый
         var pieceId = session!.Player1.Pieces[0].Id.ToString();
         var actionsResp = await _client.GetAsync($"/api/v1/gamesession/{session.Id}/piece/{pieceId}/actions?actionType=Move");
         actionsResp.IsSuccessStatusCode.Should().BeTrue();
@@ -41,7 +39,6 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
 
         var resp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", actionDto);
 
-        // Ожидание контракта демо: 200 OK и в теле актуальный GameSessionDto (или stateDiff в будущем)
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var body = await resp.Content.ReadFromJsonAsync<GameSessionDto>();
@@ -86,14 +83,12 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
     [Fact]
     public async Task PostAction_WhenNotEnoughMp_ShouldReturn_400_ProblemDetails()
     {
-        // Arrange: создаём сессию
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "AI" };
         var createResp = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResp.IsSuccessStatusCode.Should().BeTrue();
         var session = await createResp.Content.ReadFromJsonAsync<GameSessionDto>();
         session.Should().NotBeNull();
 
-        // Пытаемся использовать способность с заведомо высокой стоимостью MP, чтобы добиться ошибки валидации
         var ability = new AbilityRequestDto
         {
             PieceId = session!.Player1.Pieces[0].Id.ToString(),
@@ -103,7 +98,6 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
 
         var resp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/ability", ability);
 
-        // Ожидаем 400 и ProblemDetails (контент может быть application/problem+json)
         resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var problem = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
         problem.Should().NotBeNull();
@@ -117,7 +111,6 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
         createResp.IsSuccessStatusCode.Should().BeTrue();
         var session = await createResp.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        // 1-й вызов способности выставит CD
         var ability1 = new AbilityRequestDto
         {
             PieceId = session!.Player1.Pieces[0].Id.ToString(),
@@ -125,7 +118,6 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
             Target = new PositionDto { X = session.Player2.Pieces[0].Position.X, Y = session.Player2.Pieces[0].Position.Y }
         };
         var resp1 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/ability", ability1);
-        // Может быть 200 или 400 в зависимости от фигуры; если 200 — проверим повторный вызов
         if (resp1.StatusCode == HttpStatusCode.OK)
         {
             var resp2 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/ability", ability1);
@@ -188,7 +180,6 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
         var first = p1[0];
         var second = p1[1];
 
-        // 1-й экшен выбирает первую фигуру
         var move1 = new ExecuteActionDto
         {
             Type = "Move",
@@ -198,11 +189,9 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
         var r1 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", move1);
         if (r1.StatusCode != HttpStatusCode.OK)
         {
-            // если правило не прошло, этот тест не применим — завершаем
             return;
         }
 
-        // 2-й экшен в тот же ход другой фигурой без Royal Command — ожидаем 400
         var move2 = new ExecuteActionDto
         {
             Type = "Move",

@@ -31,7 +31,6 @@ public class TurnServiceTests
         _evolutionServiceMock = new Mock<IEvolutionService>();
         _pieceDomainServiceMock = new Mock<IPieceDomainService>();
 
-        // Реальный провайдер конфига (embedded default)
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
         versionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -41,12 +40,11 @@ public class TurnServiceTests
 
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
         
-        // Создаем мок IServiceProvider для DomainEventDispatcher
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(x => x.GetService(typeof(IEnumerable<IDomainEventHandler<PieceKilledEvent>>)))
             .Returns(new List<IDomainEventHandler<PieceKilledEvent>>
             {
-                new ExperienceAwardHandler(),
+                new ExperienceAwardHandler(_pieceDomainServiceMock.Object, _configProvider),
                 new BoardCleanupHandler(),
                 new PositionSwapHandler()
             });
@@ -62,7 +60,6 @@ public class TurnServiceTests
             _pieceDomainServiceMock.Object,
             turnServiceLogger);
 
-        // Создаем тестовую игровую сессию
         var player1 = CreateTestPlayer("Player1");
         var player2 = CreateTestPlayer("Player2");
         _gameSession = new GameSession(player1, player2);
@@ -72,14 +69,11 @@ public class TurnServiceTests
     [Fact]
     public void StartTurn_ShouldCreateNewTurn()
     {
-        // Arrange
         var gameSession = CreateTestGameSession();
         var activeParticipant = gameSession.Player1;
 
-        // Act
         var turn = _turnService.StartTurn(gameSession, activeParticipant);
 
-        // Assert
         turn.Should().NotBeNull();
         turn.Number.Should().Be(1);
         turn.ActiveParticipant.Should().Be(activeParticipant);
@@ -89,17 +83,13 @@ public class TurnServiceTests
     [Fact]
     public void StartTurn_ShouldNotRegenerateMp()
     {
-        // Arrange
         var gameSession = CreateTestGameSession();
         var activeParticipant = gameSession.Player1;
         activeParticipant.SetMana(0, 50); // У игрока нет маны
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), activeParticipant);
 
-        // Act
         var turn = _turnService.StartTurn(gameSession, activeParticipant);
 
-        // Assert: регена в начале хода быть не должно
-        // MP теперь у игрока, а не у фигуры
         activeParticipant.MP.Should().Be(0);
         turn.ActiveParticipant.Should().Be(activeParticipant);
     }
@@ -107,34 +97,28 @@ public class TurnServiceTests
     [Fact]
     public void StartTurn_WithNullGameSession_ShouldThrowArgumentNullException()
     {
-        // Arrange
         var activeParticipant = CreateTestPlayer("TestPlayer");
 
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() => _turnService.StartTurn(null!, activeParticipant));
     }
 
     [Fact]
     public void StartTurn_WithNullActiveParticipant_ShouldThrowArgumentNullException()
     {
-        // Arrange
         var gameSession = CreateTestGameSession();
 
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() => _turnService.StartTurn(gameSession, null!));
     }
 
     [Fact]
     public void ExecuteMove_WithValidMove_ShouldReturnTrue()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(10, 10); // Устанавливаем ману для игрока
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
         
-        // Размещаем фигуру на доске
         _gameSession.GetBoard().PlacePiece(piece);
         
         turn.SelectPiece(piece);
@@ -143,10 +127,8 @@ public class TurnServiceTests
             .Setup(x => x.CanMoveTo(piece, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
 
-        // Act
         var result = _turnService.ExecuteMove(_gameSession, turn, piece, targetPosition);
 
-        // Assert
         result.Should().BeTrue();
         turn.Actions.Should().HaveCount(1);
         turn.Actions[0].ActionType.Should().Be("Move");
@@ -155,7 +137,6 @@ public class TurnServiceTests
     [Fact]
     public void ExecuteMove_WithInvalidMove_ShouldReturnFalse()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
@@ -167,10 +148,8 @@ public class TurnServiceTests
             .Setup(x => x.CanMoveTo(piece, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(false);
 
-        // Act
         var result = _turnService.ExecuteMove(_gameSession, turn, piece, targetPosition);
 
-        // Assert
         result.Should().BeFalse();
         turn.Actions.Should().BeEmpty();
     }
@@ -179,18 +158,15 @@ public class TurnServiceTests
     [Fact]
     public void ExecuteAttack_WithValidAttack_ShouldReturnTrue()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(10, 10); // Устанавливаем ману для игрока
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
         
-        // Создаем цель для атаки
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
         target.HP = 10; // Устанавливаем HP для живой фигуры
         
-        // Размещаем фигуры на доске
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);
         
@@ -200,10 +176,8 @@ public class TurnServiceTests
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
 
-        // Act
         var result = _turnService.ExecuteAttack(_gameSession, turn, attacker, targetPosition);
 
-        // Assert
         result.Should().BeTrue();
         turn.Actions.Should().HaveCount(1);
         turn.Actions[0].ActionType.Should().Be("Attack");
@@ -212,7 +186,6 @@ public class TurnServiceTests
     [Fact]
     public void ExecuteAttack_WithInvalidAttack_ShouldReturnFalse()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
@@ -224,10 +197,8 @@ public class TurnServiceTests
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(false);
 
-        // Act
         var result = _turnService.ExecuteAttack(_gameSession, turn, attacker, targetPosition);
 
-        // Assert
         result.Should().BeFalse();
         turn.Actions.Should().BeEmpty();
     }
@@ -235,40 +206,30 @@ public class TurnServiceTests
     [Fact]
     public void EndTurn_ShouldCallReduceCooldowns()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         player.Pieces.Add(piece);
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", piece.Id.ToString(), new Position(1, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
 
-        // Assert
-        // В реальной реализации здесь должна быть проверка, что кулдауны снижены
-        // Пока просто проверяем, что метод не падает
         turn.Should().NotBeNull();
     }
 
     [Fact]
     public void EndTurn_ShouldRegenerateMpForActivePlayer()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(0, 50); // У игрока нет маны
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
 
-        // Assert - реген маны теперь выполняется в TurnCompletionService, не в EndTurn
         player.MP.Should().Be(0); // Игрок не получил ману в EndTurn
         turn.Should().NotBeNull(); // Просто проверяем, что метод не падает
     }
@@ -276,19 +237,15 @@ public class TurnServiceTests
     [Fact]
     public void EndTurn_ShouldNotExceedMaxMp()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(48, 50); // У игрока почти полная мана
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
 
-        // Assert - реген маны теперь выполняется в TurnCompletionService, не в EndTurn
         player.MP.Should().Be(48); // Мана не изменилась в EndTurn
         turn.Should().NotBeNull(); // Просто проверяем, что метод не падает
     }
@@ -296,26 +253,21 @@ public class TurnServiceTests
     [Fact]
     public void EndTurn_ShouldTickDownAbilityCooldowns()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(pawn, "TestAbility", 2));
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
 
-        // Assert
         _pieceDomainServiceMock.Verify(x => x.TickCooldowns(pawn), Times.Once);
     }
 
     [Fact]
     public void EndTurn_ShouldApplyRegenAndCooldownTick_ToAllActivePlayerPieces()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(0, 50); // У игрока нет маны
         var turn = new Turn(1, player);
@@ -324,13 +276,10 @@ public class TurnServiceTests
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(p1, "A", 1));
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(p2, "B", 2));
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", p1.Id.ToString(), new Position(0, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
 
-        // Assert - реген маны теперь выполняется в TurnCompletionService, не в EndTurn
         player.MP.Should().Be(0); // Игрок не получил ману в EndTurn
         _pieceDomainServiceMock.Verify(x => x.TickCooldowns(p1), Times.Once);
         _pieceDomainServiceMock.Verify(x => x.TickCooldowns(p2), Times.Once);
@@ -339,39 +288,31 @@ public class TurnServiceTests
     [Fact]
     public void EndTurn_CooldownsShouldNotGoBelowZero()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(pawn, "A", 0));
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
 
-        // Assert
         _pieceDomainServiceMock.Verify(x => x.TickCooldowns(pawn), Times.Once);
     }
 
     [Fact]
     public void EndTurn_MultipleEnds_ShouldAccumulateMpUpToCap()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(0, 50); // У игрока нет маны
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         
-        // Добавляем фиктивное действие для обхода MandatoryAction
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
-        // Act
         _turnService.EndTurn(turn);
         _turnService.EndTurn(turn);
 
-        // Assert - реген маны выполняется в TurnCompletionService, не здесь
         player.MP.Should().Be(0);
         turn.Should().NotBeNull(); // Просто проверяем, что метод не падает
     }
@@ -379,7 +320,6 @@ public class TurnServiceTests
     [Fact]
     public void EndTurn_WithNullTurn_ShouldThrowArgumentNullException()
     {
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() => _turnService.EndTurn(null!));
     }
 
@@ -395,7 +335,7 @@ public class TurnServiceTests
         return new Player(name, new List<Piece>());
     }
 
-    private Piece CreateTestPiece(string id, PieceType type, Team team, Position position, Player owner)
+    private Piece CreateTestPiece(string id, PieceType type, Team team, Position position, Participant owner)
     {
         var piece = TestHelpers.CreatePiece(type, team, position.X, position.Y);
         piece.Owner = owner;
@@ -409,14 +349,12 @@ public class TurnServiceTests
     [Fact]
     public void ExecuteAttack_WhenKillingEnemy_ShouldMoveAttackerToKilledPosition()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(10, 10);
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
         
-        // Создаем цель для атаки с низким HP чтобы убить
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
         target.HP = 1; // Низкое HP для гарантированного убийства
         
@@ -429,7 +367,6 @@ public class TurnServiceTests
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
             
-        // Настраиваем мок для убийства цели
         _pieceDomainServiceMock
             .Setup(x => x.TakeDamage(target, It.IsAny<int>()))
             .Callback<Piece, int>((piece, damage) => piece.HP -= damage);
@@ -437,10 +374,8 @@ public class TurnServiceTests
             .Setup(x => x.IsDead(target))
             .Returns(() => target.HP <= 0);
 
-        // Act
         var result = _turnService.ExecuteAttack(_gameSession, turn, attacker, targetPosition);
 
-        // Assert
         result.Should().BeTrue();
         attacker.Position.Should().Be(targetPosition, "Attacker should move to killed enemy position");
         target.IsAlive.Should().BeFalse("Target should be dead");
@@ -449,7 +384,6 @@ public class TurnServiceTests
     [Fact]
     public void ExecuteAttack_WhenNotKillingEnemy_ShouldNotMoveAttacker()
     {
-        // Arrange
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(10, 10);
         var turn = new Turn(1, player);
@@ -457,7 +391,6 @@ public class TurnServiceTests
         var targetPosition = new Position(1, 2);
         var originalPosition = attacker.Position;
         
-        // Создаем цель для атаки с высоким HP чтобы не убить
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
         target.HP = 100; // Высокое HP чтобы не убить
         
@@ -470,10 +403,8 @@ public class TurnServiceTests
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
 
-        // Act
         var result = _turnService.ExecuteAttack(_gameSession, turn, attacker, targetPosition);
 
-        // Assert
         result.Should().BeTrue();
         attacker.Position.Should().Be(originalPosition, "Attacker should stay in original position when not killing");
         target.IsAlive.Should().BeTrue("Target should be alive");

@@ -28,18 +28,14 @@ public class SignalRGameHubClientTests
     [Fact]
     public async Task SendToGroupAsync_Should_Call_Group_On_Clients()
     {
-        // Arrange
         var groupName = "test-group";
         var method = "TestMethod";
         var data = new { Message = "Test message" };
         var cancellationToken = CancellationToken.None;
 
-        // Act
         await _service.SendToGroupAsync(groupName, method, data, cancellationToken);
 
-        // Assert
         _clientsMock.Verify(x => x.Group(groupName), Times.Once);
-        // Note: Cannot verify SendAsync as it's an extension method
     }
 
     [Theory]
@@ -51,33 +47,26 @@ public class SignalRGameHubClientTests
         string method, 
         string data)
     {
-        // Arrange
         var cancellationToken = CancellationToken.None;
 
-        // Act
         await _service.SendToGroupAsync(groupName, method, data, cancellationToken);
 
-        // Assert
         _clientsMock.Verify(x => x.Group(groupName), Times.Once);
-        // Note: Cannot verify SendAsync as it's an extension method
     }
 
     [Fact]
     public async Task SendToGroupAsync_Should_Propagate_Exceptions()
     {
-        // Arrange
         var groupName = "test-group";
         var method = "TestMethod";
         var data = new { Message = "Test message" };
         var cancellationToken = CancellationToken.None;
         var expectedException = new InvalidOperationException("SignalR connection failed");
 
-        // Setup the mock to throw when SendToGroupAsync is called
         _clientsMock
             .Setup(x => x.Group(groupName))
             .Throws(expectedException);
 
-        // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.SendToGroupAsync(groupName, method, data, cancellationToken));
 
@@ -87,23 +76,18 @@ public class SignalRGameHubClientTests
     [Fact]
     public async Task SendToGroupAsync_Should_Use_Default_CancellationToken_When_Not_Provided()
     {
-        // Arrange
         var groupName = "test-group";
         var method = "TestMethod";
         var data = new { Message = "Test message" };
 
-        // Act
         await _service.SendToGroupAsync(groupName, method, data);
 
-        // Assert
         _clientsMock.Verify(x => x.Group(groupName), Times.Once);
-        // Note: Cannot verify SendAsync as it's an extension method
     }
 
     [Fact]
     public void Constructor_Should_Throw_When_HubContext_Is_Null()
     {
-        // Act & Assert
         var exception = Assert.Throws<ArgumentNullException>(() =>
             new SignalRGameHubClient(null!));
 

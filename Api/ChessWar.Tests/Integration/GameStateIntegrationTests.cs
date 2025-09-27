@@ -20,10 +20,7 @@ public class GameStateIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var state = await stateResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var p2King = state!.Player2.Pieces.First(p => p.Type.ToString() == "King");
 
-        // Упростим: считаем, что есть эндпоинт атаки/урона — пока TDD: эмулируем завершение через evolve/ability в будущих шагах.
-        // Здесь требования: после смерти короля игра должна завершиться (пока ожидаем 200 от будущего эндпоинта завершения).
 
-        // В текущей красной фазе: просто проверим, что GET возвращает статус без завершения → после реализации проверим, что станет Finished.
         state.Status.Should().Be(ChessWar.Domain.Enums.GameStatus.Active);
     }
 }

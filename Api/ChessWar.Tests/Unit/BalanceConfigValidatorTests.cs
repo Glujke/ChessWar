@@ -18,7 +18,6 @@ public class BalanceConfigValidatorTests
     [Fact]
     public async Task ValidateAsync_ValidJson_ShouldReturnValid()
     {
-        // Arrange
         var validJson = """
         {
           "globals": {
@@ -72,10 +71,8 @@ public class BalanceConfigValidatorTests
         }
         """;
 
-        // Act
         var result = await _validator.ValidateAsync(validJson);
 
-        // Assert
         Assert.True(result.IsValid);
         Assert.Empty(result.Errors);
     }
@@ -83,13 +80,10 @@ public class BalanceConfigValidatorTests
     [Fact]
     public async Task ValidateAsync_InvalidJson_ShouldReturnInvalid()
     {
-        // Arrange
         var invalidJson = "invalid json";
 
-        // Act
         var result = await _validator.ValidateAsync(invalidJson);
 
-        // Assert
         Assert.False(result.IsValid);
         Assert.NotEmpty(result.Errors);
         Assert.Contains("Invalid JSON format", result.Errors.First());
@@ -98,7 +92,6 @@ public class BalanceConfigValidatorTests
     [Fact]
     public async Task ValidateAsync_MissingRequiredFields_ShouldReturnInvalid()
     {
-        // Arrange
         var invalidJson = """
         {
           "globals": {
@@ -107,10 +100,8 @@ public class BalanceConfigValidatorTests
         }
         """;
 
-        // Act
         var result = await _validator.ValidateAsync(invalidJson);
 
-        // Assert
         Assert.False(result.IsValid);
         Assert.NotEmpty(result.Errors);
         Assert.Contains("Required properties", result.Errors.First());
@@ -119,7 +110,6 @@ public class BalanceConfigValidatorTests
     [Fact]
     public async Task ValidateAsync_InvalidPieceType_ShouldReturnInvalid()
     {
-        // Arrange
         var invalidJson = """
         {
           "globals": {
@@ -156,10 +146,8 @@ public class BalanceConfigValidatorTests
         }
         """;
 
-        // Act
         var result = await _validator.ValidateAsync(invalidJson);
 
-        // Assert
         Assert.False(result.IsValid);
         Assert.NotEmpty(result.Errors);
     }
@@ -167,7 +155,6 @@ public class BalanceConfigValidatorTests
     [Fact]
     public async Task ValidateAsync_NegativeValues_ShouldReturnInvalid()
     {
-        // Arrange
         var invalidJson = """
         {
           "globals": {
@@ -195,10 +182,8 @@ public class BalanceConfigValidatorTests
         }
         """;
 
-        // Act
         var result = await _validator.ValidateAsync(invalidJson);
 
-        // Assert
         Assert.False(result.IsValid);
         Assert.NotEmpty(result.Errors);
     }
@@ -206,7 +191,6 @@ public class BalanceConfigValidatorTests
     [Fact]
     public async Task ValidateAsync_InvalidCooldownTickPhase_ShouldReturnInvalid()
     {
-        // Arrange
         var invalidJson = """
         {
           "globals": {
@@ -234,10 +218,8 @@ public class BalanceConfigValidatorTests
         }
         """;
 
-        // Act
         var result = await _validator.ValidateAsync(invalidJson);
 
-        // Assert
         Assert.False(result.IsValid);
         Assert.NotEmpty(result.Errors);
     }

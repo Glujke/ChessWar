@@ -37,7 +37,6 @@ public class TutorialTransitionsTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task Transition_To_Battle2_ShouldRequire_Player1Victory()
     {
-        // Start tutorial → Battle1
         var startResponse = await _client.PostAsJsonAsync("/api/v1/game/tutorial", new
         {
             playerId = "tutorial-transition-test",
@@ -51,16 +50,13 @@ public class TutorialTransitionsTests : IClassFixture<TestWebApplicationFactory>
         var gameSessionId = root.GetProperty("gameSessionId").GetString();
         gameSessionId.Should().NotBeNullOrEmpty();
 
-        // Имитация поражения игрока на Battle1 → пытаемся перейти
         var completeLose = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/complete?result=Player2Victory", null);
-        // Ожидаем 409/BadRequest (логика должна запретить авто-переход вперёд)
         completeLose.StatusCode.Should().BeOneOf(HttpStatusCode.Conflict, HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task Transition_To_Boss_ShouldRequire_Player1Victory_On_Battle2()
     {
-        // Start tutorial → Battle1
         var startResponse = await _client.PostAsJsonAsync("/api/v1/game/tutorial", new
         {
             playerId = "tutorial-boss-guard",
@@ -72,17 +68,14 @@ public class TutorialTransitionsTests : IClassFixture<TestWebApplicationFactory>
         using var doc = JsonDocument.Parse(json);
         var gameSessionId = doc.RootElement.GetProperty("gameSessionId").GetString();
 
-        // Завершаем Battle1 победой игрока → ожидаем корректный переход на Battle2
         var completeWin1 = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/complete?result=Player1Victory", null);
         completeWin1.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Берём новый gameSessionId из ответа перехода
         var transJson = await completeWin1.Content.ReadAsStringAsync();
         using var transDoc = JsonDocument.Parse(transJson);
         var nextId = transDoc.RootElement.GetProperty("gameSessionId").GetString();
         nextId.Should().NotBeNullOrEmpty();
 
-        // Завершаем Battle2 поражением игрока → переход на Boss ДОЛЖЕН БЫТЬ ЗАПРЕЩЁН
         var completeLose2 = await _client.PostAsync($"/api/v1/gamesession/{nextId}/complete?result=Player2Victory", null);
         completeLose2.StatusCode.Should().BeOneOf(HttpStatusCode.Conflict, HttpStatusCode.BadRequest);
     }

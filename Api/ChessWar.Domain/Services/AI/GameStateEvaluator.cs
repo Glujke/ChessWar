@@ -20,13 +20,13 @@ public class GameStateEvaluator : IGameStateEvaluator
         { PieceType.King, 100.0 }
     };
     
-    public double EvaluateGameState(GameSession session, Player player)
+    public double EvaluateGameState(GameSession session, Participant participant)
     {
-        if (player == null) return 0; 
+        if (participant == null) return 0; 
         
-        var materialScore = EvaluateMaterialAdvantage(session, player);
-        var positionScore = EvaluatePositionAdvantage(session, player);
-        var kingSafetyScore = EvaluateKingThreat(session, player);
+        var materialScore = EvaluateMaterialAdvantage(session, participant);
+        var positionScore = EvaluatePositionAdvantage(session, participant);
+        var kingSafetyScore = EvaluateKingThreat(session, participant);
         
         return materialScore + positionScore + kingSafetyScore;
     }
@@ -40,39 +40,39 @@ public class GameStateEvaluator : IGameStateEvaluator
         return baseValue + positionBonus + mobilityBonus;
     }
     
-    public double EvaluateKingThreat(GameSession session, Player player)
+    public double EvaluateKingThreat(GameSession session, Participant participant)
     {
-        if (player == null) return 0; 
+        if (participant == null) return 0; 
         
-        var king = player.Pieces.FirstOrDefault(p => p.Type == PieceType.King && p.IsAlive);
+        var king = participant.Pieces.FirstOrDefault(p => p.Type == PieceType.King && p.IsAlive);
         if (king == null) return -1000; 
         
         var threatLevel = CalculateThreatLevel(king, session);
         return -threatLevel * 10; 
     }
     
-    public double EvaluateMaterialAdvantage(GameSession session, Player player)
+    public double EvaluateMaterialAdvantage(GameSession session, Participant participant)
     {
-        if (player == null) return 0; 
+        if (participant == null) return 0; 
         
-        var playerValue = player.Pieces
+        var playerValue = participant.Pieces
             .Where(p => p.IsAlive)
             .Sum(p => _pieceValues.GetValueOrDefault(p.Type, 1.0));
             
         var enemyValue = session.GetAllPieces()
-            .Where(p => p.Owner?.Id != player.Id && p.IsAlive)
+            .Where(p => p.Owner?.Id != participant.Id && p.IsAlive)
             .Sum(p => _pieceValues.GetValueOrDefault(p.Type, 1.0));
         
         return playerValue - enemyValue;
     }
     
-    private double EvaluatePositionAdvantage(GameSession session, Player player)
+    private double EvaluatePositionAdvantage(GameSession session, Participant participant)
     {
-        if (player == null) return 0; 
+        if (participant == null) return 0; 
         
         var score = 0.0;
         
-        foreach (var piece in player.Pieces.Where(p => p.IsAlive))
+        foreach (var piece in participant.Pieces.Where(p => p.IsAlive))
         {
             score += GetPositionBonus(piece);
             score += GetMobilityBonus(piece, session);

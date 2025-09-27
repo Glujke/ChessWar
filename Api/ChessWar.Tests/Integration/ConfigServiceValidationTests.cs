@@ -19,11 +19,9 @@ public class ConfigServiceValidationTests : IDisposable
     {
         var services = new ServiceCollection();
         
-        // Настройка БД в памяти
         services.AddDbContext<ChessWarDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
         
-        // Регистрация сервисов
         services.AddScoped<IBalanceVersionRepository, BalanceVersionRepository>();
         services.AddScoped<IBalancePayloadRepository, BalancePayloadRepository>();
         services.AddMemoryCache();
@@ -42,7 +40,6 @@ public class ConfigServiceValidationTests : IDisposable
     [Fact]
     public async Task SavePayloadAsync_ValidJson_ShouldSucceed()
     {
-        // Arrange
         var version = await _configService.CreateConfigVersionAsync("1.0.0", "Test version");
         
         var validJson = """
@@ -98,10 +95,8 @@ public class ConfigServiceValidationTests : IDisposable
         }
         """;
 
-        // Act & Assert
         await _configService.SavePayloadAsync(version.Id, validJson);
         
-        // Verify payload was saved
         var savedPayload = await _configService.GetPayloadAsync(version.Id);
         Assert.NotNull(savedPayload);
         Assert.Contains("Pawn", savedPayload);
@@ -110,11 +105,9 @@ public class ConfigServiceValidationTests : IDisposable
     [Fact]
     public async Task SavePayloadAsync_InvalidJson_ShouldThrowException()
     {
-        // Arrange
         var version = await _configService.CreateConfigVersionAsync("1.0.0", "Test version");
         var invalidJson = "invalid json";
 
-        // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _configService.SavePayloadAsync(version.Id, invalidJson));
     }
@@ -122,7 +115,6 @@ public class ConfigServiceValidationTests : IDisposable
     [Fact]
     public async Task SavePayloadAsync_MissingRequiredFields_ShouldThrowException()
     {
-        // Arrange
         var version = await _configService.CreateConfigVersionAsync("1.0.0", "Test version");
         var invalidJson = """
         {
@@ -132,7 +124,6 @@ public class ConfigServiceValidationTests : IDisposable
         }
         """;
 
-        // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _configService.SavePayloadAsync(version.Id, invalidJson));
     }
@@ -140,7 +131,6 @@ public class ConfigServiceValidationTests : IDisposable
     [Fact]
     public async Task SavePayloadAsync_InvalidPieceType_ShouldThrowException()
     {
-        // Arrange
         var version = await _configService.CreateConfigVersionAsync("1.0.0", "Test version");
         var invalidJson = """
         {
@@ -178,7 +168,6 @@ public class ConfigServiceValidationTests : IDisposable
         }
         """;
 
-        // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _configService.SavePayloadAsync(version.Id, invalidJson));
     }

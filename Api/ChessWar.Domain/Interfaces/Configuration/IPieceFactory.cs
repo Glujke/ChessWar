@@ -6,7 +6,7 @@ namespace ChessWar.Domain.Interfaces.Configuration;
 
 public interface IPieceFactory
 {
-    Piece CreatePiece(PieceType type, Team team, Position position, Player? owner = null);
+    Piece CreatePiece(PieceType type, Team team, Position position, Participant? owner = null);
 }
 
 public class PieceFactory : IPieceFactory
@@ -20,7 +20,7 @@ public class PieceFactory : IPieceFactory
         _pieceIdGenerator = pieceIdGenerator;
     }
 
-    public Piece CreatePiece(PieceType type, Team team, Position position, Player? owner = null)
+    public Piece CreatePiece(PieceType type, Team team, Position position, Participant? owner = null)
     {
         var config = _configProvider.GetActive();
         var pieceTypeName = type.ToString();

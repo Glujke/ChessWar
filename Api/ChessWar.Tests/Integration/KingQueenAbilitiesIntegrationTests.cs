@@ -47,7 +47,6 @@ public class KingQueenAbilitiesIntegrationTests : IntegrationTestBase, IClassFix
         var queen = state!.Player1.Pieces.Find(p => p.Type.ToString() == "Queen");
         var ally = state.Player1.Pieces.Find(p => p.Id != queen!.Id);
 
-        // Имитация гибели союзника через прямой API сейчас отсутствует — TDD: предполагаем, что сервер позволит обозначить цель на позиции союзника
         var req = new { pieceId = queen!.Id.ToString(), abilityName = "Resurrection", target = new { x = ally!.Position.X, y = ally.Position.Y } };
         var resp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/ability", req);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);

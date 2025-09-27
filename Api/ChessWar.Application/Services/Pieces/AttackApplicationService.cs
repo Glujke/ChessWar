@@ -1,6 +1,7 @@
 using ChessWar.Application.Interfaces.Pieces; 
 using ChessWar.Application.Interfaces.Board;
 using ChessWar.Application.Interfaces;
+using ChessWar.Application.Services.Common;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.ValueObjects;
@@ -16,26 +17,32 @@ public class AttackApplicationService : IAttackApplicationService
     private readonly IAttackRulesService _attackRulesService;
     private readonly IPieceService _pieceService;
     private readonly IBoardService _boardService;
+    private readonly IPieceValidationService _pieceValidationService;
+    private readonly IBoardContextService _boardContextService;
 
     public AttackApplicationService(
         IAttackRulesService attackRulesService,
         IPieceService pieceService,
-        IBoardService boardService)
+        IBoardService boardService,
+        IPieceValidationService pieceValidationService,
+        IBoardContextService boardContextService)
     {
         _attackRulesService = attackRulesService;
         _pieceService = pieceService;
         _boardService = boardService;
+        _pieceValidationService = pieceValidationService;
+        _boardContextService = boardContextService;
     }
 
     public async Task<AttackApplicationResult> CheckAttackAsync(int attackerId, Position targetPosition, CancellationToken cancellationToken = default)
     {
         var attacker = await _pieceService.GetPieceByIdAsync(attackerId, cancellationToken);
-        if (attacker == null)
+        if (!_pieceValidationService.IsPieceValid(attacker, attackerId))
         {
             return new AttackApplicationResult
             {
                 CanAttack = false,
-                Reason = $"Piece with ID {attackerId} not found"
+                Reason = attacker == null ? $"Piece with ID {attackerId} not found" : $"Piece with ID {attackerId} is not alive"
             };
         }
 
@@ -60,7 +67,7 @@ public class AttackApplicationService : IAttackApplicationService
     public async Task<IEnumerable<Position>> GetAttackablePositionsAsync(int attackerId, CancellationToken cancellationToken = default)
     {
         var attacker = await _pieceService.GetPieceByIdAsync(attackerId, cancellationToken);
-        if (attacker == null)
+        if (!_pieceValidationService.IsPieceValid(attacker, attackerId))
             return Enumerable.Empty<Position>();
 
         var board = await _boardService.GetBoardAsync();
@@ -72,11 +79,11 @@ public class AttackApplicationService : IAttackApplicationService
     public async Task<bool> IsEnemyAsync(int attackerId, int targetId, CancellationToken cancellationToken = default)
     {
         var attacker = await _pieceService.GetPieceByIdAsync(attackerId, cancellationToken);
-        if (attacker == null)
+        if (!_pieceValidationService.IsPieceValid(attacker, attackerId))
             return false;
 
         var target = await _pieceService.GetPieceByIdAsync(targetId, cancellationToken);
-        if (target == null)
+        if (!_pieceValidationService.IsPieceValid(target, targetId))
             return false;
 
         return _attackRulesService.IsEnemy(attacker, target);

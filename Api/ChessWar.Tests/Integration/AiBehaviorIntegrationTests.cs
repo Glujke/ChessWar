@@ -12,7 +12,6 @@ public class AiBehaviorIntegrationTests : IntegrationTestBase, IClassFixture<Tes
     [Fact]
     public async Task AiTurn_ShouldBeAvailable_In_AI_Mode_AndNotIn_LocalCoop()
     {
-        // AI mode
         var createAi = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "AI" };
         var respAi = await _client.PostAsJsonAsync("/api/v1/gamesession", createAi);
         var sessionAi = await respAi.Content.ReadFromJsonAsync<GameSessionDto>();
@@ -20,7 +19,6 @@ public class AiBehaviorIntegrationTests : IntegrationTestBase, IClassFixture<Tes
         var aiTurn = await _client.PostAsync($"/api/v1/gamesession/{sessionAi!.Id}/turn/ai", null);
         aiTurn.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // LocalCoop mode
         var createLc = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "LocalCoop" };
         var respLc = await _client.PostAsJsonAsync("/api/v1/gamesession", createLc);
         var sessionLc = await respLc.Content.ReadFromJsonAsync<GameSessionDto>();

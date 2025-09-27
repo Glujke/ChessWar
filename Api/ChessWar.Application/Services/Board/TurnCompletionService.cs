@@ -41,7 +41,7 @@ public class TurnCompletionService : ITurnCompletionService
         {
             var activePlayerPieces = currentTurn.ActiveParticipant?.Pieces ?? new List<ChessWar.Domain.Entities.Piece>();
             var hasAnyAction = activePlayerPieces.Any(p => p.IsAlive &&
-                (_turnService.GetAvailableMoves(currentTurn, p).Any() || _turnService.GetAvailableAttacks(currentTurn, p).Any()));
+                (_turnService.GetAvailableMoves(gameSession, currentTurn, p).Any() || _turnService.GetAvailableAttacks(currentTurn, p).Any()));
 
             var noMana = currentTurn.ActiveParticipant?.MP <= 0 || currentTurn.RemainingMP <= 0;
 

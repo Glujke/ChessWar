@@ -39,7 +39,6 @@ public class PieceConfigServiceTests
     var repository = new Mock<IBalanceVersionRepository>();
     var cache = new MemoryCache(new MemoryCacheOptions());
     
-    // Добавляем в кэш
     cache.Set("piece-config:active", expectedVersion, TimeSpan.FromMinutes(5));
     
     IPieceConfigService service = new PieceConfigService(repository.Object, cache);

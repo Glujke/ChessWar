@@ -10,18 +10,15 @@ public class GameModeRepositoryPersistenceTests
     [Fact]
     public async Task SaveAndGet_TutorialSession_ShouldPersistInRepository()
     {
-        // Arrange
         var memoryCache = new MemoryCache(new MemoryCacheOptions());
         var repository = new GameModeRepository(memoryCache);
         var player = new Player("player123", Team.Elves);
         var session = new TutorialSession(player);
 
-        // Act
         await repository.SaveModeAsync(session);
         var exists = await repository.ModeExistsAsync(session.Id);
         var loaded = await repository.GetModeByIdAsync<TutorialSession>(session.Id);
 
-        // Assert
         Assert.True(exists);
         Assert.NotNull(loaded);
         Assert.Equal(session.Id, loaded!.Id);

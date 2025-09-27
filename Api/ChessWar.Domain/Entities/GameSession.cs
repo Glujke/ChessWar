@@ -9,8 +9,8 @@ namespace ChessWar.Domain.Entities;
 public class GameSession
 {
     public Guid Id { get; private set; }
-    public Player Player1 { get; private set; }
-    public Player Player2 { get; private set; }
+    public Participant Player1 { get; private set; }
+    public Participant Player2 { get; private set; }
     public GameBoard Board { get; private set; }
     public Enums.GameStatus Status { get; private set; }
     public GameResult? Result { get; private set; }
@@ -19,7 +19,7 @@ public class GameSession
     public string Mode { get; private set; } = "AI"; 
     public Guid? TutorialSessionId { get; private set; }
 
-    public GameSession(Player player1, Player player2, string mode = "AI")
+    public GameSession(Participant player1, Participant player2, string mode = "AI")
     {
         Id = Guid.NewGuid();
         Player1 = player1 ?? throw new ArgumentNullException(nameof(player1));
@@ -104,29 +104,30 @@ public class GameSession
         if (CurrentTurn == null)
             throw new InvalidOperationException("No current turn to end");
 
-        var nextPlayer = CurrentTurn.ActiveParticipant.Id == Player1.Id ? Player2 : Player1;
+        var currentPlayer = CurrentTurn.ActiveParticipant;
+        var nextPlayer = currentPlayer.Id == Player1.Id ? Player2 : Player1;
         
-        nextPlayer.Restore(manaRegen);
+        currentPlayer.Restore(manaRegen);
         
         var nextTurnNumber = CurrentTurn.Number + 1;
         CurrentTurn = new Turn(nextTurnNumber, nextPlayer);
     }
 
     /// <summary>
-    /// Проверяет, может ли игрок выполнить действие в текущем ходе
+    /// Проверяет, может ли участник выполнить действие в текущем ходе
     /// </summary>
-    public bool CanPlayerAct(Player player)
+    public bool CanPlayerAct(Participant participant)
     {
         if (CurrentTurn == null)
             return false;
 
-        return CurrentTurn.ActiveParticipant == player;
+        return CurrentTurn.ActiveParticipant == participant;
     }
 
     /// <summary>
-    /// Получает следующего игрока
+    /// Получает следующего участника
     /// </summary>
-    public Player GetNextPlayer()
+    public Participant GetNextPlayer()
     {
         if (CurrentTurn == null)
             return Player1;

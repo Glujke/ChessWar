@@ -3,7 +3,7 @@
   "type": "object",
   "title": "BalanceConfig",
   "description": "Configuration for game balance including pieces, abilities, evolution rules and AI settings",
-  "required": ["globals", "playerMana", "pieces", "abilities", "evolution", "ai"],
+  "required": ["globals", "playerMana", "pieces", "abilities", "evolution", "ai", "killRewards"],
   "properties": {
     "version": {
       "type": "string",
@@ -260,6 +260,18 @@
             }
           },
           "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "killRewards": {
+      "type": "object",
+      "description": "Experience rewards for killing different piece types",
+      "patternProperties": {
+        "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experience reward for killing this piece type"
         }
       },
       "additionalProperties": false

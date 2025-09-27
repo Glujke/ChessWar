@@ -19,17 +19,14 @@ public class TestStartup
         services.AddControllers();
         services.AddOpenApi();
         
-        // Add in-memory database for testing
         services.AddDbContext<ChessWarDbContext>(options =>
         {
             options.UseInMemoryDatabase("TestDatabase");
         });
         
-        // Register services
         services.AddScoped<IPieceService, PieceService>();
         services.AddScoped<IBoardService, BoardService>();
         
-        // Register infrastructure
         services.AddInfrastructure();
     }
 

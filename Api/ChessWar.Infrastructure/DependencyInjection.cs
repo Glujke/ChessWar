@@ -10,7 +10,6 @@ using ChessWar.Infrastructure.Repositories;
 using ChessWar.Infrastructure.Services;
 using ChessWar.Domain.Services.GameLogic;
 using ChessWar.Domain.Services.AI;
-using ChessWar.Infrastructure.Services.AI;
 using Microsoft.Extensions.DependencyInjection;
 using ChessWar.Domain.Events;
 using ChessWar.Domain.Events.Handlers;
@@ -57,20 +56,13 @@ public static class DependencyInjection
         
         services.AddScoped<IGameStateEvaluator, GameStateEvaluator>();
         services.AddScoped<IProbabilityMatrix, ChessWarProbabilityMatrix>();
-        services.AddScoped<IAIDifficultyLevel, AIDifficultyProvider>();
+        services.AddScoped<IAIDifficultyLevel, ChessWar.Domain.Services.AI.AIDifficultyProvider>();
         
         
-        services.AddScoped<IAIService>(provider =>
-        {
-            var probabilityMatrix = provider.GetRequiredService<IProbabilityMatrix>();
-            var evaluator = provider.GetRequiredService<IGameStateEvaluator>();
-            var difficultyProvider = provider.GetRequiredService<IAIDifficultyLevel>();
-            var turnService = provider.GetRequiredService<ITurnService>();
-            var abilityService = provider.GetRequiredService<IAbilityService>();
-            var logger = provider.GetRequiredService<ILogger<ProbabilisticAIService>>();
-            
-            return new ProbabilisticAIService(probabilityMatrix, evaluator, difficultyProvider, turnService, abilityService, logger);
-        });
+        services.AddScoped<IActionGenerator, ChessWar.Domain.Services.AI.ActionGenerator>();
+        services.AddScoped<IActionSelector, ChessWar.Domain.Services.AI.ActionSelector>();
+        services.AddScoped<IActionExecutor, ChessWar.Domain.Services.AI.ActionExecutor>();
+        services.AddScoped<IAIService, ChessWar.Domain.Services.AI.AIService>();
         
         return services;
     }

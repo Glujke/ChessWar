@@ -4,7 +4,7 @@ using ChessWar.Domain.Interfaces.AI;
 using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.ValueObjects;
-using ChessWar.Infrastructure.Services.AI;
+using ChessWar.Domain.Services.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -19,8 +19,8 @@ public class ProbabilisticAITests
     private readonly Mock<IGameStateEvaluator> _mockEvaluator;
     private readonly Mock<IAIDifficultyLevel> _mockDifficultyProvider;
     private readonly Mock<ITurnService> _mockTurnService;
-    private readonly Mock<ILogger<ChessWar.Infrastructure.Services.AI.ProbabilisticAIService>> _mockLogger;
-    private readonly ChessWar.Infrastructure.Services.AI.ProbabilisticAIService _aiService;
+    private readonly Mock<ILogger<ChessWar.Domain.Services.AI.AIService>> _mockLogger;
+    private readonly ChessWar.Domain.Services.AI.AIService _aiService;
     
     public ProbabilisticAITests()
     {
@@ -28,47 +28,47 @@ public class ProbabilisticAITests
         _mockEvaluator = new Mock<IGameStateEvaluator>();
         _mockDifficultyProvider = new Mock<IAIDifficultyLevel>();
         _mockTurnService = new Mock<ITurnService>();
-        _mockLogger = new Mock<ILogger<ProbabilisticAIService>>();
+        _mockLogger = new Mock<ILogger<ChessWar.Domain.Services.AI.AIService>>();
         
-        // Настраиваем мок для TurnService
         _mockTurnService.Setup(x => x.ExecuteMove(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
             .Returns(true);
         _mockTurnService.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
             .Returns(true);
+        _mockTurnService.Setup(x => x.GetAvailableMoves(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>()))
+            .Returns(new List<Position> { new Position(0, 5), new Position(1, 5) });
+        _mockTurnService.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
+            .Returns(new List<Position> { new Position(1, 5) });
         
-        _aiService = new ChessWar.Infrastructure.Services.AI.ProbabilisticAIService(
-            _mockProbabilityMatrix.Object,
-            _mockEvaluator.Object,
-            _mockDifficultyProvider.Object,
-            _mockTurnService.Object,
-            Mock.Of<IAbilityService>(),
+        var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(_mockTurnService.Object, Mock.Of<IAbilityService>(), Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
+        var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(_mockProbabilityMatrix.Object, _mockEvaluator.Object, _mockDifficultyProvider.Object);
+        var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(_mockTurnService.Object, Mock.Of<IAbilityService>());
+        
+        _aiService = new ChessWar.Domain.Services.AI.AIService(
+            actionGenerator,
+            actionSelector,
+            actionExecutor,
             _mockLogger.Object);
     }
     
     [Fact]
     public void MakeAiTurn_WithNoPieces_ShouldReturnFalse()
     {
-        // Arrange
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new Player("Player 2", new List<Piece>());
         var session = new GameSession(player1, player2, "Test");
         session.StartGame();
         
-        // Act
         var result = _aiService.MakeAiTurn(session);
         
-        // Assert
         Assert.False(result);
     }
     
     [Fact]
     public void MakeAiTurn_WithPieces_ShouldReturnTrue()
     {
-        // Arrange
         var session = CreateGameSession();
         var activePlayer = session.GetCurrentTurn().ActiveParticipant; // Используем активного игрока из сессии
         
-        // Настраиваем моки для активного игрока
         _mockDifficultyProvider.Setup(x => x.GetDifficultyLevel(activePlayer))
             .Returns(AIDifficultyLevel.Medium);
         
@@ -78,10 +78,8 @@ public class ProbabilisticAITests
         _mockEvaluator.Setup(x => x.EvaluateGameState(It.IsAny<GameSession>(), It.IsAny<Player>()))
             .Returns(0.0);
         
-        // Act
         var result = _aiService.MakeAiTurn(session);
         
-        // Assert
         Assert.True(result);
     }
     
@@ -91,11 +89,9 @@ public class ProbabilisticAITests
     [InlineData(AIDifficultyLevel.Hard)]
     public void MakeAiTurn_WithDifferentDifficulties_ShouldWork(AIDifficultyLevel difficulty)
     {
-        // Arrange
         var session = CreateGameSession();
         var activePlayer = session.GetCurrentTurn().ActiveParticipant; // Используем активного игрока из сессии
         
-        // Настраиваем моки для активного игрока
         _mockDifficultyProvider.Setup(x => x.GetDifficultyLevel(activePlayer))
             .Returns(difficulty);
         
@@ -105,23 +101,19 @@ public class ProbabilisticAITests
         _mockEvaluator.Setup(x => x.EvaluateGameState(It.IsAny<GameSession>(), It.IsAny<Player>()))
             .Returns(0.0);
         
-        // Act
         var result = _aiService.MakeAiTurn(session);
         
-        // Assert
         Assert.True(result);
     }
     
     private GameSession CreateGameSession()
     {
         var player1 = new Player("Player 1", new List<Piece>());
-        var player2 = new Player("Player 2", new List<Piece>());
+        var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         
-        // Добавляем фигуры игрокам
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         
-        // Устанавливаем HP для фигур (иначе они не будут живыми)
         piece1.HP = 10; // HP пешки по умолчанию
         piece2.HP = 10;
         
@@ -131,14 +123,14 @@ public class ProbabilisticAITests
         player1.AddPiece(piece1);
         player2.AddPiece(piece2);
         
-        // Устанавливаем MP для игроков
         player1.SetMana(10, 10);
         player2.SetMana(10, 10);
         
         var session = new GameSession(player1, player2, "Test");
         session.StartGame(); // Запускаем игру
         
-        // Размещаем фигуры на доске
+        session.EndCurrentTurn();
+        
         session.GetBoard().PlacePiece(piece1);
         session.GetBoard().PlacePiece(piece2);
         

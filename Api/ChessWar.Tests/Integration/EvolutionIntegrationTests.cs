@@ -12,7 +12,6 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
     [Fact]
     public async Task Pawn_Reaches_LastRank_ShouldAllow_EvolutionEndpoint()
     {
-        // Arrange: создать сессию
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2" };
         var createResp = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResp.IsSuccessStatusCode.Should().BeTrue();
@@ -22,7 +21,6 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var state = await stateResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var pawn = state!.Player1.Pieces.First(p => p.Type.ToString() == "Pawn" && p.Position != null && p.Position.X == 0);
 
-        // Подводим пешку до y=5
         while ((pawn.Position?.Y ?? 0) < 5)
         {
             var next = new PositionDto { X = pawn.Position!.X, Y = pawn.Position.Y + 1 };
@@ -34,13 +32,11 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
             pawn = snap!.Player1.Pieces.First(p => p.Id == pawn.Id);
         }
 
-        // Снимаем блокирующую пешку противника захватом по диагонали (1,6)
         var attackPos = new PositionDto { X = 1, Y = 6 };
         var attackReq = new ExecuteActionDto { Type = "Attack", PieceId = pawn.Id.ToString(), TargetPosition = attackPos };
         var attackResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackReq);
         attackResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Атакуем несколько раз до убийства цели
         var attackCount = 0;
         var maxAttacks = 10;
         while (attackCount < maxAttacks)
@@ -59,8 +55,6 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
             attackCount++;
         }
 
-        // После убийства пешка автоматически занимает место убитой фигуры (1,6)
-        // Теперь двигаемся прямо до последней линии (1,7)
         var finalMove = new ExecuteActionDto { Type = "Move", PieceId = pawn.Id.ToString(), TargetPosition = new PositionDto { X = 1, Y = 7 } };
         var finalMoveResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", finalMove);
         finalMoveResp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -68,7 +62,6 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var evolveReq = new { pieceId = pawn.Id.ToString(), targetType = "Knight" };
         var resp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/evolve", evolveReq);
 
-        // Ожидаем 200 после реализации эндпоинта (сейчас падает в красную фазу)
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -83,7 +76,6 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var stateResp = await _client.GetAsync($"/api/v1/gamesession/{session!.Id}");
         var state = await stateResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var pawn = state!.Player1.Pieces.First(p => p.Type.ToString() == "Pawn" && p.Position != null && p.Position.X == 0);
-        // Подводим пешку до y=5
         while ((pawn.Position?.Y ?? 0) < 5)
         {
             var next = new PositionDto { X = pawn.Position!.X, Y = pawn.Position.Y + 1 };
@@ -95,13 +87,11 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
             pawn = snap!.Player1.Pieces.First(p => p.Id == pawn.Id);
         }
 
-        // Снимаем блокирующую пешку противника захватом по диагонали (1,6)
         var attackPos = new PositionDto { X = 1, Y = 6 };
         var attackReq = new ExecuteActionDto { Type = "Attack", PieceId = pawn.Id.ToString(), TargetPosition = attackPos };
         var attackResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackReq);
         attackResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Атакуем несколько раз до убийства цели
         var attackCount = 0;
         var maxAttacks = 10;
         while (attackCount < maxAttacks)
@@ -120,13 +110,10 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
             attackCount++;
         }
 
-        // После убийства пешка автоматически занимает место убитой фигуры (1,6)
-        // Теперь двигаемся прямо до последней линии (1,7)
         var finalMove = new ExecuteActionDto { Type = "Move", PieceId = pawn.Id.ToString(), TargetPosition = new PositionDto { X = 1, Y = 7 } };
         var finalMoveResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", finalMove);
         finalMoveResp.StatusCode.Should().Be(HttpStatusCode.OK);
         
-        // Получаем актуальную позицию после всех перемещений
         var finalState = await GetGameState(session.Id);
         var finalPawn = finalState.Player1.Pieces.First(p => p.Id == pawn.Id);
         var prev = finalPawn.Position;
@@ -154,7 +141,6 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var beforeResp = await _client.GetAsync($"/api/v1/gamesession/{session!.Id}");
         var before = await beforeResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var pawn = before!.Player1.Pieces.First(p => p.Type.ToString() == "Pawn" && p.Position != null && p.Position.X == 0);
-        // Подводим пешку до y=5
         while ((pawn.Position?.Y ?? 0) < 5)
         {
             var next = new PositionDto { X = pawn.Position!.X, Y = pawn.Position.Y + 1 };
@@ -166,13 +152,11 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
             pawn = snap!.Player1.Pieces.First(p => p.Id == pawn.Id);
         }
 
-        // Снимаем блокирующую пешку противника захватом по диагонали (1,6)
         var attackPos2 = new PositionDto { X = 1, Y = 6 };
         var attackReq2 = new ExecuteActionDto { Type = "Attack", PieceId = pawn.Id.ToString(), TargetPosition = attackPos2 };
         var attackResp2 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackReq2);
         attackResp2.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Атакуем несколько раз до убийства цели
         var attackCount = 0;
         var maxAttacks = 10;
         while (attackCount < maxAttacks)
@@ -191,13 +175,10 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
             attackCount++;
         }
 
-        // После убийства пешка автоматически занимает место убитой фигуры (1,6)
-        // Теперь двигаемся прямо до последней линии (1,7)
         var finalMove = new ExecuteActionDto { Type = "Move", PieceId = pawn.Id.ToString(), TargetPosition = new PositionDto { X = 1, Y = 7 } };
         var finalMoveResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", finalMove);
         finalMoveResp.StatusCode.Should().Be(HttpStatusCode.OK);
         
-        // Получаем актуальную позицию после всех перемещений
         var finalState = await GetGameState(session.Id);
         var finalPawn = finalState.Player1.Pieces.First(p => p.Id == pawn.Id);
         var prev = finalPawn.Position;

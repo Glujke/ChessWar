@@ -35,28 +35,31 @@ public class GameSessionManagementService : IGameSessionManagementService
 
         var mode = (dto.Mode ?? string.Empty).Trim();
         if (!string.Equals(mode, "AI", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(mode, "LocalCoop", StringComparison.OrdinalIgnoreCase))
+            !string.Equals(mode, "LocalCoop", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(mode, "Tutorial", StringComparison.OrdinalIgnoreCase))
         {
-            throw new ArgumentException("Invalid session mode. Allowed values: 'AI' or 'LocalCoop'", nameof(dto.Mode));
+            throw new ArgumentException("Invalid session mode. Allowed values: 'AI', 'LocalCoop', or 'Tutorial'", nameof(dto.Mode));
         }
 
         var player1 = _playerManagementService.CreatePlayerWithInitialPieces(dto.Player1Name, Team.Elves);
-        var player2 = _playerManagementService.CreatePlayerWithInitialPieces(dto.Player2Name, Team.Orcs);
-
-        var gameSession = new GameSession(player1, player2, string.Equals(mode, "LocalCoop", StringComparison.OrdinalIgnoreCase) ? "LocalCoop" : "AI");
         
-        Console.WriteLine($"[GameSessionManagementService] Creating game session with TutorialSessionId: {dto.TutorialSessionId}");
-        Console.WriteLine($"[GameSessionManagementService] TutorialSessionId HasValue: {dto.TutorialSessionId.HasValue}");
-        
-        if (dto.TutorialSessionId.HasValue)
+        Participant player2;
+        if (string.Equals(mode, "AI", StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(mode, "Tutorial", StringComparison.OrdinalIgnoreCase))
         {
-            Console.WriteLine($"[GameSessionManagementService] Setting TutorialSessionId: {dto.TutorialSessionId.Value}");
-            gameSession.SetTutorialSessionId(dto.TutorialSessionId.Value);
-            Console.WriteLine($"[GameSessionManagementService] Game session TutorialSessionId after setting: {gameSession.TutorialSessionId}");
+            player2 = _playerManagementService.CreateAIWithInitialPieces(Team.Orcs);
         }
         else
         {
-            Console.WriteLine($"[GameSessionManagementService] TutorialSessionId is null, not setting");
+            player2 = _playerManagementService.CreatePlayerWithInitialPieces(dto.Player2Name, Team.Orcs);
+        }
+
+        var gameSession = new GameSession(player1, player2, mode);
+        
+        
+        if (dto.TutorialSessionId.HasValue)
+        {
+            gameSession.SetTutorialSessionId(dto.TutorialSessionId.Value);
         }
         
         await _sessionRepository.SaveAsync(gameSession, cancellationToken);

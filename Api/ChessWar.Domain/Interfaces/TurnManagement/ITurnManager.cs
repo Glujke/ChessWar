@@ -11,7 +11,7 @@ public interface ITurnManager
     /// <summary>
     /// Начинает новый ход
     /// </summary>
-    Turn StartTurn(GameSession gameSession, Player activeParticipant);
+    Turn StartTurn(GameSession gameSession, Participant activeParticipant);
 
     /// <summary>
     /// Завершает ход

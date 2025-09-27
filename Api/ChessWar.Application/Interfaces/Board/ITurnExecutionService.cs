@@ -5,32 +5,32 @@ using ChessWar.Domain.ValueObjects;
 namespace ChessWar.Application.Interfaces.Board;
 
 /// <summary>
-/// Сервис выполнения действий в ходе
+/// Сервис выполнения ходов - объединяет все операции с ходами
 /// </summary>
 public interface ITurnExecutionService
 {
     /// <summary>
     /// Выполняет действие в ходе
     /// </summary>
-    Task<bool> ExecuteActionAsync(GameSession gameSession, ExecuteActionDto dto, CancellationToken cancellationToken = default);
-    
+    Task<bool> ExecuteActionAsync(GameSession gameSession, ExecuteActionDto dto);
+
     /// <summary>
     /// Завершает текущий ход
     /// </summary>
-    Task EndTurnAsync(GameSession gameSession, CancellationToken cancellationToken = default);
-    
+    Task EndTurnAsync(GameSession gameSession);
+
     /// <summary>
     /// Выполняет ход ИИ
     /// </summary>
-    Task<bool> MakeAiTurnAsync(GameSession gameSession, CancellationToken cancellationToken = default);
-    
+    Task<bool> MakeAiTurnAsync(GameSession gameSession);
+
+    /// <summary>
+    /// Выполняет перемещение фигуры
+    /// </summary>
+    Task<bool> ExecuteMoveAsync(GameSession gameSession, int pieceId, Position targetPosition);
+
     /// <summary>
     /// Получает доступные действия для фигуры
     /// </summary>
-    Task<List<PositionDto>> GetAvailableActionsAsync(GameSession gameSession, string pieceId, string actionType, string? abilityName = null, CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Выполняет движение фигуры
-    /// </summary>
-    Task<bool> ExecuteMoveAsync(GameSession gameSession, int pieceId, Position targetPosition, CancellationToken cancellationToken = default);
+    Task<List<Position>> GetAvailableActionsAsync(GameSession gameSession, string pieceId, string actionType, string? abilityName = null);
 }

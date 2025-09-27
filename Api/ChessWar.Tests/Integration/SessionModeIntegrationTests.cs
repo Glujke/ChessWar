@@ -17,7 +17,6 @@ public class SessionModeIntegrationTests : IntegrationTestBase, IClassFixture<Te
         createResp.IsSuccessStatusCode.Should().BeTrue();
         var session = await createResp.Content.ReadFromJsonAsync<ChessWar.Application.DTOs.GameSessionDto>();
         session.Should().NotBeNull();
-        // Пока DTO может не содержать Mode — проверим минимум, что создалась сессия
         var getResp = await _client.GetAsync($"/api/v1/gamesession/{session!.Id}");
         getResp.StatusCode.Should().Be(HttpStatusCode.OK);
     }

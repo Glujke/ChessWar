@@ -25,7 +25,7 @@ internal static class TestHelpers
     return factory.CreatePiece(type, team, new Position(x, y), tempOwner);
   }
 
-  public static Piece CreatePiece(PieceType type, Team team, Position position, Player owner, int? id = null)
+  public static Piece CreatePiece(PieceType type, Team team, Position position, Participant owner, int? id = null)
   {
     var factory = CreatePieceFactory();
     var piece = factory.CreatePiece(type, team, position, owner);
@@ -33,11 +33,11 @@ internal static class TestHelpers
     {
       piece.Id = id.Value;
     }
-    owner.Pieces.Add(piece);
+    owner.AddPiece(piece);
     return piece;
   }
 
-  public static Piece CreatePiece(PieceType type, Team team, int x, int y, Player owner, int? id = null)
+  public static Piece CreatePiece(PieceType type, Team team, int x, int y, Participant owner, int? id = null)
   {
     return CreatePiece(type, team, new Position(x, y), owner, id);
   }

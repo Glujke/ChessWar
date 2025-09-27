@@ -2,6 +2,7 @@ using ChessWar.Application.DTOs;
 using ChessWar.Application.Interfaces.Board;
 using ChessWar.Application.Interfaces.Configuration;
 using ChessWar.Application.Commands;
+using ChessWar.Application.Services.Common;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Interfaces.TurnManagement; using ChessWar.Domain.Interfaces.DataAccess;
@@ -17,17 +18,20 @@ public class ActionExecutionService : IActionExecutionService
     private readonly IPlayerManagementService _playerManagementService;
     private readonly ICommandFactory _commandFactory;
     private readonly IGameSessionRepository _sessionRepository;
+    private readonly IPieceValidationService _pieceValidationService;
 
     public ActionExecutionService(
         ITurnService turnService,
         IPlayerManagementService playerManagementService,
         ICommandFactory commandFactory,
-        IGameSessionRepository sessionRepository)
+        IGameSessionRepository sessionRepository,
+        IPieceValidationService pieceValidationService)
     {
         _turnService = turnService ?? throw new ArgumentNullException(nameof(turnService));
         _playerManagementService = playerManagementService ?? throw new ArgumentNullException(nameof(playerManagementService));
         _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
         _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
+        _pieceValidationService = pieceValidationService ?? throw new ArgumentNullException(nameof(pieceValidationService));
     }
 
     public async Task<bool> ExecuteActionAsync(GameSession gameSession, ExecuteActionDto dto, CancellationToken cancellationToken = default)
@@ -40,30 +44,9 @@ public class ActionExecutionService : IActionExecutionService
 
         var currentTurn = gameSession.GetCurrentTurn();
         var piece = _playerManagementService.FindPieceById(gameSession, dto.PieceId);
-
         
-        if (piece != null)
-        {
-            try
-            {
-                
-            }
-            catch (Exception)
-            {
-                
-            }
-        }
 
-        try
-        {
-            
-            if (piece == null || !piece.IsAlive)
-            {
-                return false;
-            }
-            
-        }
-        catch (Exception)
+        if (!_pieceValidationService.IsPieceValid(piece, int.Parse(dto.PieceId)))
         {
             return false;
         }
@@ -88,6 +71,6 @@ public class ActionExecutionService : IActionExecutionService
 
     public async Task<bool> ExecuteMoveAsync(GameSession gameSession, Turn turn, Piece piece, Position targetPosition, CancellationToken cancellationToken = default)
     {
-        return await _turnService.ExecuteMoveAsync(gameSession, turn, piece, targetPosition, cancellationToken);
+        return await Task.FromResult(_turnService.ExecuteMove(gameSession, turn, piece, targetPosition));
     }
 }

@@ -8,12 +8,12 @@ namespace ChessWar.Domain.Interfaces.AI;
 public interface IGameStateEvaluator
 {
     /// <summary>
-    /// Оценить текущее состояние игры для игрока
+    /// Оценить текущее состояние игры для участника
     /// </summary>
     /// <param name="session">Игровая сессия</param>
-    /// <param name="player">Игрок для которого оцениваем</param>
+    /// <param name="participant">Участник для которого оцениваем</param>
     /// <returns>Оценка от -100 (очень плохо) до +100 (очень хорошо)</returns>
-    double EvaluateGameState(GameSession session, Player player);
+    double EvaluateGameState(GameSession session, Participant participant);
     
     /// <summary>
     /// Оценить позицию фигуры на доске
@@ -23,10 +23,10 @@ public interface IGameStateEvaluator
     /// <summary>
     /// Оценить угрозу для короля
     /// </summary>
-    double EvaluateKingThreat(GameSession session, Player player);
+    double EvaluateKingThreat(GameSession session, Participant participant);
     
     /// <summary>
     /// Оценить материальное преимущество
     /// </summary>
-    double EvaluateMaterialAdvantage(GameSession session, Player player);
+    double EvaluateMaterialAdvantage(GameSession session, Participant participant);
 }

@@ -21,15 +21,15 @@ public interface IAIStrategy
     /// <summary>
     /// Может ли стратегия выполнить действие в текущем состоянии
     /// </summary>
-    bool CanExecute(GameSession session, Turn turn, Player active);
+    bool CanExecute(GameSession session, Turn turn, Participant active);
     
     /// <summary>
     /// Выполнить действие согласно стратегии
     /// </summary>
-    bool Execute(GameSession session, Turn turn, Player active);
+    bool Execute(GameSession session, Turn turn, Participant active);
     
     /// <summary>
     /// Рассчитать вероятность успеха действия
     /// </summary>
-    double CalculateActionProbability(GameSession session, Turn turn, Player active, GameAction action);
+    double CalculateActionProbability(GameSession session, Turn turn, Participant active, GameAction action);
 }

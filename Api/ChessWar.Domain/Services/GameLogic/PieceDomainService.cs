@@ -110,7 +110,19 @@ public class PieceDomainService : IPieceDomainService
         foreach (var key in keys)
         {
             if (piece.AbilityCooldowns[key] > 0)
+            {
                 piece.AbilityCooldowns[key]--;
+                
+                // Снимаем эффект Fortress когда кулдаун заканчивается
+                if (key == "__FortressBuff" && piece.AbilityCooldowns[key] == 0)
+                {
+                    var maxHP = GetMaxHP(piece.Type);
+                    if (piece.HP > maxHP)
+                    {
+                        piece.HP = maxHP;
+                    }
+                }
+            }
         }
     }
 

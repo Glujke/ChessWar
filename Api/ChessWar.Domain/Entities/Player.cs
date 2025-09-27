@@ -5,84 +5,28 @@ namespace ChessWar.Domain.Entities;
 /// <summary>
 /// Игрок в системе Chess War
 /// </summary>
-public class Player
+public class Player : Participant
 {
-    public Guid Id { get; private set; }
-    public string Name { get; private set; }
-    public List<Piece> Pieces { get; private set; }
-    public int Victories { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public int MP { get; private set; }
-    public int MaxMP { get; private set; }
+    private readonly Team _team;
 
-    public Player(string name, List<Piece> pieces)
+    public Player(string name, List<Piece> pieces) : base(name)
     {
-        Id = Guid.NewGuid();
-        Name = name ?? throw new ArgumentNullException(nameof(name));
         Pieces = pieces ?? throw new ArgumentNullException(nameof(pieces));
-        Victories = 0;
-        CreatedAt = DateTime.UtcNow;
-        MP = 0;
-        MaxMP = 0;
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Player name cannot be empty", nameof(name));
-        }
+        _team = pieces.FirstOrDefault()?.Team ?? Team.Elves;
     }
 
     /// <summary>
     /// Конструктор для создания игрока с командой (для Tutorial)
     /// </summary>
-    public Player(string name, Team team)
+    public Player(string name, Team team) : base(name)
     {
-        Id = Guid.NewGuid();
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        Pieces = new List<Piece>();
-        Victories = 0;
-        CreatedAt = DateTime.UtcNow;
-        MP = 0;
-        MaxMP = 0;
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Player name cannot be empty", nameof(name));
-        }
+        _team = team;
     }
 
-    /// <summary>
-    /// Добавляет победу игроку
-    /// </summary>
-    public void AddVictory()
-    {
-        Victories++;
-    }
+    public override bool IsAI => false;
 
-    public void SetMana(int current, int max)
-    {
-        if (max < 0) throw new ArgumentOutOfRangeException(nameof(max));
-        if (current < 0) current = 0;
-        MP = Math.Min(current, max);
-        MaxMP = max;
-    }
+    public override Team Team => _team;
 
-    public bool CanSpend(int amount)
-    {
-        if (amount < 0) return false;
-        return MP >= amount;
-    }
-
-    public void Spend(int amount)
-    {
-        if (!CanSpend(amount))
-            throw new InvalidOperationException("Not enough mana to perform action.");
-        MP -= amount;
-    }
-
-    public void Restore(int amount)
-    {
-        MP = Math.Max(0, Math.Min(MaxMP, MP + amount));
-    }
 
     /// <summary>
     /// Получает фигуры по типу
@@ -108,16 +52,6 @@ public class Player
         return Pieces.Where(p => p.Team == team).ToList();
     }
 
-    /// <summary>
-    /// Добавляет фигуру в коллекцию
-    /// </summary>
-    public void AddPiece(Piece piece)
-    {
-        if (piece == null)
-            throw new ArgumentNullException(nameof(piece));
-
-        Pieces.Add(piece);
-    }
 
     /// <summary>
     /// Удаляет фигуру из коллекции
@@ -144,11 +78,4 @@ public class Player
         }
     }
 
-    /// <summary>
-    /// Очищает все фигуры игрока
-    /// </summary>
-    public void ClearPieces()
-    {
-        Pieces.Clear();
-    }
 }

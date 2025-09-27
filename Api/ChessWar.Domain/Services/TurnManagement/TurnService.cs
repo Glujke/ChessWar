@@ -2,14 +2,15 @@ using ChessWar.Domain.Entities;
 using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.Interfaces.Configuration;
-using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Events;
+using ChessWar.Domain.Enums;
+using ChessWar.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace ChessWar.Domain.Services.TurnManagement;
 
 /// <summary>
-/// Сервис управления ходами в игре
+/// Координатор ходов - управляет выполнением действий в игре
 /// </summary>
 public class TurnService : ITurnService
 {
@@ -39,7 +40,7 @@ public class TurnService : ITurnService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Turn StartTurn(GameSession gameSession, Player activeParticipant)
+    public Turn StartTurn(GameSession gameSession, Participant activeParticipant)
     {
         if (gameSession == null)
             throw new ArgumentNullException(nameof(gameSession));
@@ -49,313 +50,205 @@ public class TurnService : ITurnService
 
         var turnNumber = gameSession.CurrentTurn?.Number + 1 ?? 1;
         var turn = new Turn(turnNumber, activeParticipant);
+        
+        _logger.LogInformation("Started turn {TurnNumber} for participant {ParticipantId}", 
+            turnNumber, activeParticipant.Id);
 
         return turn;
     }
 
-
-    public bool ExecuteMove(GameSession gameSession, Turn turn, Piece piece, Position targetPosition)
+    public bool ExecuteMove(GameSession session, Turn turn, Piece piece, Position targetPosition)
     {
-        _logger.LogDebug("[TurnService] ExecuteMove called for piece {PieceId} to ({X},{Y})", piece?.Id, targetPosition?.X, targetPosition?.Y);
-        _logger.LogDebug("[TurnService] Turn active participant: {ActiveParticipantName} (ID: {ActiveParticipantId})", turn.ActiveParticipant.Name, turn.ActiveParticipant.Id);
-        _logger.LogDebug("[TurnService] Piece owner: {PieceOwnerName} (ID: {PieceOwnerId})", piece.Owner?.Name, piece.Owner?.Id);
-        
-        if (gameSession == null)
-            throw new ArgumentNullException(nameof(gameSession));
+        if (session == null) throw new ArgumentNullException(nameof(session));
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
+        if (piece == null) throw new ArgumentNullException(nameof(piece));
 
-        if (turn == null)
-            throw new ArgumentNullException(nameof(turn));
-
-        if (piece == null)
-            throw new ArgumentNullException(nameof(piece));
-
-        if (targetPosition == null)
-            throw new ArgumentNullException(nameof(targetPosition));
-
-        if (piece.AbilityCooldowns.GetValueOrDefault("__RoyalCommandGranted", 0) > 0)
+        try
         {
-            piece.AbilityCooldowns["__RoyalCommandGranted"] = 0;
-        }
-        turn.SelectPiece(piece);
-
-        var allPieces = gameSession.Board?.Pieces?.Where(p => p.IsAlive).ToList() ?? new List<Piece>();
-        _logger.LogInformation("[TurnService] Checking movement rules for piece {PieceId} from ({FromX},{FromY}) to ({ToX},{ToY})", 
-            piece.Id, piece.Position.X, piece.Position.Y, targetPosition.X, targetPosition.Y);
-        _logger.LogInformation("[TurnService] Piece type: {PieceType}, Team: {Team}", piece.Type, piece.Team);
-        _logger.LogInformation("[TurnService] Total pieces on board: {PiecesCount}", allPieces.Count);
-        
-        var targetPiece = allPieces.FirstOrDefault(p => p.Position == targetPosition);
-        _logger.LogInformation("[TurnService] Target position occupied by: {TargetPieceInfo}", 
-            targetPiece != null ? $"Piece {targetPiece.Id} (Team: {targetPiece.Team})" : "Empty");
-        
-        var canMove = _movementRulesService.CanMoveTo(piece, targetPosition, allPieces);
-        _logger.LogInformation("[TurnService] CanMoveTo result: {CanMove}", canMove);
-        
-        if (canMove)
-        {
-            _logger.LogInformation("🎯 [REAL MOVE] {PieceType} {PieceId} from ({FromX},{FromY}) to ({ToX},{ToY}) by {PlayerName}", 
-                piece.Type, piece.Id, piece.Position.X, piece.Position.Y, targetPosition.X, targetPosition.Y, piece.Owner?.Name);
-        }
-        
-        if (!canMove)
-        {
-            var possibleMoves = _movementRulesService.GetAvailableMoves(piece, allPieces) ?? new List<Position>();
-            if (possibleMoves.Any(p => p == targetPosition))
+            if (piece.Owner != turn.ActiveParticipant)
             {
-                _logger.LogWarning("[TurnService] CanMoveTo returned false, but target present in GetAvailableMoves. Overriding to allow move.");
-                canMove = true;
-            }
-            var targetAlly = allPieces.FirstOrDefault(p => p.Position == targetPosition && p.Team == piece.Team) != null;
-            var targetEnemy = allPieces.FirstOrDefault(p => p.Position == targetPosition && p.Team != piece.Team) != null;
-            _logger.LogWarning("[TurnService] Move denied. Piece={PieceId} {Type} From=({FromX},{FromY}) To=({ToX},{ToY}) TargetAlly={TargetAlly} TargetEnemy={TargetEnemy}",
-                piece.Id, piece.Type, piece.Position.X, piece.Position.Y, targetPosition.X, targetPosition.Y, targetAlly, targetEnemy);
-        }
-        
-        if (!canMove)
-        {
-            _logger.LogInformation("[TurnService] Movement denied by rules!");
-            return false;
-        }
-
-        var config = _configProvider.GetActive();
-        var pieceTypeName = piece.Type.ToString();
-        var movementCost = config.PlayerMana.MovementCosts.GetValueOrDefault(pieceTypeName, 1);
-        
-        _logger.LogInformation("[TurnService] Movement cost for {PieceType}: {MovementCost}", pieceTypeName, movementCost);
-        _logger.LogInformation("[TurnService] Turn RemainingMP: {RemainingMP}", turn.RemainingMP);
-        _logger.LogInformation("[TurnService] Turn ActiveParticipant MP: {ActiveParticipantMP}", turn.ActiveParticipant.MP);
-        _logger.LogInformation("[TurnService] About to check free action marker...");
-
-        var hasFreeActionMarker = piece.AbilityCooldowns.GetValueOrDefault("__RoyalCommandFreeAction", 0) > 0;
-        var isFreeThisAction = hasFreeActionMarker;
-        _logger.LogInformation("[TurnService] Has free action marker: {HasFreeActionMarker}", hasFreeActionMarker);
-        
-        if (!isFreeThisAction)
-        {
-            var canAfford = turn.CanAfford(movementCost);
-            _logger.LogInformation("[TurnService] Can afford movement: {CanAfford}", canAfford);
-            if (!canAfford)
-            {
-                _logger.LogInformation("[TurnService] Movement denied - insufficient mana!");
+                _logger.LogWarning("Piece {PieceId} does not belong to active participant {ParticipantId}", piece.Id, turn.ActiveParticipant.Id);
                 return false;
             }
-        }
 
-        gameSession.Board.MovePiece(piece, targetPosition);
-        
-        if (isFreeThisAction)
-        {
-            piece.AbilityCooldowns["__RoyalCommandFreeAction"] = 0;
-        }
-        else
-        {
-            turn.SpendMP(movementCost);
-            turn.ActiveParticipant.Spend(movementCost);
-        }
-        
-        var action = new TurnAction("Move", piece.Id.ToString(), targetPosition);
-        turn.AddAction(action);
-        
-        turn.UpdateRemainingMP();
+            if (!_movementRulesService.CanMoveTo(piece, targetPosition, session.GetBoard().Pieces.ToList()))
+            {
+                _logger.LogWarning("Piece {PieceId} cannot move to ({X},{Y}) based on rules", piece.Id, targetPosition.X, targetPosition.Y);
+                return false;
+            }
 
-        return true;
+            _pieceDomainService.MoveTo(piece, targetPosition);
+            
+            var moveCost = _configProvider.GetActive().PlayerMana.MovementCosts[piece.Type.ToString()];
+            turn.SpendMP(moveCost);
+            piece.Owner.Spend(moveCost);
+            
+            turn.AddAction(new TurnAction("Move", piece.Id.ToString(), targetPosition));
+
+            _logger.LogInformation("Piece {PieceId} moved to ({X},{Y}). Remaining MP: {MP}", piece.Id, targetPosition.X, targetPosition.Y, turn.RemainingMP);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error executing move for piece {PieceId}", piece.Id);
+            return false;
+        }
     }
 
-
-    public bool ExecuteAttack(GameSession gameSession, Turn turn, Piece attacker, Position targetPosition)
+    public bool ExecuteAttack(GameSession session, Turn turn, Piece attacker, Position targetPosition)
     {
-        if (gameSession == null)
-            throw new ArgumentNullException(nameof(gameSession));
+        if (session == null) throw new ArgumentNullException(nameof(session));
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
+        if (attacker == null) throw new ArgumentNullException(nameof(attacker));
 
-        if (turn == null)
-            throw new ArgumentNullException(nameof(turn));
-
-        if (attacker == null)
-            throw new ArgumentNullException(nameof(attacker));
-
-        if (targetPosition == null)
-            throw new ArgumentNullException(nameof(targetPosition));
-
-        if (attacker.AbilityCooldowns.GetValueOrDefault("__RoyalCommandGranted", 0) > 0)
+        try
         {
-            attacker.AbilityCooldowns["__RoyalCommandGranted"] = 0;
-        }
-        turn.SelectPiece(attacker);
+            _logger.LogInformation("[DEBUG] ExecuteAttack: attacker={AttackerId}, target=({X},{Y})", attacker.Id, targetPosition.X, targetPosition.Y);
+            
+            if (attacker.Owner != turn.ActiveParticipant)
+            {
+                _logger.LogWarning("Attacker piece {AttackerId} does not belong to active participant {ParticipantId}", attacker.Id, turn.ActiveParticipant.Id);
+                return false;
+            }
 
-        var allPieces = new List<Piece>();
-        allPieces.AddRange(gameSession.Player1.Pieces);
-        allPieces.AddRange(gameSession.Player2.Pieces);
-        
-        var targetPiece = allPieces.FirstOrDefault(p => p.Position.Equals(targetPosition));
-        if (targetPiece != null && !targetPiece.IsAlive)
-        {
-            return false;
-        }
-        
-        var boardPieces = gameSession.Board.Pieces.Where(p => p.IsAlive).ToList();
-        
-        if (!_attackRulesService.CanAttack(attacker, targetPosition, boardPieces))
-            return false;
+            var targetPiece = session.GetBoard().GetPieceAt(targetPosition);
+            _logger.LogInformation("[DEBUG] Target piece found: {TargetPieceId}", targetPiece?.Id);
+            if (targetPiece == null)
+            {
+                _logger.LogWarning("No piece found at target position ({X},{Y})", targetPosition.X, targetPosition.Y);
+                return false;
+            }
 
-        var config = _configProvider.GetActive();
-        var attackCost = config.PlayerMana.AttackCost;
+            var canAttack = _attackRulesService.CanAttack(attacker, targetPosition, session.GetBoard().Pieces.ToList());
+            _logger.LogInformation("[DEBUG] CanAttack result: {CanAttack}", canAttack);
+            if (!canAttack)
+            {
+                _logger.LogWarning("Attacker {AttackerId} cannot attack target at ({X},{Y}) based on rules", attacker.Id, targetPosition.X, targetPosition.Y);
+                return false;
+            }
 
-        if (targetPiece != null)
-        {
-            _logger.LogDebug("[TurnService.ExecuteAttack] Target found: {TargetType}, HP: {TargetHP}, Attack: {AttackerAttack}", 
-                targetPiece.Type, targetPiece.HP, attacker.Attack);
             _pieceDomainService.TakeDamage(targetPiece, attacker.Attack);
-            _logger.LogDebug("[TurnService.ExecuteAttack] After damage: HP: {TargetHP}, IsDead: {IsDead}", 
-                targetPiece.HP, _pieceDomainService.IsDead(targetPiece));
+            var attackCost = _configProvider.GetActive().PlayerMana.AttackCost;
+            turn.SpendMP(attackCost);
+            attacker.Owner.Spend(attackCost);
             
             if (_pieceDomainService.IsDead(targetPiece))
             {
-                _logger.LogDebug("[TurnService.ExecuteAttack] Target is DEAD! Publishing PieceKilledEvent");
-                _eventDispatcher.Publish(new PieceKilledEvent(attacker, targetPiece));
-                _eventDispatcher.PublishAll();
-                gameSession.Board.MovePiece(attacker, targetPosition);
+                session.GetBoard().RemovePiece(targetPiece);
+                session.GetBoard().MovePiece(attacker, targetPosition);
+                
+                _logger.LogInformation("Target {TargetPieceId} killed, attacker {AttackerId} moved to position ({X},{Y})", 
+                    targetPiece.Id, attacker.Id, targetPosition.X, targetPosition.Y);
             }
-            else
-            {
-                _logger.LogDebug("[TurnService.ExecuteAttack] Target is ALIVE, no event published");
-            }
+            
+            turn.AddAction(new TurnAction("Attack", attacker.Id.ToString(), targetPosition));
+
+            _logger.LogInformation("Attacker {AttackerId} attacked target {TargetPieceId}. Turn MP: {TurnMP}, Target HP: {TargetHP}",
+                attacker.Id, targetPiece.Id, turn.RemainingMP, targetPiece.HP);
+
+            return true;
         }
-        else
+        catch (Exception ex)
         {
-            _logger.LogDebug("[TurnService.ExecuteAttack] No target piece found at position {TargetPosition}", targetPosition);
-        }
-        
-        if (!turn.CanAfford(attackCost))
+            _logger.LogError(ex, "Error executing attack for piece {AttackerId}", attacker.Id);
             return false;
-        turn.SpendMP(attackCost);
-        turn.ActiveParticipant.Spend(attackCost);
-        
-        var action = new TurnAction("Attack", attacker.Id.ToString(), targetPosition);
-        turn.AddAction(action);
-        
-        turn.UpdateRemainingMP();
-        
-        return true;
+        }
+    }
+
+    public List<Position> GetAvailableMoves(GameSession session, Turn turn, Piece piece)
+    {
+        if (session == null) throw new ArgumentNullException(nameof(session));
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
+        if (piece == null) throw new ArgumentNullException(nameof(piece));
+
+        try
+        {
+            return _movementRulesService.GetAvailableMoves(piece, session.GetBoard().Pieces.ToList());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting available moves for piece {PieceId}", piece.Id);
+            return new List<Position>();
+        }
+    }
+
+    public List<Position> GetAvailableAttacks(Turn turn, Piece attacker)
+    {
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
+        if (attacker == null) throw new ArgumentNullException(nameof(attacker));
+
+        try
+        {
+            return _attackRulesService.GetAttackablePositions(attacker, new List<Piece>()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting available attacks for piece {AttackerId}", attacker.Id);
+            return new List<Position>();
+        }
+    }
+
+    public bool CanEvolve(GameSession session, Turn turn, Piece piece)
+    {
+        if (session == null) throw new ArgumentNullException(nameof(session));
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
+        if (piece == null) throw new ArgumentNullException(nameof(piece));
+
+        try
+        {
+            return piece.CanEvolve && turn.CanAfford(5);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking evolution possibility for piece {PieceId}", piece.Id);
+            return false;
+        }
+    }
+
+    public bool ExecuteEvolution(GameSession session, Turn turn, Piece piece)
+    {
+        if (session == null) throw new ArgumentNullException(nameof(session));
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
+        if (piece == null) throw new ArgumentNullException(nameof(piece));
+
+        try
+        {
+            if (!CanEvolve(session, turn, piece))
+            {
+                _logger.LogWarning("Piece {PieceId} cannot evolve", piece.Id);
+                return false;
+            }
+
+            _evolutionService.EvolvePiece(piece, piece.Type);
+            
+            turn.AddAction(new TurnAction("Evolve", piece.Id.ToString(), piece.Position));
+
+            _logger.LogInformation("Piece {PieceId} evolved successfully", piece.Id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error executing evolution for piece {PieceId}", piece.Id);
+            return false;
+        }
     }
 
     public void EndTurn(Turn turn)
     {
-        if (turn == null)
-            throw new ArgumentNullException(nameof(turn));
-
-        var config = _configProvider.GetActive();
-        var activePlayer = turn.ActiveParticipant;
+        if (turn == null) throw new ArgumentNullException(nameof(turn));
         
-        if (config.PlayerMana.MandatoryAction && turn.Actions.Count == 0)
-        {
-            throw new InvalidOperationException("Нельзя завершить ход без выполнения хотя бы одного действия");
-        }
+        _logger.LogInformation("Ending turn {TurnNumber}", turn.Number);
         
-        
-        foreach (var piece in activePlayer.Pieces)
+        foreach (var piece in turn.ActiveParticipant.Pieces)
         {
             _pieceDomainService.TickCooldowns(piece);
-            var hasBuffMarker = piece.AbilityCooldowns.GetValueOrDefault("__FortressBuff", 0) > 0;
-            if (!hasBuffMarker && piece.HP > _pieceDomainService.GetMaxHP(piece.Type))
-            {
-                piece.HP = _pieceDomainService.GetMaxHP(piece.Type);
-            }
-            if (piece.Type == ChessWar.Domain.Enums.PieceType.King && config.Ai.KingAura != null)
-            {
-                ApplyKingAura(piece, activePlayer.Pieces, config.Ai.KingAura);
-            }
-        }
-        
-        _eventDispatcher.PublishAll();
-    }
-
-    private void ApplyKingAura(Piece king, List<Piece> allies, ChessWar.Domain.Entities.Config.KingAuraConfig auraConfig)
-    {
-        foreach (var ally in allies)
-        {
-            if (ally == king) continue;
-            var d = Math.Max(Math.Abs(ally.Position.X - king.Position.X), Math.Abs(ally.Position.Y - king.Position.Y));
-            var inRange = d <= auraConfig.Radius;
-            var hasAura = ally.AbilityCooldowns.GetValueOrDefault("__AuraBuff", 0) > 0;
-
-            if (inRange && !hasAura)
-            {
-                ally.ATK += auraConfig.AtkBonus;
-                _pieceDomainService.SetAbilityCooldown(ally, "__AuraBuff", 2); 
-            }
-            else if (!inRange && hasAura)
-            {
-                ally.ATK = Math.Max(0, ally.ATK - auraConfig.AtkBonus);
-                ally.AbilityCooldowns["__AuraBuff"] = 0;
-            }
-            else if (inRange && hasAura)
-            {
-                _pieceDomainService.SetAbilityCooldown(ally, "__AuraBuff", 2);
-            }
         }
     }
 
-
-
-    public List<Position> GetAvailableMoves(Turn turn, Piece piece)
+    private int CalculateDamage(Piece attacker, Piece target)
     {
-        if (turn == null)
-            throw new ArgumentNullException(nameof(turn));
-
-        if (piece == null)
-            throw new ArgumentNullException(nameof(piece));
-
-        var allPieces = GetAllPiecesFromTurn(turn).Where(p => p.IsAlive).ToList();
-        return _movementRulesService.GetAvailableMoves(piece, allPieces);
+        return attacker.Attack;
     }
+    
 
-    /// <summary>
-    /// Получает доступные ходы для фигуры с использованием GameSession
-    /// </summary>
-    public List<Position> GetAvailableMoves(GameSession gameSession, Turn turn, Piece piece)
-    {
-        if (gameSession == null)
-            throw new ArgumentNullException(nameof(gameSession));
-
-        if (turn == null)
-            throw new ArgumentNullException(nameof(turn));
-
-        if (piece == null)
-            throw new ArgumentNullException(nameof(piece));
-
-        var allPieces = gameSession.GetAllPieces();
-        return _movementRulesService.GetAvailableMoves(piece, allPieces);
-    }
-
-    public List<Position> GetAvailableAttacks(Turn turn, Piece piece)
-    {
-        if (turn == null)
-            throw new ArgumentNullException(nameof(turn));
-
-        if (piece == null)
-            throw new ArgumentNullException(nameof(piece));
-
-        var allPieces = GetAllPiecesFromTurn(turn);
-        return _attackRulesService.GetAvailableAttacks(piece, allPieces);
-    }
-
-    /// <summary>
-    /// Получает все фигуры из контекста хода
-    /// </summary>
-    private List<Piece> GetAllPiecesFromTurn(Turn turn)
-    {
-        var allPieces = new List<Piece>();
-        
-        if (turn.ActiveParticipant?.Pieces != null)
-        {
-            allPieces.AddRange(turn.ActiveParticipant.Pieces);
-        }
-        
-        return allPieces;
-    }
-
-    public async Task<bool> ExecuteMoveAsync(GameSession gameSession, Turn turn, Piece piece, Position targetPosition, CancellationToken cancellationToken = default)
-    {
-        return await Task.FromResult(ExecuteMove(gameSession, turn, piece, targetPosition));
-    }
 }

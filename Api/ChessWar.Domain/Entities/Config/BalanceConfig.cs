@@ -8,6 +8,7 @@ public sealed class BalanceConfig
     public required Dictionary<string, AbilitySpecModel> Abilities { get; init; }
     public required EvolutionSection Evolution { get; init; }
     public required AiSection Ai { get; init; }
+    public required KillRewardsSection KillRewards { get; init; }
 }
 
 

@@ -15,42 +15,30 @@ namespace ChessWar.Tests.Unit.AI
         [Fact]
         public void EvaluateKingThreat_WithNullPlayer_ShouldNotThrowException()
         {
-            // Arrange
             var session = CreateGameSession();
             
-            // Act & Assert
-            // Этот тест должен НЕ падать с NullReferenceException
             var result = _evaluator.EvaluateKingThreat(session, null);
             
-            // Должен возвращать безопасное значение по умолчанию
             Assert.True(result >= -1000 && result <= 1000);
         }
 
         [Fact]
         public void EvaluateMaterialAdvantage_WithNullPlayer_ShouldNotThrowException()
         {
-            // Arrange
             var session = CreateGameSession();
             
-            // Act & Assert
-            // Этот тест должен НЕ падать с NullReferenceException
             var result = _evaluator.EvaluateMaterialAdvantage(session, null);
             
-            // Должен возвращать безопасное значение по умолчанию
             Assert.True(result >= -1000 && result <= 1000);
         }
 
         [Fact]
         public void EvaluateGameState_WithNullPlayer_ShouldNotThrowException()
         {
-            // Arrange
             var session = CreateGameSession();
             
-            // Act & Assert
-            // Этот тест должен НЕ падать с NullReferenceException
             var result = _evaluator.EvaluateGameState(session, null);
             
-            // Должен возвращать безопасное значение по умолчанию
             Assert.True(result >= -1000 && result <= 1000);
         }
 

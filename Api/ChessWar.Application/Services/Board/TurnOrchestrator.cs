@@ -109,11 +109,6 @@ public class TurnOrchestrator : ITurnOrchestrator
                     new { Turn = gameSession.GetCurrentTurn().Number }, cancellationToken);
                 
                 var activeAfterAi = gameSession.GetCurrentTurn().ActiveParticipant;
-                if (activeAfterAi == gameSession.Player2)
-                {
-                    var config = _configProvider.GetActive();
-                    gameSession.EndCurrentTurnWithManaRestore(config.PlayerMana.ManaRegenPerTurn);
-                }
             }
             else
             {
@@ -155,7 +150,7 @@ public class TurnOrchestrator : ITurnOrchestrator
     }
 
 
-    private bool ShouldCallAIForNextTurn(GameSession gameSession, Player activePlayerAfterTurnCompletion)
+    private bool ShouldCallAIForNextTurn(GameSession gameSession, Participant activePlayerAfterTurnCompletion)
     {
         return (gameSession.Mode == "AI" || gameSession.TutorialSessionId != null) && 
                activePlayerAfterTurnCompletion == gameSession.Player2;

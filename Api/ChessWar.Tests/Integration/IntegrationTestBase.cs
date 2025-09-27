@@ -21,7 +21,6 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        // Clear all pieces before each test
         var pieces = await _context.Pieces.ToListAsync();
         _context.Pieces.RemoveRange(pieces);
         await _context.SaveChangesAsync();
@@ -29,7 +28,6 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        // Clear all pieces after each test
         var pieces = await _context.Pieces.ToListAsync();
         _context.Pieces.RemoveRange(pieces);
         await _context.SaveChangesAsync();

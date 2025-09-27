@@ -22,14 +22,11 @@ public class BalanceConfigProviderTests
     [Fact]
     public void GetActive_WhenNoPublishedVersion_ShouldReturnEmbeddedDefault()
     {
-        // Arrange
         _mockVersionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync((ChessWar.Domain.Entities.BalanceVersion?)null);
 
-        // Act
         var config = _provider.GetActive();
 
-        // Assert
         config.Should().NotBeNull();
         config.Globals.MpRegenPerTurn.Should().Be(10);
         config.Pieces["Pawn"].Hp.Should().Be(10);
@@ -41,7 +38,6 @@ public class BalanceConfigProviderTests
     [Fact]
     public void GetActive_WhenPublishedVersionExists_ShouldReturnFromDb()
     {
-        // Arrange
         var version = new ChessWar.Domain.Entities.BalanceVersion
         {
             Id = Guid.NewGuid(),
@@ -56,10 +52,8 @@ public class BalanceConfigProviderTests
         _mockPayloadRepo.Setup(x => x.GetJsonByVersionIdAsync(version.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(customJson);
 
-        // Act
         var config = _provider.GetActive();
 
-        // Assert
         config.Should().NotBeNull();
         config.Globals.MpRegenPerTurn.Should().Be(10);
         config.Pieces["Pawn"].Hp.Should().Be(15);
@@ -71,18 +65,14 @@ public class BalanceConfigProviderTests
     [Fact]
     public void Invalidate_ShouldClearCache()
     {
-        // Arrange
         _mockVersionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync((ChessWar.Domain.Entities.BalanceVersion?)null);
 
-        // Act
         var config1 = _provider.GetActive();
         _provider.Invalidate();
         var config2 = _provider.GetActive();
 
-        // Assert
         config1.Should().NotBeNull();
         config2.Should().NotBeNull();
-        // Кэш должен перезагрузиться (в реальности это будет другой объект)
     }
 }

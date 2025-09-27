@@ -126,6 +126,15 @@ public sealed class BalanceConfigProvider : IBalanceConfigProvider
                 NearEvolutionXp = 19,
                 LastRankEdgeY = new Dictionary<string, int> { ["Elves"] = 6, ["Orcs"] = 1 },
                 KingAura = new KingAuraConfig { Radius = 3, AtkBonus = 1 }
+            },
+            KillRewards = new KillRewardsSection
+            {
+                Pawn = 10,
+                Knight = 20,
+                Bishop = 20,
+                Rook = 30,
+                Queen = 50,
+                King = 100
             }
         };
     }

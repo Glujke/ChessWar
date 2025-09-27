@@ -8,7 +8,6 @@ namespace ChessWar.Domain.Interfaces.TurnManagement;
 /// </summary>
 public interface ITurnActionExecutor
 {
-    // УДАЛЕН СТАРЫЙ МЕТОД ExecuteMove(Turn turn, Piece piece, Position targetPosition)
 
     /// <summary>
     /// Выполняет движение фигуры с контекстом GameSession

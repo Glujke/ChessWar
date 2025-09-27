@@ -21,7 +21,6 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
     [Fact]
     public async Task Should_Return_ProblemDetails_For_Game_Exception()
     {
-        // Arrange
         var request = new
         {
             pieceId = Guid.NewGuid(),
@@ -29,11 +28,9 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
             availableMp = 3
         };
 
-        // Act
         var response = await _client.PostAsync("/api/v1/test/insufficient-mp", 
             new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
 
@@ -51,18 +48,15 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
     [Fact]
     public async Task Should_Return_ProblemDetails_For_Stage_Not_Completed()
     {
-        // Arrange
         var request = new
         {
             stageName = "Battle1",
             requiredCondition = "Defeat all enemies"
         };
 
-        // Act
         var response = await _client.PostAsync("/api/v1/test/stage-not-completed", 
             new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
 

@@ -12,20 +12,17 @@ public class KingQueenAbilitiesTests
     [Fact]
     public void Resurrection_ShouldRevive_Ally_With_50PercentHp_And_StartCooldown()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50); // У игрока есть мана
         var queen = TestHelpers.CreatePiece(PieceType.Queen, Team.Elves, new Position(3, 3), owner);
         var fallen = TestHelpers.CreatePiece(PieceType.Knight, Team.Elves, new Position(3, 4), owner);
 
-        // Имитация смерти союзника
         TestHelpers.TakeDamage(fallen, fallen.HP + 100);
         fallen.IsAlive.Should().BeFalse();
 
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
         
-        // Настраиваем мок для обработки лечения и cooldown
         pieceDomainService
             .Setup(x => x.Heal(fallen, It.IsAny<int>()))
             .Callback<Piece, int>((piece, heal) => piece.HP += heal);
@@ -42,24 +39,20 @@ public class KingQueenAbilitiesTests
         
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
 
-        // Act
         var ok = svc.UseAbility(queen, "Resurrection", fallen.Position, owner.Pieces);
 
-        // Assert (ожидаемое поведение — TDD):
         ok.Should().BeTrue();
         fallen.IsAlive.Should().BeTrue();
         fallen.HP.Should().BeGreaterThan(0);
         var expectedHalf = 12 / 2; // Knight max HP = 12
         fallen.HP.Should().Be(expectedHalf);
         queen.AbilityCooldowns.GetValueOrDefault("Resurrection").Should().BeGreaterThan(0);
-        // MP теперь у игрока, а не у фигуры
         owner.MP.Should().BeLessThan(50); // Игрок потратил ману
     }
 
     [Fact]
     public void RoyalCommand_ShouldGrant_ExtraAction_ToTarget_And_StartCooldown()
     {
-        // Arrange
         var owner = new Player("P1", new List<Piece>());
         owner.SetMana(50, 50); // У игрока есть мана
         var king = TestHelpers.CreatePiece(PieceType.King, Team.Elves, new Position(2, 2), owner);
@@ -68,22 +61,17 @@ public class KingQueenAbilitiesTests
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
         
-        // Настраиваем мок для обработки cooldown
         pieceDomainService
             .Setup(x => x.SetAbilityCooldown(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<int>()))
             .Callback<Piece, string, int>((piece, ability, cooldown) => piece.AbilityCooldowns[ability] = cooldown);
         
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
 
-        // Act
         var ok = svc.UseAbility(king, "RoyalCommand", ally.Position, owner.Pieces);
 
-        // Assert (TDD ожидания):
         ok.Should().BeTrue();
         king.AbilityCooldowns.GetValueOrDefault("RoyalCommand").Should().BeGreaterThan(0);
-        // MP теперь у игрока, а не у фигуры
         owner.MP.Should().BeLessThan(50); // Игрок потратил ману
-        // Доп. действие союзника будет проверяться интеграционно (разрешение второго действия в ход)
     }
 }
 

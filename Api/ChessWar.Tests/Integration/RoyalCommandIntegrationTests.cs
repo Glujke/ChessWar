@@ -12,7 +12,6 @@ public class RoyalCommandIntegrationTests : IntegrationTestBase, IClassFixture<T
     [Fact]
     public async Task RoyalCommand_ShouldAllow_ExtraAction_ForTargetAlly_InSameTurn()
     {
-        // Arrange: создать сессию
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2" };
         var createResp = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResp.IsSuccessStatusCode.Should().BeTrue();
@@ -23,12 +22,10 @@ public class RoyalCommandIntegrationTests : IntegrationTestBase, IClassFixture<T
         var king = state!.Player1.Pieces.First(p => p.Type.ToString() == "King");
         var ally = state.Player1.Pieces.First(p => p.Id != king.Id);
 
-        // 1) Применяем RoyalCommand
         var royalReq = new { pieceId = king.Id.ToString(), abilityName = "RoyalCommand", target = new { x = ally.Position.X, y = ally.Position.Y } };
         var royalResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/ability", royalReq);
         royalResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // 2) Пытаемся выполнить действие второй раз в том же ходу выбранной союзной фигурой
         var moveReq = new
         {
             type = "Move",

@@ -19,7 +19,6 @@ public class TutorialSignalRIntegrationTests : IClassFixture<WebApplicationFacto
     [Fact]
     public async Task StartTutorial_ShouldReturnSignalRUrl_AndGroupKey()
     {
-        // Arrange
         var request = new CreateTutorialSessionDto
         {
             PlayerId = "player123"
@@ -27,10 +26,8 @@ public class TutorialSignalRIntegrationTests : IClassFixture<WebApplicationFacto
         var json = JsonSerializer.Serialize(request);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // Act
         var response = await _client.PostAsync("/api/v1/game/tutorial", content);
 
-        // Assert
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
         var body = await response.Content.ReadAsStringAsync();
@@ -39,7 +36,6 @@ public class TutorialSignalRIntegrationTests : IClassFixture<WebApplicationFacto
 
         Assert.True(root.TryGetProperty("signalRUrl", out var url) && url.ValueKind == JsonValueKind.String);
         Assert.True(root.TryGetProperty("sessionId", out var sessionId) && sessionId.ValueKind == JsonValueKind.String);
-        // Клиент обязан подключаться к группе по sessionId
     }
 }
 

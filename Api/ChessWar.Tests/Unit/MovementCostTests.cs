@@ -38,7 +38,6 @@ public class MovementCostTests
     [Fact]
     public void ExecuteMove_ShouldCheckManaCost_ForPawn()
     {
-        // Arrange
         var player = new Player("TestPlayer", new List<Piece>());
         player.SetMana(5, 50);
         var turn = new Turn(1, player);
@@ -50,10 +49,8 @@ public class MovementCostTests
         _movementRulesServiceMock.Setup(x => x.CanMoveTo(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(true);
 
-        // Act
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, pawn, new Position(1, 2));
 
-        // Assert
         result.Should().BeTrue();
         turn.RemainingMP.Should().Be(4); // 5 - 1 (стоимость пешки)
         player.MP.Should().Be(4); // Игрок тоже должен потратить ману
@@ -62,7 +59,6 @@ public class MovementCostTests
     [Fact]
     public void ExecuteMove_ShouldCheckManaCost_ForKnight()
     {
-        // Arrange
         var player = new Player("TestPlayer", new List<Piece>());
         player.SetMana(5, 50);
         var turn = new Turn(1, player);
@@ -74,10 +70,8 @@ public class MovementCostTests
         _movementRulesServiceMock.Setup(x => x.CanMoveTo(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(true);
 
-        // Act
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, knight, new Position(2, 3));
 
-        // Assert
         result.Should().BeTrue();
         turn.RemainingMP.Should().Be(3); // 5 - 2 (стоимость коня)
         player.MP.Should().Be(3);
@@ -86,7 +80,6 @@ public class MovementCostTests
     [Fact]
     public void ExecuteMove_ShouldReturnFalse_WhenNotEnoughMana()
     {
-        // Arrange
         var player = new Player("TestPlayer", new List<Piece>());
         player.SetMana(1, 50); // Недостаточно для короля (стоимость 4)
         var turn = new Turn(1, player);
@@ -96,10 +89,8 @@ public class MovementCostTests
         var config = CreateTestConfig();
         _configProviderMock.Setup(x => x.GetActive()).Returns(config);
 
-        // Act
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, king, new Position(1, 2));
 
-        // Assert
         result.Should().BeFalse();
         turn.RemainingMP.Should().Be(1); // Не изменилось
         player.MP.Should().Be(1); // Не изменилось
@@ -108,7 +99,6 @@ public class MovementCostTests
     [Fact]
     public void ExecuteMove_ShouldReturnFalse_WhenMovementRulesFail()
     {
-        // Arrange
         var player = new Player("TestPlayer", new List<Piece>());
         player.SetMana(10, 50);
         var turn = new Turn(1, player);
@@ -120,10 +110,8 @@ public class MovementCostTests
         _movementRulesServiceMock.Setup(x => x.CanMoveTo(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(false); // Правила движения не позволяют
 
-        // Act
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, pawn, new Position(1, 2));
 
-        // Assert
         result.Should().BeFalse();
         turn.RemainingMP.Should().Be(10); // Не изменилось
         player.MP.Should().Be(10); // Не изменилось
@@ -132,7 +120,6 @@ public class MovementCostTests
     [Fact]
     public void ExecuteMove_ShouldUseDefaultCost_ForUnknownPieceType()
     {
-        // Arrange
         var player = new Player("TestPlayer", new List<Piece>());
         player.SetMana(5, 50);
         var turn = new Turn(1, player);
@@ -145,10 +132,8 @@ public class MovementCostTests
         _movementRulesServiceMock.Setup(x => x.CanMoveTo(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(true);
 
-        // Act
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, piece, new Position(1, 2));
 
-        // Assert
         result.Should().BeTrue();
         turn.RemainingMP.Should().Be(4); // 5 - 1 (дефолтная стоимость)
         player.MP.Should().Be(4);
@@ -207,6 +192,15 @@ public class MovementCostTests
                 NearEvolutionXp = 19,
                 LastRankEdgeY = new Dictionary<string, int>(),
                 KingAura = new KingAuraConfig { Radius = 3, AtkBonus = 1 }
+            },
+            KillRewards = new KillRewardsSection
+            {
+                Pawn = 10,
+                Knight = 20,
+                Bishop = 20,
+                Rook = 30,
+                Queen = 50,
+                King = 100
             }
         };
     }

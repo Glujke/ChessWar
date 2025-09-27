@@ -33,7 +33,12 @@ public class GameMappingProfile : Profile
 
         CreateMap<Domain.Entities.GameSession, ChessWar.Application.DTOs.GameSessionDto>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-            .ForMember(dest => dest.Mode, opt => opt.MapFrom(src => src.Mode));
+            .ForMember(dest => dest.Mode, opt => opt.MapFrom(src => src.Mode))
+            .ForMember(dest => dest.Player1, opt => opt.MapFrom(src => src.Player1))
+            .ForMember(dest => dest.Player2, opt => opt.MapFrom(src => src.Player2))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Result, opt => opt.MapFrom(src => src.Result))
+            .ForMember(dest => dest.CurrentTurn, opt => opt.MapFrom(src => src.CurrentTurn));
 
         CreateMap<Domain.Entities.TutorialSession, ChessWar.Application.DTOs.TutorialSessionDto>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -64,6 +69,16 @@ public class GameMappingProfile : Profile
             .ForMember(dest => dest.Pieces, opt => opt.MapFrom(src => src.Pieces))
             .ForMember(dest => dest.MP, opt => opt.MapFrom(src => src.MP))
             .ForMember(dest => dest.MaxMP, opt => opt.MapFrom(src => src.MaxMP));
+
+        CreateMap<Domain.Entities.AI, ChessWar.Application.DTOs.PlayerDto>()
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+            .ForMember(dest => dest.Pieces, opt => opt.MapFrom(src => src.Pieces))
+            .ForMember(dest => dest.MP, opt => opt.MapFrom(src => src.MP))
+            .ForMember(dest => dest.MaxMP, opt => opt.MapFrom(src => src.MaxMP));
+
+        CreateMap<Domain.Entities.Participant, ChessWar.Application.DTOs.PlayerDto>()
+            .Include<Domain.Entities.Player, ChessWar.Application.DTOs.PlayerDto>()
+            .Include<Domain.Entities.AI, ChessWar.Application.DTOs.PlayerDto>();
 
         CreateMap<Domain.ValueObjects.Turn, ChessWar.Application.DTOs.TurnDto>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))

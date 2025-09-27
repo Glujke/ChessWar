@@ -46,6 +46,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 builder.Services.AddScoped<IBalanceConfigValidator, ChessWar.Api.Services.BalanceConfigValidator>();
+builder.Services.AddScoped<ChessWar.Api.Services.IErrorHandlingService, ChessWar.Api.Services.ErrorHandlingService>();
 
 
 builder.Services.AddGameModeServices();

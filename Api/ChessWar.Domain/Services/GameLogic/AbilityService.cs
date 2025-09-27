@@ -167,6 +167,9 @@ public class AbilityService : IAbilityService
                 }
             }
         }
+        else if (abilityName == "KingAura")
+        {
+        }
         return true;
     }
 

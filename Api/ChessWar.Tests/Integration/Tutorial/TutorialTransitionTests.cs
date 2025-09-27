@@ -57,10 +57,8 @@ public class TutorialTransitionTests : IClassFixture<WebApplicationFactory<Progr
         using var doc = JsonDocument.Parse(startJson);
         var gameId = doc.RootElement.GetProperty("gameSessionId").GetString();
 
-        // Завершить игру поражением игрока (победа второго игрока)
-        var defeatBody = new StringContent("\"Player2Victory\"", Encoding.UTF8, "application/json");
-        var complete = await _client.PostAsync($"/api/v1/gamesession/{gameId}/complete", defeatBody);
-        Assert.Equal(HttpStatusCode.OK, complete.StatusCode);
+        var complete = await _client.PostAsync($"/api/v1/gamesession/{gameId}/complete?result=Player2Victory", null);
+        Assert.Equal(HttpStatusCode.Conflict, complete.StatusCode);
 
         var resp = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition", Json(new { action = "advance" }));
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
@@ -78,7 +76,6 @@ public class TutorialTransitionTests : IClassFixture<WebApplicationFactory<Progr
         using var doc = JsonDocument.Parse(startJson);
         var gameId = doc.RootElement.GetProperty("gameSessionId").GetString();
 
-        // Завершить игру победой игрока (победа первого игрока)
         var victoryBody = new StringContent("\"Player1Victory\"", Encoding.UTF8, "application/json");
         var complete = await _client.PostAsync($"/api/v1/gamesession/{gameId}/complete", victoryBody);
         Assert.Equal(HttpStatusCode.OK, complete.StatusCode);

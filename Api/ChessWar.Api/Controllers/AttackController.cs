@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ChessWar.Application.Interfaces.Pieces;
+using ChessWar.Api.Services;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Application.DTOs;
 using AutoMapper;
@@ -14,11 +15,13 @@ public class AttackController : BaseController
 {
     private readonly IAttackApplicationService _attackService;
     private readonly IMapper _mapper;
+    private readonly IErrorHandlingService _errorHandlingService;
 
-    public AttackController(IAttackApplicationService attackService, IMapper mapper, ILogger<AttackController> logger) : base(logger)
+    public AttackController(IAttackApplicationService attackService, IMapper mapper, IErrorHandlingService errorHandlingService, ILogger<AttackController> logger) : base(logger)
     {
         _attackService = attackService;
         _mapper = mapper;
+        _errorHandlingService = errorHandlingService;
     }
 
     /// <summary>
@@ -46,7 +49,7 @@ public class AttackController : BaseController
             if (result.Attacker == null)
             {
                 LogWarning("Piece with ID {AttackerId} not found", request.AttackerId);
-                return NotFound($"Piece with ID {request.AttackerId} not found");
+                return _errorHandlingService.CreateNotFoundError("Piece", request.AttackerId.ToString());
             }
 
             var response = _mapper.Map<AttackResponseDto>(result);
@@ -57,7 +60,7 @@ public class AttackController : BaseController
         catch (Exception ex)
         {
             LogError(ex, "Error checking attack for piece {AttackerId}", request.AttackerId);
-            return BadRequest($"Error checking attack: {ex.Message}");
+            return _errorHandlingService.CreateValidationError("Failed to check attack", ex.Message);
         }
     }
 
@@ -83,7 +86,7 @@ public class AttackController : BaseController
             if (!attackablePositions.Any())
             {
                 LogWarning("Piece with ID {AttackerId} not found", attackerId);
-                return NotFound($"Piece with ID {attackerId} not found");
+                return _errorHandlingService.CreateNotFoundError("Piece", attackerId.ToString());
             }
 
             var response = new AttackablePositionsResponseDto
@@ -100,7 +103,7 @@ public class AttackController : BaseController
         catch (Exception ex)
         {
             LogError(ex, "Error getting attackable positions for piece {AttackerId}", attackerId);
-            return BadRequest($"Error getting attackable positions: {ex.Message}");
+            return _errorHandlingService.CreateValidationError("Failed to get attackable positions", ex.Message);
         }
     }
 
@@ -133,7 +136,7 @@ public class AttackController : BaseController
         {
             LogError(ex, "Error checking enemy status between pieces {AttackerId} and {TargetId}", 
                 attackerId, targetId);
-            return BadRequest($"Error checking enemy status: {ex.Message}");
+            return _errorHandlingService.CreateValidationError("Failed to check enemy status", ex.Message);
         }
     }
 
@@ -169,7 +172,7 @@ public class AttackController : BaseController
         {
             LogError(ex, "Error calculating distance from ({FromX}, {FromY}) to ({ToX}, {ToY})", 
                 fromX, fromY, toX, toY);
-            return BadRequest($"Error calculating distance: {ex.Message}");
+            return _errorHandlingService.CreateValidationError("Failed to calculate distance", ex.Message);
         }
     }
 }

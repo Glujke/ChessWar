@@ -139,6 +139,13 @@ public class ProblemDetailsMiddleware
                 problemDetails.Extensions["tutorialId"] = tutorialEx.TutorialId;
                 break;
 
+            case ArgumentException argEx:
+                problemDetails.Status = (int)HttpStatusCode.BadRequest;
+                problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+                problemDetails.Title = "Bad Request";
+                problemDetails.Detail = exception.Message;
+                break;
+
             case NotImplementedException:
                 problemDetails.Status = (int)HttpStatusCode.NotImplemented;
                 problemDetails.Type = "https://tools.ietf.org/html/rfc7231#section-6.6.2";

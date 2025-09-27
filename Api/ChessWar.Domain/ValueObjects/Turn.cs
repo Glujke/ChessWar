@@ -8,13 +8,13 @@ namespace ChessWar.Domain.ValueObjects;
 public class Turn
 {
     public int Number { get; private set; }
-    public Player ActiveParticipant { get; private set; }
+    public Participant ActiveParticipant { get; private set; }
     public Piece? SelectedPiece { get; private set; }
     public List<TurnAction> Actions { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public int RemainingMP { get; private set; }
 
-    public Turn(int number, Player activeParticipant)
+    public Turn(int number, Participant activeParticipant)
     {
         if (number <= 0)
             throw new ArgumentException("Turn number must be positive", nameof(number));

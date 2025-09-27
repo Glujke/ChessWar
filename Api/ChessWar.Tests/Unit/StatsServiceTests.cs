@@ -15,10 +15,8 @@ public class StatsServiceTests
     [Fact]
     public async Task GetPlayerStatsAsync_ShouldThrowNotImplementedException()
     {
-        // Arrange
         var playerId = "player123";
 
-        // Act & Assert
         await Assert.ThrowsAsync<NotImplementedException>(() => 
             _service.GetPlayerStatsAsync(playerId));
     }
@@ -26,7 +24,6 @@ public class StatsServiceTests
     [Fact]
     public async Task UpdatePlayerStatsAsync_ShouldThrowNotImplementedException()
     {
-        // Arrange
         var playerId = "player123";
         var result = new GameResultDto
         {
@@ -36,7 +33,6 @@ public class StatsServiceTests
             CompletedAt = DateTime.UtcNow
         };
 
-        // Act & Assert
         await Assert.ThrowsAsync<NotImplementedException>(() => 
             _service.UpdatePlayerStatsAsync(playerId, result));
     }

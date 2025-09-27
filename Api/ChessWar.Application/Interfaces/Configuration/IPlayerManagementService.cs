@@ -14,6 +14,11 @@ public interface IPlayerManagementService
     Player CreatePlayerWithInitialPieces(string name, Team team);
     
     /// <summary>
+    /// Создаёт ИИ с начальными фигурами
+    /// </summary>
+    ChessWar.Domain.Entities.AI CreateAIWithInitialPieces(Team team);
+    
+    /// <summary>
     /// Находит фигуру по ID в сессии
     /// </summary>
     Piece? FindPieceById(GameSession gameSession, string pieceId);

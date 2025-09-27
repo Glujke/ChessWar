@@ -23,11 +23,9 @@ public class BalanceConfigIntegrationTests : IDisposable
     {
         var services = new ServiceCollection();
         
-        // Настройка БД в памяти
         services.AddDbContext<ChessWarDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
         
-        // Регистрация сервисов
         services.AddScoped<IBalanceVersionRepository, ChessWar.Infrastructure.Repositories.BalanceVersionRepository>();
         services.AddScoped<IBalancePayloadRepository, ChessWar.Infrastructure.Repositories.BalancePayloadRepository>();
         services.AddSingleton<IBalanceConfigProvider, BalanceConfigProvider>();
@@ -44,7 +42,6 @@ public class BalanceConfigIntegrationTests : IDisposable
     [Fact]
     public async Task CreateAndPublishConfig_ShouldBeAvailableThroughProvider()
     {
-        // Arrange
         var configService = new ChessWar.Application.Services.Configuration.ConfigService(
             _serviceProvider.GetRequiredService<IBalanceVersionRepository>(),
             Mock.Of<IPieceConfigService>(),
@@ -81,13 +78,20 @@ public class BalanceConfigIntegrationTests : IDisposable
                 NearEvolutionXp = 24,
                 LastRankEdgeY = new Dictionary<string, int> { ["Elves"] = 6, ["Orcs"] = 1 },
                 KingAura = new KingAuraConfig { Radius = 4, AtkBonus = 2 }
+            },
+            KillRewards = new KillRewardsSection
+            {
+                Pawn = 10,
+                Knight = 20,
+                Bishop = 20,
+                Rook = 30,
+                Queen = 50,
+                King = 100
             }
         };
 
-        // Act
         var version = await configService.CreateConfigVersionAsync("2.0.0", "Test config", CancellationToken.None);
         
-        // Сериализуем с правильными настройками JSON (строчные имена свойств)
         var jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -96,7 +100,6 @@ public class BalanceConfigIntegrationTests : IDisposable
         await configService.SavePayloadAsync(version.Id, JsonSerializer.Serialize(customConfig, jsonOptions), CancellationToken.None);
         await configService.PublishConfigVersionAsync(version.Id, CancellationToken.None);
 
-        // Assert
         var activeConfig = _configProvider.GetActive();
         activeConfig.Should().NotBeNull();
         activeConfig.Globals.MpRegenPerTurn.Should().Be(8);
@@ -109,10 +112,8 @@ public class BalanceConfigIntegrationTests : IDisposable
     [Fact]
     public void GetActive_WhenNoPublishedVersion_ShouldReturnEmbeddedDefault()
     {
-        // Act
         var config = _configProvider.GetActive();
 
-        // Assert
         config.Should().NotBeNull();
         config.Globals.MpRegenPerTurn.Should().Be(10);
         config.PlayerMana.MaxMana.Should().Be(50);
