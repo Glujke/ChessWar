@@ -43,7 +43,6 @@ public class TurnOrchestrator : ITurnOrchestrator
             ValidateGameSession(gameSession);
             LogTurnStart(gameSession);
             
-            // Проверяем обязательные действия
             var config = _configProvider.GetActive();
             if (config.PlayerMana.MandatoryAction)
             {
@@ -54,9 +53,20 @@ public class TurnOrchestrator : ITurnOrchestrator
                 }
             }
             
-        await ProcessCurrentTurn(gameSession, cancellationToken);
-        await CheckAndHandleGameCompletion(gameSession, cancellationToken);
-        await SaveGameState(gameSession, cancellationToken);
+                var activePlayerBeforeTurn = gameSession.GetCurrentTurn().ActiveParticipant;
+                
+                await ProcessCurrentTurn(gameSession, cancellationToken);
+                
+                var activePlayerAfterTurn = gameSession.GetCurrentTurn().ActiveParticipant;
+                
+                if (ShouldCallAIForNextTurn(gameSession, activePlayerAfterTurn) && 
+                    activePlayerBeforeTurn != activePlayerAfterTurn)
+                {
+                    await ExecuteAITurn(gameSession, cancellationToken);
+                }
+            
+            await CheckAndHandleGameCompletion(gameSession, cancellationToken);
+            await SaveGameState(gameSession, cancellationToken);
             
             LogTurnCompletion(gameSession);
         }
@@ -133,8 +143,8 @@ public class TurnOrchestrator : ITurnOrchestrator
 
     private bool ShouldCallAIForNextTurn(GameSession gameSession, Participant activePlayerAfterTurnCompletion)
     {
-        // ИИ должен ходить, когда активный игрок - Player2 (ИИ)
         return (gameSession.Mode == "AI" || gameSession.TutorialSessionId != null) && 
-               activePlayerAfterTurnCompletion == gameSession.Player2;
+               activePlayerAfterTurnCompletion == gameSession.Player2 &&
+               activePlayerAfterTurnCompletion is ChessWar.Domain.Entities.AI;
     }
 }

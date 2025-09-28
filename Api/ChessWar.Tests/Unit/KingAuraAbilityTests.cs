@@ -39,7 +39,6 @@ public class KingAuraAbilityTests
         
         turnSvc.EndTurn(turn);
         
-        // Применяем ауру короля
         var abilityService = new AbilityService(cfg, new MockDomainEventDispatcher(), new PieceDomainService());
         var allPieces = session.GetAllPieces().ToList();
         

@@ -26,7 +26,6 @@ public class TutorialAiBehaviorTests : IClassFixture<WebApplicationFactory<Progr
     [Fact]
     public async Task AiTurn_ShouldExecuteAtLeastOneAction_InTutorialMode()
     {
-        // Создаем AI сессию вместо tutorial
         var createResponse = await _client.PostAsync("/api/v1/gamesession", Json(new { 
             player1Name = "TestPlayer", 
             player2Name = "AI", 
@@ -76,11 +75,9 @@ public class TutorialAiBehaviorTests : IClassFixture<WebApplicationFactory<Progr
 
         Assert.Equal(HttpStatusCode.OK, endTurnResponse.StatusCode);
         
-        // Вызываем ход ИИ
         var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/ai", Json(new { }));
         Assert.Equal(HttpStatusCode.OK, aiTurnResponse.StatusCode);
         
-        // Завершаем ход ИИ, чтобы переключиться обратно на игрока
         var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
         Assert.Equal(HttpStatusCode.OK, endAiTurnResponse.StatusCode);
         

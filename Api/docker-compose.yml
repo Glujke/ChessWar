@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # API сервер
+  chesswar-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chesswar-api
+    ports:
+      - "8080:80"  # Внешний порт 8080 -> внутренний 80
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__Default=Data Source=/app/data/chesswar.db
+    volumes:
+      # Volume для SQLite базы данных
+      - chesswar_data:/app/data
+      # Volume для логов
+      - chesswar_logs:/app/Logs
+    restart: unless-stopped
+    networks:
+      - chesswar-network
+
+  # Дополнительный сервис для управления данными (опционально)
+  chesswar-data-manager:
+    image: alpine:latest
+    container_name: chesswar-data-manager
+    volumes:
+      - chesswar_data:/data
+    command: sh -c "echo 'Data volume mounted at /data' && tail -f /dev/null"
+    networks:
+      - chesswar-network
+    profiles:
+      - tools  # Запускается только с профилем tools
+
+volumes:
+  # Постоянное хранилище для SQLite базы данных
+  chesswar_data:
+    driver: local
+  # Постоянное хранилище для логов
+  chesswar_logs:
+    driver: local
+
+networks:
+  # Изолированная сеть для контейнеров
+  chesswar-network:
+    driver: bridge

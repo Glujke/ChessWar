@@ -26,7 +26,6 @@ public class TutorialAiTurnFailureTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task EndTurn_WhenAiCannotMakeMove_ShouldCompleteAiTurnAndPassToPlayer()
     {
-        // Создаем AI сессию вместо tutorial
         var createResponse = await _client.PostAsync("/api/v1/gamesession", Json(new { 
             player1Name = "TestPlayer", 
             player2Name = "AI", 
@@ -70,11 +69,9 @@ public class TutorialAiTurnFailureTests : IClassFixture<WebApplicationFactory<Pr
 
         Assert.Equal(HttpStatusCode.OK, endTurnResponse.StatusCode);
         
-        // Вызываем ход ИИ
         var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/ai", Json(new { }));
         Assert.Equal(HttpStatusCode.OK, aiTurnResponse.StatusCode);
         
-        // Завершаем ход ИИ, чтобы переключиться обратно на игрока
         var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
         Assert.Equal(HttpStatusCode.OK, endAiTurnResponse.StatusCode);
         

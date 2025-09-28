@@ -26,7 +26,6 @@ public class AITurnServiceTutorialModeTests : IClassFixture<WebApplicationFactor
     [Fact]
     public async Task AITurnService_ShouldSupportTutorialMode_NotOnlyAIMode()
     {
-        // Создаем AI сессию вместо tutorial
         var createResponse = await _client.PostAsync("/api/v1/gamesession", Json(new { 
             player1Name = "TestPlayer", 
             player2Name = "AI", 

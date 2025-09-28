@@ -76,7 +76,8 @@ using (var scope = app.Services.CreateScope())
     
     if (db.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
     {
-        System.IO.Directory.CreateDirectory("App_Data");
+        var dataPath = app.Environment.IsDevelopment() ? "App_Data" : "/app/data";
+        System.IO.Directory.CreateDirectory(dataPath);
         db.Database.Migrate();
     }
     
