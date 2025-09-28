@@ -79,7 +79,10 @@ public class TurnService : ITurnService
 
             _pieceDomainService.MoveTo(piece, targetPosition);
             
-            var moveCost = _configProvider.GetActive().PlayerMana.MovementCosts[piece.Type.ToString()];
+            var movementCosts = _configProvider.GetActive().PlayerMana.MovementCosts;
+            var moveCost = movementCosts.ContainsKey(piece.Type.ToString()) 
+                ? movementCosts[piece.Type.ToString()] 
+                : 1; // Дефолтная стоимость
             turn.SpendMP(moveCost);
             piece.Owner.Spend(moveCost);
             
@@ -134,11 +137,16 @@ public class TurnService : ITurnService
             
             if (_pieceDomainService.IsDead(targetPiece))
             {
+                // Начисляем опыт за убийство
+                var config = _configProvider.GetActive();
+                var experienceReward = config.KillRewards.GetRewardForPieceType(targetPiece.Type);
+                attacker.GainExperience(experienceReward);
+                
                 session.GetBoard().RemovePiece(targetPiece);
                 session.GetBoard().MovePiece(attacker, targetPosition);
                 
-                _logger.LogInformation("Target {TargetPieceId} killed, attacker {AttackerId} moved to position ({X},{Y})", 
-                    targetPiece.Id, attacker.Id, targetPosition.X, targetPosition.Y);
+                _logger.LogInformation("Target {TargetPieceId} killed, attacker {AttackerId} moved to position ({X},{Y}), gained {XP} XP", 
+                    targetPiece.Id, attacker.Id, targetPosition.X, targetPosition.Y, experienceReward);
             }
             
             turn.AddAction(new TurnAction("Attack", attacker.Id.ToString(), targetPosition));
@@ -244,6 +252,7 @@ public class TurnService : ITurnService
             _pieceDomainService.TickCooldowns(piece);
         }
     }
+
 
     private int CalculateDamage(Piece attacker, Piece target)
     {

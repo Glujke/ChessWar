@@ -91,6 +91,14 @@ public class ConfigServiceValidationTests : IDisposable
           },
           "ai": {
             "nearEvolutionXp": 19
+          },
+          "killRewards": {
+            "pawn": 10,
+            "knight": 20,
+            "bishop": 20,
+            "rook": 30,
+            "queen": 50,
+            "king": 100
           }
         }
         """;

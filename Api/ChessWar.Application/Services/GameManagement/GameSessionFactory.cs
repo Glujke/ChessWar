@@ -45,7 +45,7 @@ public class GameSessionFactory : IGameSessionFactory
         }
 
         var player1 = CreatePlayerWithInitialPieces(dto.Player1Name, Team.Elves);
-        var player2 = CreatePlayerWithInitialPieces(dto.Player2Name, Team.Orcs);
+        Participant player2 = dto.Player2Name == "AI" ? CreateAIWithInitialPieces("AI", Team.Orcs) : CreatePlayerWithInitialPieces(dto.Player2Name, Team.Orcs);
 
         var gameSession = new GameSession(player1, player2, string.Equals(mode, "LocalCoop", StringComparison.OrdinalIgnoreCase) ? "LocalCoop" : "AI");
         
@@ -88,5 +88,33 @@ public class GameSessionFactory : IGameSessionFactory
         }
         
         return player;
+    }
+
+    public ChessWar.Domain.Entities.AI CreateAIWithInitialPieces(string name, Team team)
+    {
+        var ai = new ChessWar.Domain.Entities.AI(name, team);
+        
+        var config = _configProvider.GetActive();
+        ai.SetMana(config.PlayerMana.InitialMana, config.PlayerMana.MaxMana);
+        
+        var pieces = new List<Piece>();
+        
+        for (int i = 0; i < 8; i++)
+        {
+            var y = team == Team.Elves ? 1 : 6;
+            var pawn = _pieceFactory.CreatePiece(PieceType.Pawn, team, new Position(i, y), ai);
+            pieces.Add(pawn);
+        }
+        
+        var kingY = team == Team.Elves ? 0 : 7;
+        var king = _pieceFactory.CreatePiece(PieceType.King, team, new Position(4, kingY), ai);
+        pieces.Add(king);
+
+        foreach (var piece in pieces)
+        {
+            ai.AddPiece(piece);
+        }
+        
+        return ai;
     }
 }

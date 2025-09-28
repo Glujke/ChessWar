@@ -31,17 +31,37 @@ public class ActionSelector : IActionSelector
         }
 
         var difficulty = _difficultyProvider.GetDifficultyLevel(active);
-        var selectedActions = new List<GameAction>();
+        
+        // Оцениваем и сортируем действия по их ценности
+        var scoredActions = availableActions
+            .Select(action => new
+            {
+                Action = action,
+                Score = CalculateActionScore(session, turn, active, action)
+            })
+            .OrderByDescending(x => x.Score)
+            .ToList();
 
         var maxActions = GetMaxActionsForDifficulty(difficulty);
-        var actionsToTake = System.Math.Min(maxActions, availableActions.Count);
+        var actionsToTake = System.Math.Min(maxActions, scoredActions.Count);
 
-        for (int i = 0; i < actionsToTake; i++)
-        {
-            selectedActions.Add(availableActions[i]);
-        }
+        return scoredActions
+            .Take(actionsToTake)
+            .Select(x => x.Action)
+            .ToList();
+    }
 
-        return selectedActions;
+    private double CalculateActionScore(GameSession session, Turn turn, Participant active, GameAction action)
+    {
+        // Базовая оценка из матрицы вероятностей
+        var probability = _probabilityMatrix.GetActionProbability(session, action);
+        var reward = _probabilityMatrix.GetReward(session, action);
+        
+        // Оценка состояния игры
+        var stateEvaluation = _evaluator.EvaluateGameState(session, active);
+        
+        // Комбинированная оценка
+        return probability * reward + stateEvaluation * 0.1;
     }
 
     private int GetMaxActionsForDifficulty(AIDifficultyLevel difficulty)

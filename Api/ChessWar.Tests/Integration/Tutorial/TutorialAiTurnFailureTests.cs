@@ -26,12 +26,17 @@ public class TutorialAiTurnFailureTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task EndTurn_WhenAiCannotMakeMove_ShouldCompleteAiTurnAndPassToPlayer()
     {
-        var createResponse = await _client.PostAsync("/api/v1/game/tutorial?embed=(game)", Json(new { playerId = "TestPlayer" }));
+        // Создаем AI сессию вместо tutorial
+        var createResponse = await _client.PostAsync("/api/v1/gamesession", Json(new { 
+            player1Name = "TestPlayer", 
+            player2Name = "AI", 
+            mode = "AI" 
+        }));
         
         Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
         var createContent = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createContent);
-        var gameSessionId = createDoc.RootElement.GetProperty("gameSessionId").GetString();
+        var gameSessionId = createDoc.RootElement.GetProperty("id").GetString();
         
         Assert.NotNull(gameSessionId);
 
@@ -64,6 +69,14 @@ public class TutorialAiTurnFailureTests : IClassFixture<WebApplicationFactory<Pr
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
 
         Assert.Equal(HttpStatusCode.OK, endTurnResponse.StatusCode);
+        
+        // Вызываем ход ИИ
+        var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/ai", Json(new { }));
+        Assert.Equal(HttpStatusCode.OK, aiTurnResponse.StatusCode);
+        
+        // Завершаем ход ИИ, чтобы переключиться обратно на игрока
+        var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
+        Assert.Equal(HttpStatusCode.OK, endAiTurnResponse.StatusCode);
         
         var finalSessionResponse = await _client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
         Assert.Equal(HttpStatusCode.OK, finalSessionResponse.StatusCode);

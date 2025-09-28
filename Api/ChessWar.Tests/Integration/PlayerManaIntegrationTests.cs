@@ -214,8 +214,25 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
 
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         
+        // Проверяем, что активный игрок - AI
+        var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
+        var afterEndTurnSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
+        afterEndTurnSession!.CurrentTurn.ActiveParticipant.Name.Should().Be("AI");
+        
+        // Вызываем ход ИИ
+        var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/ai", null);
+        aiTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        // Завершаем ход ИИ
+        var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
+        endAiTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        
         var finalResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var finalSession = await finalResponse.Content.ReadFromJsonAsync<GameSessionDto>();
+        
+        // Отладочная информация
+        Console.WriteLine($"Final active participant: {finalSession!.CurrentTurn.ActiveParticipant.Name}");
+        Console.WriteLine($"Final turn number: {finalSession.CurrentTurn.Number}");
         
         finalSession!.CurrentTurn.ActiveParticipant.Name.Should().Be("Player1");
         

@@ -71,6 +71,22 @@ public class ActionExecutor : IActionExecutor
 
     private bool ExecuteAbility(GameSession session, Turn turn, Piece piece, GameAction action)
     {
-        return false;
+        try
+        {
+            if (string.IsNullOrEmpty(action.AbilityName))
+            {
+                return false;
+            }
+
+            // Получаем все фигуры на доске
+            var allPieces = session.GetAllPieces().ToList();
+            
+            // Выполняем способность
+            return _abilityService.UseAbility(piece, action.AbilityName, action.TargetPosition, allPieces);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

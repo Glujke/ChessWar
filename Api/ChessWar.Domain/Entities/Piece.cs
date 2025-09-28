@@ -27,6 +27,14 @@ public class Piece
     public bool IsFirstMove { get; set; } = true;
     
     public Dictionary<string, int> AbilityCooldowns { get; set; } = new();
+
+    /// <summary>
+    /// Начисляет опыт фигуре
+    /// </summary>
+    public void GainExperience(int experience)
+    {
+        XP += experience;
+    }
     
     public Piece() { }
     

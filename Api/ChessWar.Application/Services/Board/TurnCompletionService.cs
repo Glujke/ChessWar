@@ -35,7 +35,6 @@ public class TurnCompletionService : ITurnCompletionService
         var currentTurn = gameSession.GetCurrentTurn();
         var activePlayerBefore = currentTurn.ActiveParticipant;
         
-        _logger.LogInformation("=== TURN COMPLETION DEBUG ===");
         
         if (currentTurn.Actions == null || currentTurn.Actions.Count == 0)
         {
@@ -60,7 +59,6 @@ public class TurnCompletionService : ITurnCompletionService
         var newTurn = gameSession.GetCurrentTurn();
         var activePlayerAfter = newTurn.ActiveParticipant;
 
-        _logger.LogInformation("=== END TURN COMPLETION DEBUG ===");
 
         await _sessionRepository.SaveAsync(gameSession, cancellationToken);
     }

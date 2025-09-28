@@ -37,7 +37,7 @@ public class MandatoryActionIntegrationTests : IClassFixture<TestWebApplicationF
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         
         var errorContent = await endTurnResponse.Content.ReadAsStringAsync();
-        errorContent.Should().Contain("Player must perform at least one action before ending turn");
+        errorContent.Should().Contain("хотя бы одного действия");
     }
 
     [Fact]

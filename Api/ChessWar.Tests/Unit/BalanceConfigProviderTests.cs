@@ -45,7 +45,7 @@ public class BalanceConfigProviderTests
             Status = "Published"
         };
         
-        var customJson = """{"globals":{"mpRegenPerTurn":10},"playerMana":{"initialMana":10,"maxMana":50,"manaRegenPerTurn":10,"mandatoryAction":true,"attackCost":1,"movementCosts":{"Pawn":1,"Knight":2,"Bishop":3,"Rook":3,"Queen":4,"King":4}},"pieces":{"Pawn":{"hp":15,"atk":3,"range":1,"movement":1,"xpToEvolve":25}},"abilities":{"Bishop.LightArrow":{"mpCost":5,"cooldown":3,"range":5,"isAoe":false}},"evolution":{"xpThresholds":{"Pawn":25},"rules":{"Pawn":["Knight","Bishop"]},"immediateOnLastRank":{"Pawn":true}},"ai":{"nearEvolutionXp":24,"lastRankEdgeY":{"Elves":6,"Orcs":1},"kingAura":{"radius":4,"atkBonus":2}}}""";
+        var customJson = """{"globals":{"mpRegenPerTurn":10},"playerMana":{"initialMana":10,"maxMana":50,"manaRegenPerTurn":10,"mandatoryAction":true,"attackCost":1,"movementCosts":{"Pawn":1,"Knight":2,"Bishop":3,"Rook":3,"Queen":4,"King":4}},"pieces":{"Pawn":{"hp":15,"atk":3,"range":1,"movement":1,"xpToEvolve":25}},"abilities":{"Bishop.LightArrow":{"mpCost":5,"cooldown":3,"range":5,"isAoe":false}},"evolution":{"xpThresholds":{"Pawn":25},"rules":{"Pawn":["Knight","Bishop"]},"immediateOnLastRank":{"Pawn":true}},"ai":{"nearEvolutionXp":24,"lastRankEdgeY":{"Elves":6,"Orcs":1},"kingAura":{"radius":4,"atkBonus":2}},"killRewards":{"pawn":10,"knight":20,"bishop":20,"rook":30,"queen":50,"king":100}}""";
 
         _mockVersionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(version);

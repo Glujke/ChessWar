@@ -29,6 +29,10 @@ public class ProbabilisticAIServiceIntegrationTests
             .Returns(true);
         mockTurnService.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
             .Returns(true);
+        mockTurnService.Setup(x => x.GetAvailableMoves(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>()))
+            .Returns(new List<Position> { new Position(1, 1), new Position(2, 2), new Position(3, 3), new Position(4, 4) });
+        mockTurnService.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
+            .Returns(new List<Position> { new Position(5, 5), new Position(6, 6) });
         return mockTurnService;
     }
 

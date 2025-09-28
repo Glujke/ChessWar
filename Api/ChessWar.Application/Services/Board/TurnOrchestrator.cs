@@ -43,10 +43,20 @@ public class TurnOrchestrator : ITurnOrchestrator
             ValidateGameSession(gameSession);
             LogTurnStart(gameSession);
             
-            await ProcessCurrentTurn(gameSession, cancellationToken);
-            await ProcessAITurnIfNeeded(gameSession, cancellationToken);
-            await CheckAndHandleGameCompletion(gameSession, cancellationToken);
-            await SaveGameState(gameSession, cancellationToken);
+            // Проверяем обязательные действия
+            var config = _configProvider.GetActive();
+            if (config.PlayerMana.MandatoryAction)
+            {
+                var currentTurn = gameSession.GetCurrentTurn();
+                if (currentTurn.Actions == null || currentTurn.Actions.Count == 0)
+                {
+                    throw new InvalidOperationException("хотя бы одного действия");
+                }
+            }
+            
+        await ProcessCurrentTurn(gameSession, cancellationToken);
+        await CheckAndHandleGameCompletion(gameSession, cancellationToken);
+        await SaveGameState(gameSession, cancellationToken);
             
             LogTurnCompletion(gameSession);
         }
@@ -66,12 +76,6 @@ public class TurnOrchestrator : ITurnOrchestrator
     private void LogTurnStart(GameSession gameSession)
     {
         _logger.LogInformation("Starting EndTurnAsync for session: {SessionId}", gameSession.Id);
-        _logger.LogInformation("Mode: {Mode}", gameSession.Mode);
-        
-        var currentTurn = gameSession.GetCurrentTurn();
-        _logger.LogInformation("Current active player: {PlayerName} (ID: {PlayerId})", 
-            currentTurn.ActiveParticipant.Name, 
-            currentTurn.ActiveParticipant.Id);
     }
 
     private async Task ProcessCurrentTurn(GameSession gameSession, CancellationToken cancellationToken)
@@ -79,40 +83,17 @@ public class TurnOrchestrator : ITurnOrchestrator
         await _turnCompletionService.EndTurnAsync(gameSession, cancellationToken);
     }
 
-    private async Task ProcessAITurnIfNeeded(GameSession gameSession, CancellationToken cancellationToken)
-    {
-        var activePlayerAfterTurnCompletion = gameSession.GetCurrentTurn().ActiveParticipant;
-        var shouldCallAIForNextTurn = ShouldCallAIForNextTurn(gameSession, activePlayerAfterTurnCompletion);
-        
-        _logger.LogInformation("After turn completion - Active player: {PlayerName} (ID: {PlayerId})", 
-            activePlayerAfterTurnCompletion.Name, activePlayerAfterTurnCompletion.Id);
-        _logger.LogInformation("Should call AI for next turn: {ShouldCallAI}", shouldCallAIForNextTurn);
-        
-        if (shouldCallAIForNextTurn)
-        {
-            await ExecuteAITurn(gameSession, cancellationToken);
-        }
-    }
 
     private async Task ExecuteAITurn(GameSession gameSession, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Executing AI turn...");
-        
         try
         {
             var aiSuccess = await _aiService.MakeAiTurnAsync(gameSession, cancellationToken);
-            _logger.LogInformation("AI turn result: {Success}", aiSuccess);
             
             if (aiSuccess)
             {
                 await _notificationService.NotifyAiMoveAsync(gameSession.Id, 
                     new { Turn = gameSession.GetCurrentTurn().Number }, cancellationToken);
-                
-                var activeAfterAi = gameSession.GetCurrentTurn().ActiveParticipant;
-            }
-            else
-            {
-                _logger.LogWarning("AI turn failed! AI could not make any moves.");
             }
         }
         catch (Exception ex)
@@ -152,6 +133,7 @@ public class TurnOrchestrator : ITurnOrchestrator
 
     private bool ShouldCallAIForNextTurn(GameSession gameSession, Participant activePlayerAfterTurnCompletion)
     {
+        // ИИ должен ходить, когда активный игрок - Player2 (ИИ)
         return (gameSession.Mode == "AI" || gameSession.TutorialSessionId != null) && 
                activePlayerAfterTurnCompletion == gameSession.Player2;
     }

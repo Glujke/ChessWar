@@ -267,11 +267,37 @@
     "killRewards": {
       "type": "object",
       "description": "Experience rewards for killing different piece types",
-      "patternProperties": {
-        "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
+      "required": ["pawn", "knight", "bishop", "rook", "queen", "king"],
+      "properties": {
+        "pawn": {
           "type": "integer",
           "minimum": 0,
-          "description": "Experience reward for killing this piece type"
+          "description": "Experience reward for killing pawn"
+        },
+        "knight": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experience reward for killing knight"
+        },
+        "bishop": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experience reward for killing bishop"
+        },
+        "rook": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experience reward for killing rook"
+        },
+        "queen": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experience reward for killing queen"
+        },
+        "king": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experience reward for killing king"
         }
       },
       "additionalProperties": false

@@ -106,6 +106,57 @@ public class ActionGenerator : IActionGenerator
     {
         var actions = new List<GameAction>();
 
+        try
+        {
+            // Получаем все фигуры на доске
+            var allPieces = session.GetAllPieces().ToList();
+            
+            // Генерируем действия для известных способностей
+            var abilityNames = GetAvailableAbilityNames(piece);
+            
+            foreach (var abilityName in abilityNames)
+            {
+                // Проверяем все возможные позиции как цели
+                for (int x = 0; x < 8; x++)
+                {
+                    for (int y = 0; y < 8; y++)
+                    {
+                        var target = new Position(x, y);
+                        
+                        if (_abilityService.CanUseAbility(piece, abilityName, target, allPieces))
+                        {
+                            actions.Add(new GameAction
+                            {
+                                Type = "Ability",
+                                PieceId = piece.Id.ToString(),
+                                TargetPosition = target,
+                                AbilityName = abilityName
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to generate ability actions for piece {PieceId}", piece.Id);
+        }
+
         return actions;
+    }
+
+    private List<string> GetAvailableAbilityNames(Piece piece)
+    {
+        // Возвращаем известные способности для каждого типа фигуры
+        return piece.Type switch
+        {
+            Enums.PieceType.Pawn => new List<string> { "ShieldBash", "Breakthrough" },
+            Enums.PieceType.Knight => new List<string> { "DoubleStrike", "IronStance" },
+            Enums.PieceType.Bishop => new List<string> { "LightArrow", "Heal" },
+            Enums.PieceType.Rook => new List<string> { "ArrowStorm", "Fortress" },
+            Enums.PieceType.Queen => new List<string> { "MagicBlast", "Resurrection" },
+            Enums.PieceType.King => new List<string> { "RoyalCommand" },
+            _ => new List<string>()
+        };
     }
 }

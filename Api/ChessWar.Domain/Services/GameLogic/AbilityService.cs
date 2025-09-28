@@ -169,6 +169,27 @@ public class AbilityService : IAbilityService
         }
         else if (abilityName == "KingAura")
         {
+            // Аура короля - пассивная способность, которая увеличивает атаку союзников в радиусе
+            var balanceConfig = _configProvider.GetActive();
+            var kingAuraConfig = balanceConfig.Ai.KingAura;
+            if (kingAuraConfig != null)
+            {
+                var radius = kingAuraConfig.Radius;
+                var atkBonus = kingAuraConfig.AtkBonus;
+                
+                // Находим всех союзников в радиусе
+                var alliesInRange = allPieces.Where(p => 
+                    p.Owner == piece.Owner && 
+                    p.Id != piece.Id && 
+                    CalculateChebyshevDistance(piece.Position, p.Position) <= radius)
+                    .ToList();
+                
+                // Увеличиваем атаку союзников
+                foreach (var ally in alliesInRange)
+                {
+                    ally.ATK += atkBonus;
+                }
+            }
         }
         return true;
     }

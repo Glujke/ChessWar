@@ -209,29 +209,21 @@ public class MovementRulesService : IMovementRulesService
         var dx = Math.Abs(target.X - king.Position.X);
         var dy = Math.Abs(target.Y - king.Position.Y);
 
-        _logger.LogInformation("[MovementRules] CanKingMove: king {Id} from ({X},{Y}) to ({TX},{TY}) dx={Dx} dy={Dy}",
-            king.Id, king.Position.X, king.Position.Y, target.X, target.Y, dx, dy);
 
         if (dx <= 1 && dy <= 1 && (dx + dy) > 0)
         {
             var isEmpty = IsEmpty(target, boardPieces);
             var isEnemy = IsOccupiedByEnemy(target, king.Team, boardPieces);
             var result = isEmpty || isEnemy;
-            _logger.LogInformation("[MovementRules] CanKingMove: dx={Dx} dy={Dy} isEmpty={IsEmpty} isEnemy={IsEnemy} result={Result}",
-                dx, dy, isEmpty, isEnemy, result);
             return result;
         }
 
-        _logger.LogWarning("[MovementRules] CanKingMove: NO VALID MOVE for king {Id} from ({X},{Y}) to ({TX},{TY}) dx={Dx} dy={Dy}",
-            king.Id, king.Position.X, king.Position.Y, target.X, target.Y, dx, dy);
         return false;
     }
 
     private bool IsEmpty(Position position, IReadOnlyList<Piece> boardPieces)
     {
         var isEmpty = !boardPieces.Any(p => p.Position == position);
-        _logger.LogInformation("[MovementRules] IsEmpty({X},{Y}): {IsEmpty}, pieces at position: {PiecesCount}", 
-            position.X, position.Y, isEmpty, boardPieces.Count(p => p.Position == position));
         return isEmpty;
     }
 
@@ -239,8 +231,6 @@ public class MovementRulesService : IMovementRulesService
     {
         var piece = boardPieces.FirstOrDefault(p => p.Position == position);
         var isEnemy = piece != null && piece.Team != team;
-        _logger.LogInformation("[MovementRules] IsOccupiedByEnemy({X},{Y}): piece={PieceId}, pieceTeam={PieceTeam}, ourTeam={OurTeam}, isEnemy={IsEnemy}", 
-            position.X, position.Y, piece?.Id, piece?.Team, team, isEnemy);
         return isEnemy;
     }
 }

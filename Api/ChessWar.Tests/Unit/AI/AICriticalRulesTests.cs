@@ -245,8 +245,10 @@ public class AICriticalRulesTests
         var result = service.MakeAiTurn(session);
 
         Assert.True(result, "AI should respect turn order");
+        // ИИ не должен переключать ход - это делает TurnOrchestrator
+        // Проверяем, что ИИ выполнил ход успешно
         var nextTurn = session.GetCurrentTurn();
-        Assert.NotEqual(activePlayer.Id, nextTurn.ActiveParticipant.Id);
+        Assert.Equal(activePlayer.Id, nextTurn.ActiveParticipant.Id);
     }
 
     [Fact]

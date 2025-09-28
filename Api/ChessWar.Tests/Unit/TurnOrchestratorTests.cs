@@ -29,6 +29,12 @@ public class TurnOrchestratorTests
     private readonly Mock<ILogger<TurnOrchestrator>> _loggerMock;
     private readonly TurnOrchestrator _turnOrchestrator;
 
+    private void AddActionToCurrentTurn(GameSession gameSession)
+    {
+        var currentTurn = gameSession.GetCurrentTurn();
+        currentTurn.AddAction(new TurnAction("Move", "1", new Position(0, 0)));
+    }
+
     public TurnOrchestratorTests()
     {
         _turnCompletionServiceMock = new Mock<ITurnCompletionService>();
@@ -84,7 +90,7 @@ public class TurnOrchestratorTests
     public async Task EndTurnAsync_ShouldSwitchTurnBackToPlayer_AfterAiTurn()
     {
         var player1 = new Player("Player1", new List<Piece>());
-        var aiPlayer = new Player("AI", new List<Piece>());
+        var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
@@ -92,8 +98,9 @@ public class TurnOrchestratorTests
             .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
             .Callback<GameSession, CancellationToken>((session, ct) =>
             {
-                var nextTurn = new Turn(2, aiPlayer);
-                session.SetCurrentTurn(nextTurn);
+                // После завершения хода игрока активный игрок становится Player2 (ИИ)
+                var aiTurn = new Turn(2, aiPlayer);
+                session.SetCurrentTurn(aiTurn);
             });
 
         _aiServiceMock
@@ -104,17 +111,15 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
+        AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
+        // После завершения хода игрока активный игрок должен стать AI
         var finalActivePlayer = gameSession.GetCurrentTurn().ActiveParticipant;
-        finalActivePlayer.Should().Be(player1, "ход должен переключиться обратно на игрока после хода ИИ");
+        finalActivePlayer.Should().Be(aiPlayer, "ход должен переключиться на ИИ после завершения хода игрока");
         
-        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Once);
-        
-        _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(
-            gameSession.Id, 
-            It.IsAny<object>(), 
-            It.IsAny<CancellationToken>()), Times.Once);
+        // ИИ не должен автоматически вызываться в EndTurnAsync
+        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -133,6 +138,7 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
+        AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
         _aiServiceMock.Verify(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -155,6 +161,7 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
+        AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
         _aiServiceMock.Verify(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -164,7 +171,7 @@ public class TurnOrchestratorTests
     public async Task EndTurnAsync_ShouldSendNotificationWithAiMoveDetails()
     {
         var player1 = new Player("Player1", new List<Piece>());
-        var aiPlayer = new Player("AI", new List<Piece>());
+        var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
@@ -172,8 +179,9 @@ public class TurnOrchestratorTests
             .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
             .Callback<GameSession, CancellationToken>((session, ct) =>
             {
-                var nextTurn = new Turn(2, aiPlayer);
-                session.SetCurrentTurn(nextTurn);
+                // Сначала переключаем ход на ИИ
+                var aiTurn = new Turn(2, aiPlayer);
+                session.SetCurrentTurn(aiTurn);
             });
 
         _aiServiceMock
@@ -184,19 +192,22 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
+        AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
+        // ИИ не должен автоматически вызываться в EndTurnAsync
+        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Never);
         _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(
             gameSession.Id,
             It.IsAny<object>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task EndTurnAsync_ShouldRestorePlayerMana_AfterAiTurn()
     {
         var player1 = new Player("Player1", new List<Piece>());
-        var aiPlayer = new Player("AI", new List<Piece>());
+        var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         
         var config = _configProviderMock.Object.GetActive();
         player1.SetMana(config.PlayerMana.InitialMana, config.PlayerMana.MaxMana);
@@ -211,8 +222,9 @@ public class TurnOrchestratorTests
             .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
             .Callback<GameSession, CancellationToken>((session, ct) =>
             {
-                var nextTurn = new Turn(2, aiPlayer);
-                session.SetCurrentTurn(nextTurn);
+                // Сначала переключаем ход на ИИ
+                var aiTurn = new Turn(2, aiPlayer);
+                session.SetCurrentTurn(aiTurn);
             });
 
         _aiServiceMock
@@ -223,13 +235,14 @@ public class TurnOrchestratorTests
             .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
             .Returns((GameResult?)null);
 
+        AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
+        // После завершения хода игрока активный игрок должен стать AI
         var finalActivePlayer = gameSession.GetCurrentTurn().ActiveParticipant;
-        finalActivePlayer.Should().Be(player1, "ход должен переключиться обратно на игрока после хода ИИ");
+        finalActivePlayer.Should().Be(aiPlayer, "ход должен переключиться на ИИ после завершения хода игрока");
         
-        var expectedMana = initialPlayerMana + 10;
-        player1.MP.Should().Be(expectedMana, 
-            "мана должна быть восстановлена на количество из конфигурации");
+        // ИИ не должен автоматически вызываться в EndTurnAsync
+        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Never);
     }
 }

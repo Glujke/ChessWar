@@ -8,6 +8,7 @@ using ChessWar.Application.Services.Common;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.ValueObjects;
+using ChessWar.Domain.Interfaces.Configuration;
 using AutoMapper;
 
 namespace ChessWar.Application.Services.GameModes;
