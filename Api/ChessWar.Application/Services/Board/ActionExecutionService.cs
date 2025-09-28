@@ -43,6 +43,14 @@ public class ActionExecutionService : IActionExecutionService
             throw new ArgumentNullException(nameof(dto));
 
         var currentTurn = gameSession.GetCurrentTurn();
+        
+        if (dto.Type == "Pass")
+        {
+            currentTurn.AddAction(new ChessWar.Domain.ValueObjects.TurnAction("Pass", string.Empty, null));
+            await _sessionRepository.SaveAsync(gameSession, cancellationToken);
+            return true;
+        }
+        
         var piece = _playerManagementService.FindPieceById(gameSession, dto.PieceId);
         
 
