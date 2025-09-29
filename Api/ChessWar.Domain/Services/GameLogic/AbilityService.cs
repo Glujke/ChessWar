@@ -199,6 +199,13 @@ public class AbilityService : IAbilityService
 
     private static bool IsPathBlocked(Position from, Position to, List<Piece> all)
     {
+        // Создаем словарь позиций для быстрого поиска
+        var occupiedPositions = new HashSet<(int, int)>();
+        foreach (var piece in all)
+        {
+            occupiedPositions.Add((piece.Position.X, piece.Position.Y));
+        }
+        
         var dx = Math.Sign(to.X - from.X);
         var dy = Math.Sign(to.Y - from.Y);
         var steps = Math.Max(Math.Abs(to.X - from.X), Math.Abs(to.Y - from.Y));
@@ -206,7 +213,7 @@ public class AbilityService : IAbilityService
         for (int i = 1; i < steps; i++)
         {
             x += dx; y += dy;
-            if (all.Any(p => p.Position.X == x && p.Position.Y == y)) return true;
+            if (occupiedPositions.Contains((x, y))) return true;
         }
         return false;
     }

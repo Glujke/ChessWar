@@ -116,10 +116,16 @@ public class ActionGenerator : IActionGenerator
             
             foreach (var abilityName in abilityNames)
             {
-                // Проверяем все возможные позиции как цели
-                for (int x = 0; x < 8; x++)
+                // Ограничиваем поиск только близкими позициями для оптимизации
+                var maxRange = 3; // Максимальный радиус поиска
+                var startX = System.Math.Max(0, piece.Position.X - maxRange);
+                var endX = System.Math.Min(7, piece.Position.X + maxRange);
+                var startY = System.Math.Max(0, piece.Position.Y - maxRange);
+                var endY = System.Math.Min(7, piece.Position.Y + maxRange);
+                
+                for (int x = startX; x <= endX; x++)
                 {
-                    for (int y = 0; y < 8; y++)
+                    for (int y = startY; y <= endY; y++)
                     {
                         var target = new Position(x, y);
                         
