@@ -34,6 +34,30 @@ try
         });
     });
     builder.Services.AddControllers();
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("DevCors", policy =>
+        {
+            var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+            if (origins.Length > 0)
+            {
+                policy
+                    .WithOrigins(origins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+            else
+            {
+                policy
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()
+                    .SetIsOriginAllowed(_ => false);
+            }
+        });
+    });
     builder.Services.AddProblemDetails();
     
     builder.Services.AddSignalR();
@@ -66,6 +90,11 @@ builder.Services.AddGameModeServices();
         });
     }
 
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseCors("DevCors");
+    }
+    
     app.MapControllers();
     
     app.MapHub<ChessWar.Api.Hubs.GameHub>("/gameHub");
