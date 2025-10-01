@@ -14,9 +14,14 @@ import { GameViewModel } from './game.view-model';
     <h2>Game Session: {{ gameId() }}</h2>
     <p *ngIf="vm.error()" style="color: red;">{{ vm.error() }}</p>
     <p *ngIf="vm.isLoading()">Загрузка...</p>
+    
+    <div *ngIf="vm.gameState() === 'ai-thinking'" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; margin: 8px 0; border-radius: 4px; color: #856404;">
+      🤖 ИИ думает...
+    </div>
+    
     <div *ngIf="vm.session() as s">
       <app-game-status [gameId]="gameId()" />
-      <button type="button" (click)="vm.endTurn(gameId())" [disabled]="vm.isLoading()">Завершить ход</button>
+      <button type="button" (click)="vm.endTurn(gameId())" [disabled]="vm.isLoading() || !vm.canControlPieces()">Завершить ход</button>
         <button type="button" (click)="vm.enableHints(true)" [disabled]="vm.isLoading()" style="margin-left:8px;">Показать подсказки</button>
       <div *ngIf="vm.board() as b" style="margin-top: 12px; display: flex; gap: 16px; align-items: flex-start;">
         <div style="display: grid; gap: 2px; width: fit-content;" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 40px)'">

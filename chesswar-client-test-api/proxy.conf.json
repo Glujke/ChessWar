@@ -1,12 +1,13 @@
 {
-  "/api": {
-    "target": "http://localhost:5000",
+"/api": {
+    "target": "http://chesswar:80",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "info"
+    "logLevel": "debug",
+    "ws": true
   },
   "/gameHub": {
-    "target": "http://localhost:5000",
+    "target": "http://chesswar:80",
     "secure": false,
     "changeOrigin": true,
     "ws": true,

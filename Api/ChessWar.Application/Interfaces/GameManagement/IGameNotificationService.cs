@@ -29,4 +29,24 @@ public interface IGameNotificationService
     /// Уведомляет об эволюции фигуры
     /// </summary>
     Task NotifyPieceEvolvedAsync(Guid sessionId, string pieceId, string newType, int x, int y, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Уведомляет о начале хода ИИ
+    /// </summary>
+    Task NotifyAITurnInProgressAsync(Guid sessionId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Уведомляет о завершении хода ИИ
+    /// </summary>
+    Task NotifyAITurnCompletedAsync(Guid sessionId, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Уведомляет о начале хода
+    /// </summary>
+    Task NotifyTurnStartedAsync(Guid sessionId, string participantType, int turnNumber, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Уведомляет о завершении хода
+    /// </summary>
+    Task NotifyTurnEndedAsync(Guid sessionId, string participantType, int turnNumber, CancellationToken cancellationToken = default);
 }

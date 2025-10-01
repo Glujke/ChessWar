@@ -22,12 +22,11 @@ export class GameViewModel {
   readonly isEvolutionDialogOpen = signal(false);
   readonly isGameFinished = signal(false);
   readonly gameResult = signal<string | null>(null);
-  // Tutorial hints
-  readonly tutorialStep = signal<1 | 2 | 3 | 4>(1); // 1: select, 2: move/attack, 3: end turn, 4: ability
+  readonly gameState = signal<'player-turn' | 'ai-thinking' | 'ai-turn' | 'unknown'>('unknown');
+  readonly canControlPieces = signal(true);
+  readonly tutorialStep = signal<1 | 2 | 3 | 4>(1);
   readonly showHints = signal(true);
-  // Log panel
   readonly logs = signal<{ ts: string; level: 'info' | 'error' | 'event'; source: string; message: string; data?: unknown }[]>([]);
-  // Одноразовое исключение для только что эволюционировавшей фигуры
   private justEvolvedPieceId: string | null = null;
 
   private addLog(level: 'info' | 'error' | 'event', source: string, message: string, data?: unknown): void {
@@ -37,12 +36,38 @@ export class GameViewModel {
   }
   clearLogs(): void { this.logs.set([]); }
 
+  private updateGameState(session: GameSessionDto): void {
+    if (!session) {
+      this.gameState.set('unknown');
+      this.canControlPieces.set(false);
+      return;
+    }
+
+    const isMyTurn = this.isMyTurn();
+    
+    if (isMyTurn) {
+      this.gameState.set('player-turn');
+      this.canControlPieces.set(true);
+    } else {
+      this.gameState.set('ai-turn');
+      this.canControlPieces.set(false);
+    }
+  }
+
+  private setAITurnInProgress(): void {
+    this.gameState.set('ai-thinking');
+    this.canControlPieces.set(false);
+    this.addLog('info', 'GameState', 'ИИ думает...');
+  }
+
+  private setAITurnCompleted(): void {
+    this.addLog('info', 'GameState', 'ИИ завершил ход');
+  }
+
   private logAttackDetails(beforePieces: PieceDto[], afterPieces: PieceDto[], attackerId: string, target: PositionDto): void {
-    // Находим атакующую фигуру
     const attacker = afterPieces.find(p => String(p.id) === String(attackerId));
     if (!attacker) return;
 
-    // Находим цель атаки по позиции
     const targetPiece = beforePieces.find(p => 
       (p as any).position?.x === target.x && (p as any).position?.y === target.y
     );
@@ -168,7 +193,7 @@ export class GameViewModel {
       this.addLog('info', 'VM', 'Loading game session', { gameId });
       const data = await this.api.getGameSession(gameId);
       this.session.set(data);
-      // Предпочтем доску из сессии (через фигуры игроков), fallback — бэкендовый /board
+      this.updateGameState(data);
       const live = this.getLivePieces(data);
       if (live.length > 0) {
         this.board.set({ pieces: live } as any);
@@ -181,12 +206,12 @@ export class GameViewModel {
         this.gameResult.set((data as any).result ?? null);
       }
 
-      // Подключение к SignalR и подписка на события
       await this.hub.connect(gameId);
       await this.hub.joinGame(gameId);
       const refresh = async () => {
         const updated = await this.api.getGameSession(gameId);
         this.session.set(updated);
+        this.updateGameState(updated);
         const pieces = this.getLivePieces(updated);
         this.board.set({ pieces } as any);
         if ((updated as any).status === 'Finished' || (updated as any).status === 'finished') {
@@ -195,11 +220,27 @@ export class GameViewModel {
         }
       };
       this.hub.on('AiMove', refresh);
+      this.hub.on('AITurnInProgress', () => {
+        this.addLog('event', 'SignalR', 'AITurnInProgress');
+        this.setAITurnInProgress();
+      });
+      this.hub.on('AITurnCompleted', () => {
+        this.addLog('event', 'SignalR', 'AITurnCompleted');
+        this.setAITurnCompleted();
+        refresh();
+      });
+      this.hub.on('TurnStarted', (payload: any) => {
+        this.addLog('event', 'SignalR', 'TurnStarted', payload);
+        refresh();
+      });
+      this.hub.on('TurnEnded', (payload: any) => {
+        this.addLog('event', 'SignalR', 'TurnEnded', payload);
+        refresh();
+      });
       this.hub.on('GameEnded', async () => {
         this.addLog('event', 'SignalR', 'GameEnded');
         await refresh();
       });
-      // PieceEvolved: точечное обновление фигуры
       this.hub.on('PieceEvolved', (payload: any) => {
         try {
           const s = this.session();
@@ -216,13 +257,11 @@ export class GameViewModel {
           const live = this.getLivePieces(updated);
           this.board.set({ pieces: live } as any);
           this.addLog('event', 'SignalR', 'PieceEvolved', payload);
-          // после первого применения исключения — снимаем флаг
           this.justEvolvedPieceId = null;
         } catch {
           // ignore
         }
       });
-      // Универсальный слушатель: на любое событие обновляем сессию
       (this.hub as any).onAny?.(async (name: string, payload: unknown) => {
         this.addLog('event', 'SignalR', String(name), payload);
         await refresh();

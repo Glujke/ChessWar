@@ -48,4 +48,28 @@ public class GameNotificationService : IGameNotificationService
         _logger.LogInformation("Notified clients about piece evolution in session {SessionId}: {PieceId} -> {NewType} at ({X},{Y})", sessionId, pieceId, newType, x, y);
         await _hubClient.SendToGroupAsync(sessionId.ToString(), "PieceEvolved", new { SessionId = sessionId, PieceId = pieceId, NewType = newType, Position = new { X = x, Y = y }, Timestamp = DateTime.UtcNow }, cancellationToken);
     }
+
+    public async Task NotifyAITurnInProgressAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Notified clients about AI turn in progress in session {SessionId}", sessionId);
+        await _hubClient.SendToGroupAsync(sessionId.ToString(), "AITurnInProgress", new { SessionId = sessionId, Timestamp = DateTime.UtcNow }, cancellationToken);
+    }
+
+    public async Task NotifyAITurnCompletedAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Notified clients about AI turn completed in session {SessionId}", sessionId);
+        await _hubClient.SendToGroupAsync(sessionId.ToString(), "AITurnCompleted", new { SessionId = sessionId, Timestamp = DateTime.UtcNow }, cancellationToken);
+    }
+
+    public async Task NotifyTurnStartedAsync(Guid sessionId, string participantType, int turnNumber, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Notified clients about turn started in session {SessionId}: {ParticipantType} turn {TurnNumber}", sessionId, participantType, turnNumber);
+        await _hubClient.SendToGroupAsync(sessionId.ToString(), "TurnStarted", new { SessionId = sessionId, ParticipantType = participantType, TurnNumber = turnNumber, Timestamp = DateTime.UtcNow }, cancellationToken);
+    }
+
+    public async Task NotifyTurnEndedAsync(Guid sessionId, string participantType, int turnNumber, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Notified clients about turn ended in session {SessionId}: {ParticipantType} turn {TurnNumber}", sessionId, participantType, turnNumber);
+        await _hubClient.SendToGroupAsync(sessionId.ToString(), "TurnEnded", new { SessionId = sessionId, ParticipantType = participantType, TurnNumber = turnNumber, Timestamp = DateTime.UtcNow }, cancellationToken);
+    }
 }

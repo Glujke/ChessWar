@@ -53,17 +53,27 @@ public class TurnOrchestrator : ITurnOrchestrator
                 }
             }
             
-                var activePlayerBeforeTurn = gameSession.GetCurrentTurn().ActiveParticipant;
-                
-                await ProcessCurrentTurn(gameSession, cancellationToken);
-                
-                var activePlayerAfterTurn = gameSession.GetCurrentTurn().ActiveParticipant;
-                
-                if (ShouldCallAIForNextTurn(gameSession, activePlayerAfterTurn) && 
-                    activePlayerBeforeTurn != activePlayerAfterTurn)
-                {
-                    await ExecuteAITurn(gameSession, cancellationToken);
-                }
+            var activePlayerBeforeTurn = gameSession.GetCurrentTurn().ActiveParticipant;
+            
+            await _notificationService.NotifyTurnEndedAsync(gameSession.Id, 
+                activePlayerBeforeTurn.IsAI ? "AI" : "Player", 
+                gameSession.GetCurrentTurn().Number, 
+                cancellationToken);
+            
+            await ProcessCurrentTurn(gameSession, cancellationToken);
+            
+            var activePlayerAfterTurn = gameSession.GetCurrentTurn().ActiveParticipant;
+            
+            await _notificationService.NotifyTurnStartedAsync(gameSession.Id, 
+                activePlayerAfterTurn.IsAI ? "AI" : "Player", 
+                gameSession.GetCurrentTurn().Number, 
+                cancellationToken);
+            
+            if (ShouldCallAIForNextTurn(gameSession, activePlayerAfterTurn) && 
+                activePlayerBeforeTurn != activePlayerAfterTurn)
+            {
+                _ = Task.Run(async () => await ExecuteAITurnAsync(gameSession, cancellationToken), cancellationToken);
+            }
             
             await CheckAndHandleGameCompletion(gameSession, cancellationToken);
             await SaveGameState(gameSession, cancellationToken);
@@ -109,6 +119,43 @@ public class TurnOrchestrator : ITurnOrchestrator
         catch (Exception ex)
         {
             _logger.LogError(ex, "AI turn threw exception: {Message}", ex.Message);
+        }
+    }
+
+    private async Task ExecuteAITurnAsync(GameSession gameSession, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogInformation("Starting AI turn for session {SessionId}", gameSession.Id);
+            
+            await _notificationService.NotifyAITurnInProgressAsync(gameSession.Id, cancellationToken);
+            
+            var aiSuccess = await _aiService.MakeAiTurnAsync(gameSession, cancellationToken);
+            
+            if (aiSuccess)
+            {
+                await ProcessCurrentTurn(gameSession, cancellationToken);
+                
+                await _notificationService.NotifyAITurnCompletedAsync(gameSession.Id, cancellationToken);
+                
+                await _notificationService.NotifyAiMoveAsync(gameSession.Id, 
+                    new { Turn = gameSession.GetCurrentTurn().Number }, cancellationToken);
+                
+                await CheckAndHandleGameCompletion(gameSession, cancellationToken);
+                await SaveGameState(gameSession, cancellationToken);
+                
+                _logger.LogInformation("AI turn completed successfully for session {SessionId}", gameSession.Id);
+            }
+            else
+            {
+                _logger.LogWarning("AI turn failed for session {SessionId}", gameSession.Id);
+                await _notificationService.NotifyAITurnCompletedAsync(gameSession.Id, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AI turn threw exception: {Message}", ex.Message);
+            await _notificationService.NotifyAITurnCompletedAsync(gameSession.Id, cancellationToken);
         }
     }
 
