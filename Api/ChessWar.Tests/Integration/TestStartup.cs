@@ -18,15 +18,15 @@ public class TestStartup
     {
         services.AddControllers();
         services.AddOpenApi();
-        
+
         services.AddDbContext<ChessWarDbContext>(options =>
         {
             options.UseInMemoryDatabase("TestDatabase");
         });
-        
+
         services.AddScoped<IPieceService, PieceService>();
         services.AddScoped<IBoardService, BoardService>();
-        
+
         services.AddInfrastructure();
     }
 

@@ -13,8 +13,8 @@ public class GameStateServiceTests
     {
         var p1 = new Player("P1", new List<Piece>());
         var p2 = new Player("P2", new List<Piece>());
-        var k1 = TestHelpers.CreatePiece(PieceType.King, Team.Elves, new Position(0,0), p1);
-        var k2 = TestHelpers.CreatePiece(PieceType.King, Team.Orcs, new Position(1,1), p2);
+        var k1 = TestHelpers.CreatePiece(PieceType.King, Team.Elves, new Position(0, 0), p1);
+        var k2 = TestHelpers.CreatePiece(PieceType.King, Team.Orcs, new Position(1, 1), p2);
 
         var session = new GameSession(p1, p2);
         var gs = new GameStateService();

@@ -57,7 +57,7 @@ public class EvolutionCommand : ICommand
         _gameSession.Board.RemovePiece(_piece);
         evolved.Position = pos;
         _gameSession.Board.PlacePiece(evolved);
-        
+
         if (_notificationService != null)
         {
             await _notificationService.NotifyPieceEvolvedAsync(

@@ -85,30 +85,35 @@ public sealed class BalanceConfigProvider : IBalanceConfigProvider
             },
             Pieces = new Dictionary<string, PieceStats>
             {
-                ["Pawn"]   = new PieceStats{ Hp=10, Atk=2, Range=1, Movement=1, XpToEvolve=20 },
-                ["Knight"] = new PieceStats{ Hp=20, Atk=4, Range=1, Movement=1, XpToEvolve=40 },
-                ["Bishop"] = new PieceStats{ Hp=18, Atk=3, Range=4, Movement=8, XpToEvolve=40 },
-                ["Rook"]   = new PieceStats{ Hp=25, Atk=5, Range=8, Movement=8, XpToEvolve=60 },
-                ["Queen"]  = new PieceStats{ Hp=30, Atk=7, Range=3, Movement=8, XpToEvolve=0 },
-                ["King"]   = new PieceStats{ Hp=50, Atk=3, Range=1, Movement=1, XpToEvolve=0 },
+                ["Pawn"] = new PieceStats { Hp = 10, Atk = 2, Range = 1, Movement = 1, XpToEvolve = 20 },
+                ["Knight"] = new PieceStats { Hp = 20, Atk = 4, Range = 1, Movement = 1, XpToEvolve = 40 },
+                ["Bishop"] = new PieceStats { Hp = 18, Atk = 3, Range = 4, Movement = 8, XpToEvolve = 40 },
+                ["Rook"] = new PieceStats { Hp = 25, Atk = 5, Range = 8, Movement = 8, XpToEvolve = 60 },
+                ["Queen"] = new PieceStats { Hp = 30, Atk = 7, Range = 3, Movement = 8, XpToEvolve = 0 },
+                ["King"] = new PieceStats { Hp = 50, Atk = 3, Range = 1, Movement = 1, XpToEvolve = 0 },
             },
             Abilities = new Dictionary<string, AbilitySpecModel>
             {
-                ["Bishop.LightArrow"]    = new AbilitySpecModel{ MpCost=3, Cooldown=2, Range=4, IsAoe=false, Damage=4 },
-                ["Bishop.Heal"]          = new AbilitySpecModel{ MpCost=6, Cooldown=4, Range=2, IsAoe=false, Heal=5 },
-                ["Knight.DoubleStrike"]  = new AbilitySpecModel{ MpCost=5, Cooldown=3, Range=1, IsAoe=false, Hits=2, DamagePerHit=3 },
-                ["Rook.Fortress"]        = new AbilitySpecModel{ MpCost=8, Cooldown=5, Range=0, IsAoe=false, TempHpMultiplier=2, DurationTurns=1 },
-                ["Queen.MagicExplosion"] = new AbilitySpecModel{ MpCost=10, Cooldown=3, Range=3, IsAoe=true, Damage=7 },
-                ["Queen.Resurrection"]   = new AbilitySpecModel{ MpCost=10, Cooldown=10, Range=3, IsAoe=false, Heal=20 },
-                ["King.RoyalCommand"]    = new AbilitySpecModel{ MpCost=10, Cooldown=6, Range=8, IsAoe=false },
-                ["Pawn.ShieldBash"]      = new AbilitySpecModel{ MpCost=2, Cooldown=0, Range=1, IsAoe=false, Damage=2 },
-                ["Pawn.Breakthrough"]    = new AbilitySpecModel{ MpCost=2, Cooldown=0, Range=1, IsAoe=false, Damage=3 },
+                ["Bishop.LightArrow"] = new AbilitySpecModel { MpCost = 3, Cooldown = 2, Range = 4, IsAoe = false, Damage = 4 },
+                ["Bishop.Heal"] = new AbilitySpecModel { MpCost = 6, Cooldown = 4, Range = 2, IsAoe = false, Heal = 5 },
+                ["Knight.DoubleStrike"] = new AbilitySpecModel { MpCost = 5, Cooldown = 3, Range = 1, IsAoe = false, Hits = 2, DamagePerHit = 3 },
+                ["Rook.Fortress"] = new AbilitySpecModel { MpCost = 8, Cooldown = 5, Range = 0, IsAoe = false, TempHpMultiplier = 2, DurationTurns = 1 },
+                ["Queen.MagicExplosion"] = new AbilitySpecModel { MpCost = 10, Cooldown = 3, Range = 3, IsAoe = true, Damage = 7 },
+                ["Queen.Resurrection"] = new AbilitySpecModel { MpCost = 10, Cooldown = 10, Range = 3, IsAoe = false, Heal = 20 },
+                ["King.RoyalCommand"] = new AbilitySpecModel { MpCost = 10, Cooldown = 6, Range = 8, IsAoe = false },
+                ["Pawn.ShieldBash"] = new AbilitySpecModel { MpCost = 2, Cooldown = 0, Range = 1, IsAoe = false, Damage = 2 },
+                ["Pawn.Breakthrough"] = new AbilitySpecModel { MpCost = 2, Cooldown = 0, Range = 1, IsAoe = false, Damage = 3 },
             },
             Evolution = new EvolutionSection
             {
                 XpThresholds = new Dictionary<string, int>
                 {
-                    ["Pawn"] = 20, ["Knight"] = 40, ["Bishop"] = 40, ["Rook"] = 60, ["Queen"] = 0, ["King"] = 0
+                    ["Pawn"] = 20,
+                    ["Knight"] = 40,
+                    ["Bishop"] = 40,
+                    ["Rook"] = 60,
+                    ["Queen"] = 0,
+                    ["King"] = 0
                 },
                 Rules = new Dictionary<string, List<string>>
                 {

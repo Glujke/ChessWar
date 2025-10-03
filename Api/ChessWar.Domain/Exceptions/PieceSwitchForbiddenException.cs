@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when trying to switch pieces during a turn when it's not allowed
+/// Исключение при попытке переключить фигуры в ходе, когда это запрещено.
 /// </summary>
 public class PieceSwitchForbiddenException : GameException
 {

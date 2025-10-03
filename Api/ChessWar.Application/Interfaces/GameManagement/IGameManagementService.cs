@@ -12,7 +12,7 @@ public interface IGameManagementService
     /// Начинает игру
     /// </summary>
     void StartGame(GameSession gameSession);
-    
+
     /// <summary>
     /// Завершает игру
     /// </summary>

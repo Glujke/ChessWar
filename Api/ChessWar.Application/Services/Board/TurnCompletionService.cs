@@ -1,6 +1,8 @@
 using ChessWar.Application.Interfaces.Board;
 using ChessWar.Domain.Entities;
-using ChessWar.Domain.Interfaces.TurnManagement; using ChessWar.Domain.Interfaces.DataAccess; using ChessWar.Domain.Interfaces.Configuration;
+using ChessWar.Domain.Interfaces.TurnManagement;
+using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ChessWar.Application.Services.Board;
@@ -34,8 +36,8 @@ public class TurnCompletionService : ITurnCompletionService
 
         var currentTurn = gameSession.GetCurrentTurn();
         var activePlayerBefore = currentTurn.ActiveParticipant;
-        
-        
+
+
         if (currentTurn.Actions == null || currentTurn.Actions.Count == 0)
         {
             var activePlayerPieces = currentTurn.ActiveParticipant?.Pieces ?? new List<ChessWar.Domain.Entities.Piece>();
@@ -53,9 +55,9 @@ public class TurnCompletionService : ITurnCompletionService
         _turnService.EndTurn(currentTurn);
 
         var config = _configProvider.GetActive();
-        
+
         gameSession.EndCurrentTurnWithManaRestore(config.PlayerMana.ManaRegenPerTurn);
-        
+
         var newTurn = gameSession.GetCurrentTurn();
         var activePlayerAfter = newTurn.ActiveParticipant;
 

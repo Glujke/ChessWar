@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when tutorial session is not found
+/// Исключение, возникающее при отсутствии сессии обучения.
 /// </summary>
 public class TutorialNotFoundException : GameException
 {

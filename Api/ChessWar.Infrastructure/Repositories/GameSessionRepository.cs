@@ -11,7 +11,7 @@ public class GameSessionRepository : IGameSessionRepository
 {
     private readonly IMemoryCache _cache;
     private readonly string _cacheKeyPrefix = "gamesession_";
-    private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(2); 
+    private readonly TimeSpan _cacheExpiration = TimeSpan.FromHours(2);
 
     public GameSessionRepository(IMemoryCache cache)
     {
@@ -21,7 +21,7 @@ public class GameSessionRepository : IGameSessionRepository
     public Task<GameSession?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         var cacheKey = GetCacheKey(sessionId);
-        
+
         if (_cache.TryGetValue(cacheKey, out GameSession? session))
         {
             return Task.FromResult(session);
@@ -36,16 +36,16 @@ public class GameSessionRepository : IGameSessionRepository
             throw new ArgumentNullException(nameof(session));
 
         var cacheKey = GetCacheKey(session.Id);
-        
+
         var cacheOptions = new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = _cacheExpiration,
-            SlidingExpiration = TimeSpan.FromMinutes(30), 
+            SlidingExpiration = TimeSpan.FromMinutes(30),
             Priority = CacheItemPriority.High
         };
 
         _cache.Set(cacheKey, session, cacheOptions);
-        
+
         return Task.CompletedTask;
     }
 
@@ -53,7 +53,7 @@ public class GameSessionRepository : IGameSessionRepository
     {
         var cacheKey = GetCacheKey(sessionId);
         _cache.Remove(cacheKey);
-        
+
         return Task.CompletedTask;
     }
 

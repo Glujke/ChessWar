@@ -14,7 +14,7 @@ public class TutorialSession : ITutorialMode
     public Enums.GameStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
-    
+
     public TutorialStage CurrentStage { get; private set; }
     public int Progress { get; private set; }
     public bool ShowHints { get; }
@@ -28,7 +28,7 @@ public class TutorialSession : ITutorialMode
         Status = Enums.GameStatus.Waiting;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
-        
+
         ShowHints = showHints;
         CurrentStage = TutorialStage.Introduction;
         Progress = 0;

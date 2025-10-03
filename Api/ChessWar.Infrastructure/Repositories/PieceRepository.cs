@@ -23,7 +23,7 @@ public class PieceRepository : IPieceRepository
         var pieces = await _context.Pieces
             .AsNoTracking()
             .ToListAsync(cancellationToken);
-            
+
         return pieces.Select(MapToDomain).ToList();
     }
 
@@ -33,7 +33,7 @@ public class PieceRepository : IPieceRepository
             .AsNoTracking()
             .Where(p => p.Team == team)
             .ToListAsync(cancellationToken);
-            
+
         return pieces.Select(MapToDomain).ToList();
     }
 
@@ -43,7 +43,7 @@ public class PieceRepository : IPieceRepository
             .AsNoTracking()
             .Where(p => p.HP > 0)
             .ToListAsync(cancellationToken);
-            
+
         return pieces.Select(MapToDomain).ToList();
     }
 
@@ -53,7 +53,7 @@ public class PieceRepository : IPieceRepository
             .AsNoTracking()
             .Where(p => p.Team == team && p.HP > 0)
             .ToListAsync(cancellationToken);
-            
+
         return pieces.Select(MapToDomain).ToList();
     }
 
@@ -62,7 +62,7 @@ public class PieceRepository : IPieceRepository
         var piece = await _context.Pieces
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-            
+
         return piece != null ? MapToDomain(piece) : null;
     }
 
@@ -71,7 +71,7 @@ public class PieceRepository : IPieceRepository
         var piece = await _context.Pieces
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.PositionX == position.X && p.PositionY == position.Y, cancellationToken);
-            
+
         return piece != null ? MapToDomain(piece) : null;
     }
 
@@ -80,7 +80,7 @@ public class PieceRepository : IPieceRepository
         var dto = MapToDto(piece);
         _context.Pieces.Add(dto);
         await _context.SaveChangesAsync(cancellationToken);
-        
+
         piece.Id = dto.Id;
     }
 
@@ -99,7 +99,7 @@ public class PieceRepository : IPieceRepository
             existingDto.Movement = piece.Movement;
             existingDto.Range = piece.Range;
             existingDto.AbilityCooldownsJson = System.Text.Json.JsonSerializer.Serialize(piece.AbilityCooldowns);
-            
+
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
@@ -130,7 +130,7 @@ public class PieceRepository : IPieceRepository
             XPToEvolve = dto.XPToEvolve,
             IsFirstMove = dto.IsFirstMove
         };
-        
+
         try
         {
             piece.AbilityCooldowns = JsonSerializer.Deserialize<Dictionary<string, int>>(dto.AbilityCooldownsJson) ?? new();
@@ -139,7 +139,7 @@ public class PieceRepository : IPieceRepository
         {
             piece.AbilityCooldowns = new();
         }
-        
+
         return piece;
     }
 

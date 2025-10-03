@@ -9,7 +9,7 @@ public interface IDomainEventDispatcher
     /// Публикует доменное событие
     /// </summary>
     void Publish<T>(T domainEvent) where T : IDomainEvent;
-    
+
     /// <summary>
     /// Публикует все накопленные события
     /// </summary>

@@ -47,7 +47,7 @@ public class TutorialModeStrategy : BaseGameModeStrategy
         var session = await _sessionManagementService.CreateGameSessionAsync(tutorialDto);
         await _sessionManagementService.StartGameAsync(session);
         await _battlePresetService.ApplyPresetAsync(session, "Battle1");
-        
+
         return _mapper.Map<GameSessionDto>(session);
     }
 
@@ -84,7 +84,7 @@ public class TutorialModeStrategy : BaseGameModeStrategy
         {
             return _mapper.Map<GameSessionDto>(session);
         }
-        
+
         var success = await _aiTurnService.MakeAiTurnAsync(session);
         if (!success)
         {
@@ -140,7 +140,7 @@ public class TutorialModeStrategy : BaseGameModeStrategy
     public override async Task<GameSessionDto> CompleteGameAsync(GameSession session, GameResult result)
     {
         await _sessionManagementService.CompleteGameAsync(session, result);
-        
+
         if (session.TutorialSessionId.HasValue && result == GameResult.Player1Victory)
         {
             var enemy = session.GetPlayer2Pieces();
@@ -186,24 +186,24 @@ public class TutorialModeStrategy : BaseGameModeStrategy
         }
 
         var activeTutorialSessionId = request.TutorialSessionId ?? session.TutorialSessionId;
-        
+
         string nextStage;
-        
+
         if (activeTutorialSessionId.HasValue)
         {
             try
             {
                 var tutorialSession = await _tutorialService.AdvanceToNextStageAsync(activeTutorialSessionId.Value);
-                
+
                 nextStage = tutorialSession.CurrentStage switch
                 {
                     TutorialStage.Battle1 => "Battle2",
-                    TutorialStage.Battle2 => "Boss", 
+                    TutorialStage.Battle2 => "Boss",
                     TutorialStage.Boss => "Completed",
                     TutorialStage.Completed => "Completed",
-                    _ => "Battle2" 
+                    _ => "Battle2"
                 };
-                
+
                 if (tutorialSession.IsCompleted || nextStage == "Completed")
                 {
                     throw new InvalidOperationException("Tutorial is completed - no more stages available");
@@ -224,7 +224,7 @@ public class TutorialModeStrategy : BaseGameModeStrategy
             var hasBishop = enemy.Any(p => p.Type == PieceType.Bishop);
             nextStage = (hasKnight && hasBishop) ? "Boss" : "Battle2";
         }
-        
+
         var next = await _sessionManagementService.CreateGameSessionAsync(new CreateGameSessionDto
         {
             Player1Name = session.Player1.Name,

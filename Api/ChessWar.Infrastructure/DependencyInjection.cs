@@ -25,7 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IBalancePayloadRepository, BalancePayloadRepository>();
         services.AddScoped<IGameSessionRepository, GameSessionRepository>();
         services.AddScoped<IGameModeRepository, GameModeRepository>();
-        
+
         services.AddScoped<IAttackRulesService, AttackRulesService>();
         services.AddScoped<IAbilityTargetProvider, AbilityTargetProvider>();
         services.AddScoped<IAbilityTargetService, AbilityTargetService>();
@@ -40,30 +40,30 @@ public static class DependencyInjection
         services.AddScoped<IGameStateService, GameStateService>();
         services.AddScoped<IPieceFactory, PieceFactory>();
         services.AddScoped<IPieceDomainService, PieceDomainService>();
-        
+
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<IDomainEventHandler<PieceKilledEvent>, ExperienceAwardHandler>();
         services.AddScoped<IDomainEventHandler<PieceKilledEvent>, BoardCleanupHandler>();
         services.AddScoped<IDomainEventHandler<PieceKilledEvent>, PositionSwapHandler>();
-        
-        
+
+
         services.AddScoped<IBalanceConfigProvider, BalanceConfigProvider>();
         services.AddScoped<PieceConfigService>();
-        
+
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IPieceConfigService, CachedPieceConfigService>();
-        
-        
+
+
         services.AddScoped<IGameStateEvaluator, GameStateEvaluator>();
         services.AddScoped<IProbabilityMatrix, ChessWarProbabilityMatrix>();
         services.AddScoped<IAIDifficultyLevel, ChessWar.Domain.Services.AI.AIDifficultyProvider>();
-        
-        
+
+
         services.AddScoped<IActionGenerator, ChessWar.Domain.Services.AI.ActionGenerator>();
         services.AddScoped<IActionSelector, ChessWar.Domain.Services.AI.ActionSelector>();
         services.AddScoped<IActionExecutor, ChessWar.Domain.Services.AI.ActionExecutor>();
         services.AddScoped<IAIService, ChessWar.Domain.Services.AI.AIService>();
-        
+
         return services;
     }
 }

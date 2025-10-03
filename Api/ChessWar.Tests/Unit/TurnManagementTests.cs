@@ -27,20 +27,20 @@ public class TurnManagementTests
         _movementRulesServiceMock = new Mock<IMovementRulesService>();
         _attackRulesServiceMock = new Mock<IAttackRulesService>();
         _evolutionServiceMock = new Mock<IEvolutionService>();
-        
+
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
         _turnService = new TurnService(_movementRulesServiceMock.Object, _attackRulesServiceMock.Object, _evolutionServiceMock.Object, _TestConfig.CreateProvider(), new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
-        
+
         var player1 = CreateTestPlayer("Player1");
         var player2 = CreateTestPlayer("Player2");
-        
+
         // Добавляем фигуры к игрокам для правильной инициализации
         var player1Piece = CreateTestPiece("player1_piece", PieceType.Pawn, Team.Elves, new Position(0, 1), player1);
         var player2Piece = CreateTestPiece("player2_piece", PieceType.Pawn, Team.Orcs, new Position(0, 6), player2);
-        
+
         player1.AddPiece(player1Piece);
         player2.AddPiece(player2Piece);
-        
+
         _gameSession = new GameSession(player1, player2);
         _gameSession.StartGame();
     }
@@ -97,7 +97,7 @@ public class TurnManagementTests
         gameSession.StartGame();
 
         gameSession.GetNextPlayer().Should().Be(player2);
-        
+
         gameSession.EndCurrentTurn();
         gameSession.GetNextPlayer().Should().Be(player1);
     }
@@ -135,9 +135,9 @@ public class TurnManagementTests
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         piece.HP = 10; // Устанавливаем HP для живой фигуры
         turn.SelectPiece(piece);
-        
+
         _gameSession.GetBoard().PlacePiece(piece);
-        
+
         _movementRulesServiceMock
             .Setup(x => x.CanMoveTo(piece, It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(true);
@@ -159,25 +159,25 @@ public class TurnManagementTests
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         piece.HP = 10; // Устанавливаем HP для живой фигуры
         turn.SelectPiece(piece);
-        
+
         _gameSession.GetBoard().PlacePiece(piece);
-        
+
         var enemyPlayer = _gameSession.Player2; // Используем игрока из GameSession
         var enemyPiece = CreateTestPiece("enemy1", PieceType.Pawn, Team.Orcs, new Position(1, 2), enemyPlayer);
         _gameSession.GetBoard().PlacePiece(enemyPiece);
-        
+
         _attackRulesServiceMock
             .Setup(x => x.CanAttack(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(true);
 
         var targetPosition = new Position(1, 2);
-        
+
         _output.WriteLine($"Testing attack from piece {piece.Id} at {piece.Position} to {targetPosition}");
         _output.WriteLine($"GameSession board pieces count: {_gameSession.GetBoard().Pieces.Count()}");
-        
+
         var targetPiece = _gameSession.GetBoard().GetPieceAt(targetPosition);
         _output.WriteLine($"Target piece found: {targetPiece?.Id} at {targetPosition}");
-        
+
         if (targetPiece == null)
         {
             _output.WriteLine("Available pieces on board:");
@@ -186,9 +186,9 @@ public class TurnManagementTests
                 _output.WriteLine($"  Piece {boardPiece.Id} at {boardPiece.Position} (Owner: {boardPiece.Owner?.Name})");
             }
         }
-        
+
         _output.WriteLine($"Target piece found: {targetPiece?.Id} at {targetPosition}");
-        
+
         if (targetPiece == null)
         {
             _output.WriteLine("ERROR: Target piece not found! Test will fail.");
@@ -197,25 +197,25 @@ public class TurnManagementTests
             {
                 _output.WriteLine($"  Piece {boardPiece.Id} at {boardPiece.Position} (Owner: {boardPiece.Owner?.Name})");
             }
-            return; 
+            return;
         }
-        
+
         _output.WriteLine($"Target piece found: {targetPiece.Id} at {targetPiece.Position}");
-        
+
         _output.WriteLine("Before ExecuteAttack:");
         _output.WriteLine($"  Piece position: {piece.Position}");
         _output.WriteLine($"  Target position: {targetPosition}");
         _output.WriteLine($"  Turn actions count: {turn.Actions.Count}");
-        
+
         _output.WriteLine("Testing mock CanAttack call:");
         var canAttackResult = _attackRulesServiceMock.Object.CanAttack(piece, targetPosition, _gameSession.GetBoard().Pieces.ToList());
         _output.WriteLine($"  CanAttack result: {canAttackResult}");
-        
+
         var result = _turnService.ExecuteAttack(_gameSession, turn, piece, targetPosition);
-        
+
         _output.WriteLine($"ExecuteAttack result: {result}");
         _output.WriteLine($"Turn actions count: {turn.Actions.Count}");
-        
+
         result.Should().BeTrue($"ExecuteAttack should return true. Actions count: {turn.Actions.Count}");
         turn.Actions.Should().HaveCount(1);
         turn.Actions[0].ActionType.Should().Be("Attack");

@@ -8,7 +8,7 @@ public interface IAIService
     /// Выполняет ход за активного участника (ИИ) и возвращает true, если действие выполнено.
     /// </summary>
     bool MakeAiTurn(GameSession session);
-    
+
     /// <summary>
     /// Выполняет ход за активного участника (ИИ) асинхронно и возвращает true, если действие выполнено.
     /// </summary>

@@ -17,26 +17,21 @@ public class MovementRulesService : IMovementRulesService
 
     public bool CanMoveTo(Piece piece, Position targetPosition, IReadOnlyList<Piece> boardPieces)
     {
-        _logger.LogDebug("[MovementRules] CanMoveTo: piece {PieceId} ({PieceType}) at ({FromX},{FromY}) to ({ToX},{ToY})", 
-            piece.Id, piece.Type, piece.Position.X, piece.Position.Y, targetPosition.X, targetPosition.Y);
-        
+
+
         if (!IsValidPosition(targetPosition))
         {
-            _logger.LogDebug("[MovementRules] Invalid position: ({X},{Y})", targetPosition.X, targetPosition.Y);
             return false;
         }
 
         if (piece.Position == targetPosition)
         {
-            _logger.LogDebug("[MovementRules] Cannot move to same position");
             return false;
         }
 
         var targetPiece = boardPieces.FirstOrDefault(p => p.Position == targetPosition);
         if (targetPiece != null && targetPiece.Team == piece.Team)
         {
-            _logger.LogDebug("[MovementRules] Target position occupied by ally: piece {TargetPieceId} (Team: {TargetTeam}) at ({X},{Y})", 
-                targetPiece.Id, targetPiece.Team, targetPiece.Position.X, targetPiece.Position.Y);
             return false;
         }
 
@@ -50,8 +45,7 @@ public class MovementRulesService : IMovementRulesService
             PieceType.King => CanKingMove(piece, targetPosition, boardPieces),
             _ => false
         };
-        
-        _logger.LogDebug("[MovementRules] CanMoveTo result: {Result}", result);
+
         return result;
     }
 
@@ -81,7 +75,7 @@ public class MovementRulesService : IMovementRulesService
 
     public bool IsValidPosition(Position position)
     {
-        return position.X >= 0 && position.X < 8 && 
+        return position.X >= 0 && position.X < 8 &&
                position.Y >= 0 && position.Y < 8;
     }
 
@@ -90,18 +84,13 @@ public class MovementRulesService : IMovementRulesService
         var dx = target.X - pawn.Position.X;
         var dy = target.Y - pawn.Position.Y;
 
-        _logger.LogDebug("[MovementRules] CanPawnMove: pawn at ({PawnX},{PawnY}), target ({TargetX},{TargetY})", 
-            pawn.Position.X, pawn.Position.Y, target.X, target.Y);
-        _logger.LogDebug("[MovementRules] dx={Dx}, dy={Dy}, Team={Team}, IsFirstMove={IsFirstMove}", 
-            dx, dy, pawn.Team, pawn.IsFirstMove);
+
 
         if (pawn.Team == Team.Elves)
         {
-            _logger.LogDebug("[MovementRules] Elves pawn - checking forward movement");
             if (dx == 0 && dy == 1)
             {
                 var isEmpty = IsEmpty(target, boardPieces);
-                _logger.LogDebug("[MovementRules] Forward 1: dx={Dx}, dy={Dy}, isEmpty={IsEmpty}", dx, dy, isEmpty);
                 if (isEmpty) return true;
             }
 
@@ -109,18 +98,15 @@ public class MovementRulesService : IMovementRulesService
             {
                 var isEmptyTarget = IsEmpty(target, boardPieces);
                 var isEmptyMiddle = IsEmpty(new Position(target.X, target.Y - 1), boardPieces);
-                _logger.LogDebug("[MovementRules] Forward 2: dx={Dx}, dy={Dy}, isEmptyTarget={IsEmptyTarget}, isEmptyMiddle={IsEmptyMiddle}", dx, dy, isEmptyTarget, isEmptyMiddle);
                 if (isEmptyTarget && isEmptyMiddle) return true;
             }
 
         }
         else
         {
-            _logger.LogDebug("[MovementRules] Orcs pawn - checking downward movement");
             if (dx == 0 && dy == -1)
             {
                 var isEmpty = IsEmpty(target, boardPieces);
-                _logger.LogDebug("[MovementRules] Downward 1: dx={Dx}, dy={Dy}, isEmpty={IsEmpty}", dx, dy, isEmpty);
                 if (isEmpty) return true;
             }
 
@@ -128,13 +114,10 @@ public class MovementRulesService : IMovementRulesService
             {
                 var isEmptyTarget = IsEmpty(target, boardPieces);
                 var isEmptyMiddle = IsEmpty(new Position(target.X, target.Y + 1), boardPieces);
-                _logger.LogDebug("[MovementRules] Downward 2: dx={Dx}, dy={Dy}, isEmptyTarget={IsEmptyTarget}, isEmptyMiddle={IsEmptyMiddle}", dx, dy, isEmptyTarget, isEmptyMiddle);
                 if (isEmptyTarget && isEmptyMiddle) return true;
             }
         }
 
-        _logger.LogDebug("[MovementRules] CanPawnMove: NO VALID MOVE FOUND for piece {Id} at ({X},{Y}) to ({TX},{TY}) dx={Dx} dy={Dy} isFirst={IsFirst} team={Team}",
-            pawn.Id, pawn.Position.X, pawn.Position.Y, target.X, target.Y, dx, dy, pawn.IsFirstMove, pawn.Team);
         return false;
     }
 

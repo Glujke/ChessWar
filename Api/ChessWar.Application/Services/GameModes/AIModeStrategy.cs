@@ -53,7 +53,7 @@ public class AIModeStrategy : BaseGameModeStrategy
         {
             throw new ArgumentException("хотя бы одного действия");
         }
-        
+
         await _turnOrchestrator.EndTurnAsync(session);
         return _mapper.Map<GameSessionDto>(session);
     }
@@ -62,6 +62,10 @@ public class AIModeStrategy : BaseGameModeStrategy
     {
         var success = await _aiTurnService.MakeAiTurnAsync(session);
         if (!success)
+        {
+            await _turnOrchestrator.EndTurnAsync(session);
+        }
+        else
         {
             await _turnOrchestrator.EndTurnAsync(session);
         }

@@ -45,10 +45,10 @@ public class GameSessionController : BaseController
         var gameSession = await _sessionManagementService.CreateGameSessionAsync(dto);
         await _sessionManagementService.StartGameAsync(gameSession);
         var result = _mapper.Map<GameSessionDto>(gameSession);
-        
-        LogInformation("Created game session {GameSessionId} with players {Player1} and {Player2}", 
+
+        LogInformation("Created game session {GameSessionId} with players {Player1} and {Player2}",
             gameSession.Id, dto.Player1Name, dto.Player2Name);
-        
+
         return Ok(result);
     }
 
@@ -169,7 +169,7 @@ public class GameSessionController : BaseController
             return NotFound();
         }
         var success = await _turnExecutionService.ExecuteActionAsync(session, dto);
-        LogInformation("Executed action {ActionType} for piece {PieceId} in game session {GameSessionId}", 
+        LogInformation("Executed action {ActionType} for piece {PieceId} in game session {GameSessionId}",
             dto.Type, dto.PieceId, gameSessionId);
 
         if (!success)
@@ -246,69 +246,34 @@ public class GameSessionController : BaseController
     [HttpPost("{gameSessionId}/turn/end")]
     public async Task<ActionResult> EndTurn(Guid gameSessionId)
     {
-        LogInformation("=== API DEBUG: EndTurn called for session {GameSessionId}", gameSessionId);
-        
+        LogInformation("Завершение хода для сессии {GameSessionId}", gameSessionId);
+
         var session = await _sessionManagementService.GetSessionAsync(gameSessionId);
         if (session == null)
         {
-            LogInformation("=== API DEBUG: Session not found for {GameSessionId}", gameSessionId);
+            LogInformation("Сессия не найдена: {GameSessionId}", gameSessionId);
             return NotFound();
         }
-        
-        LogInformation("=== API DEBUG: Session found, calling EndTurnAsync for {GameSessionId}", gameSessionId);
-        if (session.Status == ChessWar.Domain.Enums.GameStatus.Active)
-        {
-            var turn = session.GetCurrentTurn();
-            LogInformation("=== API DEBUG: Current active player: {ActivePlayer} (ID: {ActivePlayerId})", 
-                turn.ActiveParticipant?.Name ?? "unknown", 
-                turn.ActiveParticipant?.Id ?? Guid.Empty);
-        }
-        else
-        {
-            LogInformation("=== API DEBUG: Session status is {Status}, skipping current turn logging", session.Status);
-        }
-        
-        LogInformation("=== API DEBUG: About to call _turnExecutionService.EndTurnAsync for {GameSessionId}", gameSessionId);
-        
+
         try
         {
-            LogInformation("=== API DEBUG: Calling _turnExecutionService.EndTurnAsync for {GameSessionId}", gameSessionId);
             await _turnExecutionService.EndTurnAsync(session);
-            LogInformation("=== API DEBUG: EndTurnAsync completed successfully for {GameSessionId}", gameSessionId);
+            LogInformation("Ход завершён для сессии {GameSessionId}", gameSessionId);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("хотя бы одного действия"))
         {
-            LogWarning("=== API DEBUG: Turn validation failed for {GameSessionId}: {Error}", gameSessionId, ex.Message);
+            LogWarning("Валидация хода не пройдена для {GameSessionId}: {Error}", gameSessionId, ex.Message);
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
-            LogError(ex, "=== API DEBUG: EndTurnAsync failed for {GameSessionId}: {Error}", gameSessionId, ex.Message);
+            LogError(ex, "Ошибка при завершении хода для {GameSessionId}: {Error}", gameSessionId, ex.Message);
             throw;
         }
-        
-        LogInformation("Ended turn in game session {GameSessionId}", gameSessionId);
+
         return Ok();
     }
 
-    /// <summary>
-    /// Выполнить ход ИИ (доступно только в режиме AI)
-    /// </summary>
-    [HttpPost("{gameSessionId}/turn/ai")] 
-    public async Task<ActionResult> MakeAiTurn(Guid gameSessionId)
-    {
-        var session = await _sessionManagementService.GetSessionAsync(gameSessionId);
-        if (session == null)
-        {
-            return NotFound();
-        }
-        if (session.Mode != "AI")
-        {
-            return BadRequest("AI turn is not available in LocalCoop mode");
-        }
-        var ok = await _turnExecutionService.MakeAiTurnAsync(session);
-        return ok ? Ok() : BadRequest("AI turn failed");
-    }
 
     /// <summary>
     /// Переместить фигуру
@@ -326,7 +291,7 @@ public class GameSessionController : BaseController
         {
             var pieceId = int.Parse(request.PieceId);
             var targetPosition = new Position(request.TargetPosition.X, request.TargetPosition.Y);
-            
+
             var success = await _turnExecutionService.ExecuteMoveAsync(session, pieceId, targetPosition);
             if (!success)
             {
@@ -353,8 +318,8 @@ public class GameSessionController : BaseController
     /// </summary>
     [HttpGet("{gameSessionId}/piece/{pieceId}/actions")]
     public async Task<ActionResult<List<PositionDto>>> GetAvailableActions(
-        Guid gameSessionId, 
-        string pieceId, 
+        Guid gameSessionId,
+        string pieceId,
         [FromQuery] string actionType,
         [FromQuery(Name = "ability")] string? abilityName = null)
     {
@@ -363,145 +328,131 @@ public class GameSessionController : BaseController
         {
             return NotFound();
         }
-        
+
         var actions = await _turnExecutionService.GetAvailableActionsAsync(session, pieceId, actionType, abilityName);
-        LogInformation("Retrieved available actions for piece {PieceId} in game session {GameSessionId}", 
+        LogInformation("Retrieved available actions for piece {PieceId} in game session {GameSessionId}",
             pieceId, gameSessionId);
-        
+
         return Ok(actions);
     }
 
-        /// <summary>
-        /// Tutorial transition: advance or replay
-        /// </summary>
-        public sealed class TutorialTransitionRequest
-        {
-            public string? action { get; set; }
-        }
+    /// <summary>
+    /// Переход в обучении: следующий этап или повтор
+    /// </summary>
+    public sealed class TutorialTransitionRequest
+    {
+        public string? action { get; set; }
+    }
 
-        [HttpPost("{gameSessionId}/tutorial/transition")]
-        public async Task<IActionResult> TutorialTransition(Guid gameSessionId, [FromBody] TutorialTransitionRequest body, [FromQuery] string? embed = null, [FromQuery] Guid? tutorialSessionId = null)
+    [HttpPost("{gameSessionId}/tutorial/transition")]
+    public async Task<IActionResult> TutorialTransition(Guid gameSessionId, [FromBody] TutorialTransitionRequest body, [FromQuery] string? embed = null, [FromQuery] Guid? tutorialSessionId = null)
+    {
+        try
         {
-            try
+            var action = body?.action ?? string.Empty;
+            if (string.Equals(action, "replay", StringComparison.OrdinalIgnoreCase))
             {
-                var action = body?.action ?? string.Empty;
-                if (string.Equals(action, "replay", StringComparison.OrdinalIgnoreCase))
+                var newGame = await _sessionManagementService.CreateGameSessionAsync(new CreateGameSessionDto
                 {
-                    var newGame = await _sessionManagementService.CreateGameSessionAsync(new CreateGameSessionDto
-                    {
-                        Player1Name = "P1",
-                        Player2Name = "AI",
-                        Mode = "AI"
-                    });
-                    await _sessionManagementService.StartGameAsync(newGame);
+                    Player1Name = "P1",
+                    Player2Name = "AI",
+                    Mode = "AI"
+                });
+                await _sessionManagementService.StartGameAsync(newGame);
 
-                    var response = new Dictionary<string, object?>
+                var response = new Dictionary<string, object?>
+                {
+                    ["gameSessionId"] = newGame.Id.ToString()
+                };
+                if (string.Equals(embed, "(game)", StringComparison.OrdinalIgnoreCase))
+                {
+                    response["_embedded"] = new Dictionary<string, object?>
                     {
-                        ["gameSessionId"] = newGame.Id.ToString()
+                        ["game"] = _mapper.Map<GameSessionDto>(newGame)
                     };
-                    if (string.Equals(embed, "(game)", StringComparison.OrdinalIgnoreCase))
-                    {
-                        response["_embedded"] = new Dictionary<string, object?>
-                        {
-                            ["game"] = _mapper.Map<GameSessionDto>(newGame)
-                        };
-                    }
-                    return new JsonResult(response);
                 }
+                return new JsonResult(response);
+            }
 
-                var current = await _sessionManagementService.GetSessionAsync(gameSessionId);
-                if (current == null)
-                {
-                    return NotFound();
-                }
-                if (current.Status != ChessWar.Domain.Enums.GameStatus.Finished || current.Result != ChessWar.Domain.Enums.GameResult.Player1Victory)
-                {
-                    return Problem(statusCode: 409, title: "StageNotCompleted");
-                }
+            var current = await _sessionManagementService.GetSessionAsync(gameSessionId);
+            if (current == null)
+            {
+                return NotFound();
+            }
+            if (current.Status != ChessWar.Domain.Enums.GameStatus.Finished || current.Result != ChessWar.Domain.Enums.GameResult.Player1Victory)
+            {
+                return Problem(statusCode: 409, title: "StageNotCompleted");
+            }
 
-                var activeTutorialSessionId = tutorialSessionId ?? current.TutorialSessionId;
-                
-                LogInformation("=== TUTORIAL TRANSITION START DEBUG ===");
-                
-                string nextStage;
-                
-                if (activeTutorialSessionId.HasValue)
+            var activeTutorialSessionId = tutorialSessionId ?? current.TutorialSessionId;
+
+            string nextStage;
+
+            if (activeTutorialSessionId.HasValue)
+            {
+                try
                 {
-                    try
+                    var tutorialSession = await _tutorialService.AdvanceToNextStageAsync(activeTutorialSessionId.Value);
+                    nextStage = tutorialSession.CurrentStage switch
                     {
-                        var tutorialSession = await _tutorialService.AdvanceToNextStageAsync(activeTutorialSessionId.Value);
-                        
-                        LogInformation("=== TUTORIAL TRANSITION DEBUG ===");
-                        
-                        nextStage = tutorialSession.CurrentStage switch
-                        {
-                            TutorialStage.Battle1 => "Battle2",
-                            TutorialStage.Battle2 => "Boss", 
-                            TutorialStage.Boss => "Completed",
-                            TutorialStage.Completed => "Completed",
-                            _ => "Battle2" 
-                        };
-                        
-                        if (tutorialSession.IsCompleted || nextStage == "Completed")
-                        {
-                            LogInformation("Tutorial completed - no more stages available");
-                            return Problem(statusCode: 409, title: "TutorialCompleted", detail: "Tutorial is completed - no more stages available");
-                        }
-                    }
-                    catch (Exception ex)
+                        TutorialStage.Battle1 => "Battle2",
+                        TutorialStage.Battle2 => "Boss",
+                        TutorialStage.Boss => "Completed",
+                        TutorialStage.Completed => "Completed",
+                        _ => "Battle2"
+                    };
+                    if (tutorialSession.IsCompleted || nextStage == "Completed")
                     {
-                        var safeTutorialId = current.TutorialSessionId ?? Guid.Empty;
-                        LogError(ex, "Failed to advance tutorial session {TutorialSessionId}, using fallback logic", safeTutorialId);
-                        var enemy = current.GetPlayer2Pieces();
-                        var hasKnight = enemy.Any(p => p.Type == ChessWar.Domain.Enums.PieceType.Knight);
-                        var hasBishop = enemy.Any(p => p.Type == ChessWar.Domain.Enums.PieceType.Bishop);
-                        nextStage = (hasKnight && hasBishop) ? "Boss" : "Battle2";
+                        return Problem(statusCode: 409, title: "TutorialCompleted", detail: "Tutorial is completed - no more stages available");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
+                    var safeTutorialId = current.TutorialSessionId ?? Guid.Empty;
+                    LogError(ex, "Failed to advance tutorial session {TutorialSessionId}, using fallback logic", safeTutorialId);
                     var enemy = current.GetPlayer2Pieces();
                     var hasKnight = enemy.Any(p => p.Type == ChessWar.Domain.Enums.PieceType.Knight);
                     var hasBishop = enemy.Any(p => p.Type == ChessWar.Domain.Enums.PieceType.Bishop);
                     nextStage = (hasKnight && hasBishop) ? "Boss" : "Battle2";
                 }
-                
-                var next = await _sessionManagementService.CreateGameSessionAsync(new CreateGameSessionDto
-                {
-                    Player1Name = current.Player1.Name,
-                    Player2Name = current.Player2.Name,
-                    Mode = current.Mode,
-                    TutorialSessionId = activeTutorialSessionId
-                });
-                await _sessionManagementService.StartGameAsync(next);
-
-                LogInformation("=== NEW GAME SESSION DEBUG ===");
-                LogInformation("New game session created: {GameSessionId}", next.Id);
-                LogInformation("New game session TutorialSessionId: {TutorialSessionId}", next.TutorialSessionId ?? Guid.Empty);
-                LogInformation("New game session Mode: {Mode}", next.Mode);
-                LogInformation("=== END NEW GAME SESSION DEBUG ===");
-
-                await _battlePresetService.ApplyPresetAsync(next, nextStage);
-
-                var ok = new Dictionary<string, object?>
-                {
-                    ["gameSessionId"] = next.Id.ToString()
-                };
-                if (string.Equals(embed, "(game)", StringComparison.OrdinalIgnoreCase))
-                {
-                    ok["_embedded"] = new Dictionary<string, object?>
-                    {
-                        ["game"] = _mapper.Map<GameSessionDto>(next)
-                    };
-                }
-                return new JsonResult(ok);
             }
-            catch (Exception ex)
+            else
             {
-                LogError(ex, "Tutorial transition failed for game {GameSessionId}", gameSessionId);
-                return StatusCode(500, "Internal server error");
+                var enemy = current.GetPlayer2Pieces();
+                var hasKnight = enemy.Any(p => p.Type == ChessWar.Domain.Enums.PieceType.Knight);
+                var hasBishop = enemy.Any(p => p.Type == ChessWar.Domain.Enums.PieceType.Bishop);
+                nextStage = (hasKnight && hasBishop) ? "Boss" : "Battle2";
             }
+
+            var next = await _sessionManagementService.CreateGameSessionAsync(new CreateGameSessionDto
+            {
+                Player1Name = current.Player1.Name,
+                Player2Name = current.Player2.Name,
+                Mode = current.Mode,
+                TutorialSessionId = activeTutorialSessionId
+            });
+            await _sessionManagementService.StartGameAsync(next);
+            await _battlePresetService.ApplyPresetAsync(next, nextStage);
+
+            var ok = new Dictionary<string, object?>
+            {
+                ["gameSessionId"] = next.Id.ToString()
+            };
+            if (string.Equals(embed, "(game)", StringComparison.OrdinalIgnoreCase))
+            {
+                ok["_embedded"] = new Dictionary<string, object?>
+                {
+                    ["game"] = _mapper.Map<GameSessionDto>(next)
+                };
+            }
+            return new JsonResult(ok);
         }
+        catch (Exception ex)
+        {
+            LogError(ex, "Tutorial transition failed for game {GameSessionId}", gameSessionId);
+            return StatusCode(500, "Internal server error");
+        }
+    }
 
     /// <summary>
     /// Получить состояние игровой сессии

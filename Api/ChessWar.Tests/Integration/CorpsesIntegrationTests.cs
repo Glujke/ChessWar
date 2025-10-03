@@ -22,8 +22,8 @@ public class CorpsesIntegrationTests : IntegrationTestBase, IClassFixture<TestWe
         var initialPlayer2PiecesCount = initialState.Player2.Pieces.Count;
 
         var target = initialState.Player2.Pieces.First();
-        
-        
+
+
         var finalState = await GetGameState(session.Id);
 
         finalState.Player1.Pieces.Count.Should().Be(initialPlayer1PiecesCount);
@@ -56,11 +56,11 @@ public class CorpsesIntegrationTests : IntegrationTestBase, IClassFixture<TestWe
         var state = await GetGameState(session!.Id);
 
         var allPieces = state.Player1.Pieces.Concat(state.Player2.Pieces).ToList();
-        
+
         allPieces.Should().NotBeEmpty("В игровой сессии должны быть фигуры");
-        
+
         allPieces.Should().OnlyContain(p => p.HP > 0, "Все фигуры должны быть живы");
-        
+
         allPieces.Should().OnlyContain(p => p.Position != null, "Все фигуры должны иметь позиции");
     }
 

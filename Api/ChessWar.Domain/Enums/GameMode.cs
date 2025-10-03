@@ -9,17 +9,17 @@ public enum GameMode
     /// Обучение (демо)
     /// </summary>
     Tutorial,
-    
+
     /// <summary>
     /// Сетевая игра
     /// </summary>
     Online,
-    
+
     /// <summary>
     /// Локальная игра
     /// </summary>
     Local,
-    
+
     /// <summary>
     /// Игра с ИИ
     /// </summary>

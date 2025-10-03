@@ -13,7 +13,7 @@ public interface IActionExecutionService
     /// Выполняет действие в ходе
     /// </summary>
     Task<bool> ExecuteActionAsync(GameSession gameSession, ExecuteActionDto dto, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Выполняет движение фигуры
     /// </summary>

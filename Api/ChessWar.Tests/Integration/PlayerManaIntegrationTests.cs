@@ -31,7 +31,7 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var gameSession = await response.Content.ReadFromJsonAsync<GameSessionDto>();
         gameSession.Should().NotBeNull();
-        
+
         gameSession!.Player1.MP.Should().Be(10); // Начальная мана
         gameSession.Player1.MaxMP.Should().Be(50); // Максимальная мана
         gameSession.Player2.MP.Should().Be(10);
@@ -64,10 +64,10 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var moveResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionId}/move", moveRequest);
 
         moveResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var afterMoveResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterSession = await afterMoveResponse.Content.ReadFromJsonAsync<GameSessionDto>();
-        
+
         afterSession!.Player1.MP.Should().Be(9); // 10 - 1
         afterSession.Player1.MaxMP.Should().Be(50);
     }
@@ -141,11 +141,11 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
 
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
-        
-        afterSession!.Player1.MP.Should().Be(19); // осталось 9; реген +10 уходит следующему активному игроку (AI), который может сразу потратить ману, но теперь игрок тоже получает реген
+
+        afterSession!.Player1.MP.Should().Be(19); // 10 - 1 + 10 = 19
         afterSession.Player1.MaxMP.Should().Be(50);
     }
 
@@ -176,10 +176,10 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
 
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
-        
+
         afterSession!.Player1.MP.Should().BeLessOrEqualTo(50); // Не больше максимума
         afterSession.Player1.MaxMP.Should().Be(50);
     }
@@ -213,32 +213,38 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
 
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
-        // Проверяем, что активный игрок - AI
+
+        // Проверяем, что активный игрок - Player1 (после автоматического AI хода)
         var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterEndTurnSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
-        afterEndTurnSession!.CurrentTurn.ActiveParticipant.Name.Should().Be("AI");
-        
-        // Вызываем ход ИИ
-        var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/ai", null);
+        afterEndTurnSession!.CurrentTurn.ActiveParticipant.Name.Should().Be("Player1");
+
+        // Добавляем действие "Pass" для AI
+        var passAction = new { type = "Pass", pieceId = "0" };
+        var passResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionId}/turn/action", passAction);
+        passResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Вызываем завершение хода (асинхронный путь)
+        var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
         aiTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
+        // Добавляем действие "Pass" для Player1
+        var passAction2 = new { type = "Pass", pieceId = "0" };
+        var passResponse2 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionId}/turn/action", passAction2);
+        passResponse2.StatusCode.Should().Be(HttpStatusCode.OK);
+
         // Завершаем ход ИИ
         var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
         endAiTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var finalResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var finalSession = await finalResponse.Content.ReadFromJsonAsync<GameSessionDto>();
-        
-        // Отладочная информация
-        Console.WriteLine($"Final active participant: {finalSession!.CurrentTurn.ActiveParticipant.Name}");
-        Console.WriteLine($"Final turn number: {finalSession.CurrentTurn.Number}");
-        
+
         finalSession!.CurrentTurn.ActiveParticipant.Name.Should().Be("Player1");
-        
-        finalSession.Player1.MP.Should().BeGreaterThan(initialPlayerMana, 
+
+        finalSession.Player1.MP.Should().BeGreaterThan(initialPlayerMana,
             "мана игрока должна быть восстановлена после хода ИИ");
-        
+
         finalSession.Player1.MP.Should().BeLessOrEqualTo(50);
     }
 }

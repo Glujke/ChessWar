@@ -11,17 +11,17 @@ public interface IOnlineMode : IGameModeBase
     /// ID игрока-создателя
     /// </summary>
     string HostPlayerId { get; }
-    
+
     /// <summary>
     /// ID подключенного игрока
     /// </summary>
     string? ConnectedPlayerId { get; }
-    
+
     /// <summary>
     /// Максимальное количество игроков
     /// </summary>
     int MaxPlayers { get; }
-    
+
     /// <summary>
     /// Готовы ли все игроки к началу
     /// </summary>

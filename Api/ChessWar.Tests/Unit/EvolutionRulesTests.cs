@@ -37,7 +37,7 @@ public class EvolutionRulesTests
         pawn.XP = 20; // Достаточно XP для эволюции
 
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Pawn);
-        
+
         Assert.Contains(PieceType.Knight, possibleEvolutions);
         Assert.Contains(PieceType.Bishop, possibleEvolutions);
         Assert.DoesNotContain(PieceType.Rook, possibleEvolutions);
@@ -51,7 +51,7 @@ public class EvolutionRulesTests
         pawn.XP = 20; // Достаточно XP для эволюции
 
         var canEvolveToQueen = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Queen);
-        
+
         Assert.False(canEvolveToQueen);
     }
 
@@ -62,7 +62,7 @@ public class EvolutionRulesTests
         pawn.XP = 20; // Достаточно XP для эволюции
 
         var canEvolveToRook = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Rook);
-        
+
         Assert.False(canEvolveToRook);
     }
 
@@ -73,7 +73,7 @@ public class EvolutionRulesTests
         knight.XP = 40; // Достаточно XP для эволюции
 
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Knight);
-        
+
         Assert.Contains(PieceType.Rook, possibleEvolutions);
         Assert.DoesNotContain(PieceType.Queen, possibleEvolutions);
     }
@@ -85,7 +85,7 @@ public class EvolutionRulesTests
         bishop.XP = 40; // Достаточно XP для эволюции
 
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Bishop);
-        
+
         Assert.Contains(PieceType.Rook, possibleEvolutions);
         Assert.DoesNotContain(PieceType.Queen, possibleEvolutions);
     }
@@ -97,7 +97,7 @@ public class EvolutionRulesTests
         rook.XP = 60; // Достаточно XP для эволюции
 
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Rook);
-        
+
         Assert.Contains(PieceType.Queen, possibleEvolutions);
     }
 
@@ -108,7 +108,7 @@ public class EvolutionRulesTests
         queen.XP = 100; // Много XP, но не должно помочь
 
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.Queen);
-        
+
         Assert.Empty(possibleEvolutions);
     }
 
@@ -119,7 +119,7 @@ public class EvolutionRulesTests
         king.XP = 100; // Много XP, но не должно помочь
 
         var possibleEvolutions = _evolutionService.GetPossibleEvolutions(PieceType.King);
-        
+
         Assert.Empty(possibleEvolutions);
     }
 
@@ -131,7 +131,7 @@ public class EvolutionRulesTests
 
         var canEvolveToKnight = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Knight);
         var canEvolveToBishop = _evolutionService.MeetsEvolutionRequirements(pawn, PieceType.Bishop);
-        
+
         Assert.False(canEvolveToKnight);
         Assert.False(canEvolveToBishop);
     }

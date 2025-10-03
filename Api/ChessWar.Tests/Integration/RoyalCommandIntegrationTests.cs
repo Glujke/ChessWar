@@ -24,14 +24,14 @@ public class RoyalCommandIntegrationTests : IntegrationTestBase, IClassFixture<T
 
         var royalReq = new { pieceId = king.Id.ToString(), abilityName = "King.RoyalCommand", target = new { x = ally.Position.X, y = ally.Position.Y } };
         var royalResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/ability", royalReq);
-        
+
         // Если у короля недостаточно маны, тест должен пройти с ошибкой 400
         if (royalResp.StatusCode == HttpStatusCode.BadRequest)
         {
             // Это ожидаемо, если у короля недостаточно маны
             return;
         }
-        
+
         royalResp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var moveReq = new

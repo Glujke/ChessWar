@@ -5,7 +5,9 @@ using ChessWar.Application.Commands;
 using ChessWar.Application.Services.Common;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.ValueObjects;
-using ChessWar.Domain.Interfaces.TurnManagement; using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.TurnManagement;
+using ChessWar.Domain.Interfaces.DataAccess;
+using Microsoft.Extensions.Logging;
 
 namespace ChessWar.Application.Services.Board;
 
@@ -19,19 +21,22 @@ public class ActionExecutionService : IActionExecutionService
     private readonly ICommandFactory _commandFactory;
     private readonly IGameSessionRepository _sessionRepository;
     private readonly IPieceValidationService _pieceValidationService;
+    private readonly ILogger<ActionExecutionService> _logger;
 
     public ActionExecutionService(
         ITurnService turnService,
         IPlayerManagementService playerManagementService,
         ICommandFactory commandFactory,
         IGameSessionRepository sessionRepository,
-        IPieceValidationService pieceValidationService)
+        IPieceValidationService pieceValidationService,
+        ILogger<ActionExecutionService> logger)
     {
         _turnService = turnService ?? throw new ArgumentNullException(nameof(turnService));
         _playerManagementService = playerManagementService ?? throw new ArgumentNullException(nameof(playerManagementService));
         _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
         _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         _pieceValidationService = pieceValidationService ?? throw new ArgumentNullException(nameof(pieceValidationService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<bool> ExecuteActionAsync(GameSession gameSession, ExecuteActionDto dto, CancellationToken cancellationToken = default)
@@ -43,16 +48,20 @@ public class ActionExecutionService : IActionExecutionService
             throw new ArgumentNullException(nameof(dto));
 
         var currentTurn = gameSession.GetCurrentTurn();
-        
+
         if (dto.Type == "Pass")
         {
-            currentTurn.AddAction(new ChessWar.Domain.ValueObjects.TurnAction("Pass", string.Empty, null));
+            var passAction = new ChessWar.Domain.ValueObjects.TurnAction("Pass", string.Empty, null);
+            currentTurn.AddAction(passAction);
+            _logger.LogInformation("Added Pass action to turn {TurnNumber}, actions count: {ActionsCount}",
+                currentTurn.Number, currentTurn.Actions.Count);
             await _sessionRepository.SaveAsync(gameSession, cancellationToken);
+            _logger.LogInformation("Saved game session {SessionId} after Pass action", gameSession.Id);
             return true;
         }
-        
+
         var piece = _playerManagementService.FindPieceById(gameSession, dto.PieceId);
-        
+
 
         if (!_pieceValidationService.IsPieceValid(piece, int.Parse(dto.PieceId)))
         {
@@ -66,7 +75,7 @@ public class ActionExecutionService : IActionExecutionService
         currentTurn.SelectPiece(piece);
 
         var command = _commandFactory.CreateCommand(dto.Type, gameSession, currentTurn, piece, dto.TargetPosition, dto.Description);
-        
+
         var success = command != null && await command.ExecuteAsync(cancellationToken);
 
         if (success)

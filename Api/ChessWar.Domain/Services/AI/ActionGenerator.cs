@@ -10,6 +10,9 @@ namespace ChessWar.Domain.Services.AI;
 /// <summary>
 /// Генератор действий для ИИ
 /// </summary>
+/// <summary>
+/// Формирует набор возможных действий ИИ (ходы, атаки, способности) для текущего состояния.
+/// </summary>
 public class ActionGenerator : IActionGenerator
 {
     private readonly ITurnService _turnService;
@@ -23,6 +26,9 @@ public class ActionGenerator : IActionGenerator
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Генерирует список доступных действий ИИ для активного участника.
+    /// </summary>
     public List<GameAction> GenerateActions(GameSession session, Turn turn, Participant active)
     {
         var actions = new List<GameAction>();
@@ -54,6 +60,9 @@ public class ActionGenerator : IActionGenerator
         return actions;
     }
 
+    /// <summary>
+    /// Создаёт действия перемещения для указанной фигуры.
+    /// </summary>
     private List<GameAction> GenerateMoveActions(GameSession session, Turn turn, Piece piece)
     {
         var actions = new List<GameAction>();
@@ -78,6 +87,9 @@ public class ActionGenerator : IActionGenerator
         return actions;
     }
 
+    /// <summary>
+    /// Создаёт действия атаки для указанной фигуры.
+    /// </summary>
     private List<GameAction> GenerateAttackActions(GameSession session, Turn turn, Piece piece)
     {
         var actions = new List<GameAction>();
@@ -102,33 +114,33 @@ public class ActionGenerator : IActionGenerator
         return actions;
     }
 
+    /// <summary>
+    /// Создаёт действия использования способностей для указанной фигуры.
+    /// </summary>
     private List<GameAction> GenerateAbilityActions(GameSession session, Turn turn, Piece piece)
     {
         var actions = new List<GameAction>();
 
         try
         {
-            // Получаем все фигуры на доске
             var allPieces = session.GetAllPieces().ToList();
-            
-            // Генерируем действия для известных способностей
+
             var abilityNames = GetAvailableAbilityNames(piece);
-            
+
             foreach (var abilityName in abilityNames)
             {
-                // Ограничиваем поиск только близкими позициями для оптимизации
-                var maxRange = 3; // Максимальный радиус поиска
+                var maxRange = 3;
                 var startX = System.Math.Max(0, piece.Position.X - maxRange);
                 var endX = System.Math.Min(7, piece.Position.X + maxRange);
                 var startY = System.Math.Max(0, piece.Position.Y - maxRange);
                 var endY = System.Math.Min(7, piece.Position.Y + maxRange);
-                
+
                 for (int x = startX; x <= endX; x++)
                 {
                     for (int y = startY; y <= endY; y++)
                     {
                         var target = new Position(x, y);
-                        
+
                         if (_abilityService.CanUseAbility(piece, abilityName, target, allPieces))
                         {
                             actions.Add(new GameAction
@@ -151,6 +163,9 @@ public class ActionGenerator : IActionGenerator
         return actions;
     }
 
+    /// <summary>
+    /// Возвращает список известных способностей для типа фигуры.
+    /// </summary>
     private List<string> GetAvailableAbilityNames(Piece piece)
     {
         // Возвращаем известные способности для каждого типа фигуры

@@ -7,18 +7,27 @@ using AutoMapper;
 
 namespace ChessWar.Api.Controllers;
 
+/// <summary>
+/// Контроллер для работы с доской: получение состояния, сброс, установка позиций и операции с фигурами
+/// </summary>
 [ApiExplorerSettings(IgnoreApi = true)]
 public class BoardController : BaseController
 {
     private readonly IBoardService _boardService;
     private readonly IMapper _mapper;
 
+    /// <summary>
+    /// Создаёт контроллер доски
+    /// </summary>
     public BoardController(IBoardService boardService, IMapper mapper, ILogger<BoardController> logger) : base(logger)
     {
         _boardService = boardService;
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Возвращает текущее состояние игровой доски
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetGameBoard(CancellationToken ct)
     {
@@ -37,6 +46,9 @@ public class BoardController : BaseController
         }
     }
 
+    /// <summary>
+    /// Сбрасывает доску в исходное состояние
+    /// </summary>
     [HttpPost("reset")]
     public async Task<IActionResult> ResetBoard(CancellationToken ct)
     {
@@ -44,6 +56,9 @@ public class BoardController : BaseController
         return Ok("Board reset successfully");
     }
 
+    /// <summary>
+    /// Устанавливает стартовую позицию на доске
+    /// </summary>
     [HttpPost("setup")]
     public async Task<IActionResult> SetupInitialPosition(CancellationToken ct)
     {
@@ -51,6 +66,9 @@ public class BoardController : BaseController
         return Ok("Initial position setup completed");
     }
 
+    /// <summary>
+    /// Размещает фигуру на указанной позиции
+    /// </summary>
     [HttpPost("place")]
     public async Task<IActionResult> PlacePiece([FromBody] PlacePieceDto placeDto, CancellationToken ct)
     {
@@ -61,13 +79,13 @@ public class BoardController : BaseController
             return BadRequest($"Invalid team: {placeDto.Team}");
 
         var position = new Position(placeDto.X, placeDto.Y);
-        
+
         try
         {
             var piece = await _boardService.PlacePieceAsync(pieceType, team, position, ct);
             if (piece == null)
                 return BadRequest("Failed to place piece");
-                
+
             var pieceDto = _mapper.Map<PieceDto>(piece);
             return CreatedAtAction(nameof(GetPieceAtPosition), new { x = position.X, y = position.Y }, pieceDto);
         }
@@ -81,6 +99,9 @@ public class BoardController : BaseController
         }
     }
 
+    /// <summary>
+    /// Перемещает фигуру в указанную позицию
+    /// </summary>
     [HttpPut("{id}/move")]
     public async Task<IActionResult> MovePiece(int id, [FromBody] UpdatePieceDto moveDto, CancellationToken ct)
     {
@@ -88,13 +109,13 @@ public class BoardController : BaseController
             return BadRequest("X and Y coordinates are required");
 
         var position = new Position(moveDto.X.Value, moveDto.Y.Value);
-        
+
         try
         {
             var piece = await _boardService.MovePieceAsync(id, position, ct);
             if (piece == null)
                 return NotFound();
-                
+
             var pieceDto = _mapper.Map<PieceDto>(piece);
             return Ok(pieceDto);
         }
@@ -108,6 +129,9 @@ public class BoardController : BaseController
         }
     }
 
+    /// <summary>
+    /// Возвращает фигуру на указанной позиции, если она существует
+    /// </summary>
     [HttpGet("position/{x}/{y}")]
     public async Task<IActionResult> GetPieceAtPosition(int x, int y, CancellationToken ct)
     {
@@ -123,6 +147,9 @@ public class BoardController : BaseController
         return Ok(pieceDto);
     }
 
+    /// <summary>
+    /// Проверяет, свободна ли указанная позиция
+    /// </summary>
     [HttpGet("free/{x}/{y}")]
     public async Task<IActionResult> IsPositionFree(int x, int y, CancellationToken ct)
     {

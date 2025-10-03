@@ -9,7 +9,7 @@ public class BalanceVersion
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? PublishedAt { get; set; }
     public string? PublishedBy { get; set; }
-    
+
     public ICollection<PieceDefinition> Pieces { get; set; } = new List<PieceDefinition>();
     public ICollection<EvolutionRule> EvolutionRules { get; set; } = new List<EvolutionRule>();
     public GlobalRules? Globals { get; set; }

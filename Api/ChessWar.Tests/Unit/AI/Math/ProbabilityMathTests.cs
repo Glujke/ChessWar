@@ -54,7 +54,7 @@ public class ProbabilityMathTests
 
         var highTempVariance = CalculateVariance(highTempResult);
         var lowTempVariance = CalculateVariance(lowTempResult);
-        
+
         Assert.True(highTempVariance < lowTempVariance);
     }
 
@@ -154,7 +154,7 @@ public class ProbabilityMathTests
     private double CalculateVariance(double[] values)
     {
         if (values.Length == 0) return 0.0;
-        
+
         var mean = values.Average();
         var variance = values.Select(v => System.Math.Pow(v - mean, 2)).Average();
         return variance;

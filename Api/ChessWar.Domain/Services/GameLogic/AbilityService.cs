@@ -23,7 +23,7 @@ public class AbilityService : IAbilityService
     {
         var config = _configProvider.GetActive();
         var key = $"{piece.Type}.{abilityName}";
-        
+
         if (!config.Abilities.TryGetValue(key, out var spec)) return false;
         if (piece.AbilityCooldowns.GetValueOrDefault(abilityName, 0) > 0) return false;
 
@@ -37,7 +37,7 @@ public class AbilityService : IAbilityService
                 if (IsPathBlocked(piece.Position, target, allPieces)) return false;
             }
         }
-        
+
         var owner = piece.Owner;
         if (owner == null) return false;
         if (!owner.CanSpend(spec.MpCost)) return false;
@@ -47,7 +47,7 @@ public class AbilityService : IAbilityService
     public bool UseAbility(Piece piece, string abilityName, Position target, List<Piece> allPieces)
     {
         if (!CanUseAbility(piece, abilityName, target, allPieces)) return false;
-        
+
         var config = _configProvider.GetActive();
         var key = $"{piece.Type}.{abilityName}";
         var spec = config.Abilities[key];
@@ -64,7 +64,7 @@ public class AbilityService : IAbilityService
             if (targetPiece != null && targetPiece.Team != piece.Team)
             {
                 _pieceDomainService.TakeDamage(targetPiece, Math.Max(0, spec.Damage));
-                
+
                 if (_pieceDomainService.IsDead(targetPiece))
                 {
                     _eventDispatcher.Publish(new PieceKilledEvent(piece, targetPiece));
@@ -115,7 +115,7 @@ public class AbilityService : IAbilityService
                     _pieceDomainService.TakeDamage(targetPiece, dmg);
                     if (_pieceDomainService.IsDead(targetPiece)) break;
                 }
-                
+
                 if (_pieceDomainService.IsDead(targetPiece))
                 {
                     _eventDispatcher.Publish(new PieceKilledEvent(piece, targetPiece));
@@ -135,8 +135,8 @@ public class AbilityService : IAbilityService
             var targetPiece = allPieces.FirstOrDefault(p => p.Position.X == target.X && p.Position.Y == target.Y);
             if (targetPiece != null && targetPiece.Team == piece.Team)
             {
-                _pieceDomainService.SetAbilityCooldown(targetPiece, "__RoyalCommandGranted", 2); 
-                _pieceDomainService.SetAbilityCooldown(targetPiece, "__RoyalCommandFreeAction", 2); 
+                _pieceDomainService.SetAbilityCooldown(targetPiece, "__RoyalCommandGranted", 2);
+                _pieceDomainService.SetAbilityCooldown(targetPiece, "__RoyalCommandFreeAction", 2);
             }
         }
         else if (abilityName == "ShieldBash")
@@ -145,7 +145,7 @@ public class AbilityService : IAbilityService
             if (targetPiece != null && targetPiece.Team != piece.Team)
             {
                 _pieceDomainService.TakeDamage(targetPiece, Math.Max(0, spec.Damage));
-                
+
                 if (_pieceDomainService.IsDead(targetPiece))
                 {
                     _eventDispatcher.Publish(new PieceKilledEvent(piece, targetPiece));
@@ -159,32 +159,29 @@ public class AbilityService : IAbilityService
             if (targetPiece != null && targetPiece.Team != piece.Team)
             {
                 _pieceDomainService.TakeDamage(targetPiece, Math.Max(0, spec.Damage));
-                
+
                 if (_pieceDomainService.IsDead(targetPiece))
                 {
                     _eventDispatcher.Publish(new PieceKilledEvent(piece, targetPiece));
-                    _eventDispatcher.PublishAll(); 
+                    _eventDispatcher.PublishAll();
                 }
             }
         }
         else if (abilityName == "KingAura")
         {
-            // Аура короля - пассивная способность, которая увеличивает атаку союзников в радиусе
             var balanceConfig = _configProvider.GetActive();
             var kingAuraConfig = balanceConfig.Ai.KingAura;
             if (kingAuraConfig != null)
             {
                 var radius = kingAuraConfig.Radius;
                 var atkBonus = kingAuraConfig.AtkBonus;
-                
-                // Находим всех союзников в радиусе
-                var alliesInRange = allPieces.Where(p => 
-                    p.Owner == piece.Owner && 
-                    p.Id != piece.Id && 
+
+                var alliesInRange = allPieces.Where(p =>
+                    p.Owner == piece.Owner &&
+                    p.Id != piece.Id &&
                     CalculateChebyshevDistance(piece.Position, p.Position) <= radius)
                     .ToList();
-                
-                // Увеличиваем атаку союзников
+
                 foreach (var ally in alliesInRange)
                 {
                     ally.ATK += atkBonus;
@@ -199,13 +196,12 @@ public class AbilityService : IAbilityService
 
     private static bool IsPathBlocked(Position from, Position to, List<Piece> all)
     {
-        // Создаем словарь позиций для быстрого поиска
         var occupiedPositions = new HashSet<(int, int)>();
         foreach (var piece in all)
         {
             occupiedPositions.Add((piece.Position.X, piece.Position.Y));
         }
-        
+
         var dx = Math.Sign(to.X - from.X);
         var dy = Math.Sign(to.Y - from.Y);
         var steps = Math.Max(Math.Abs(to.X - from.X), Math.Abs(to.Y - from.Y));

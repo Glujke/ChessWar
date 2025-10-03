@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when line of sight is blocked for the action
+/// Исключение при заблокированной линии обзора для действия.
 /// </summary>
 public class LineOfSightBlockedException : GameException
 {

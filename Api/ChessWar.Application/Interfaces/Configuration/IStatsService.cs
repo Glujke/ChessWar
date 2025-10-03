@@ -11,7 +11,7 @@ public interface IStatsService
     /// Получает статистику игрока
     /// </summary>
     Task<PlayerStatsDto> GetPlayerStatsAsync(string playerId, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Обновляет статистику после завершения игры
     /// </summary>

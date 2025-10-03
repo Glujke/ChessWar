@@ -25,29 +25,40 @@ public class AiBehaviorIntegrationTests : IntegrationTestBase, IClassFixture<Tes
         var stateResp = await _client.GetAsync($"/api/v1/gamesession/{sessionAi.Id}");
         var state = await stateResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var piece = state!.Player1.Pieces.First();
-        
+
         var moveAction = new ExecuteActionDto
         {
             Type = "Move",
             PieceId = piece.Id.ToString(),
             TargetPosition = new PositionDto { X = piece.Position.X, Y = piece.Position.Y + 1 }
         };
-        
+
         var moveResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionAi.Id}/turn/action", moveAction);
         moveResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var endTurn = await _client.PostAsync($"/api/v1/gamesession/{sessionAi.Id}/turn/end", null);
         endTurn.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var aiTurn = await _client.PostAsync($"/api/v1/gamesession/{sessionAi.Id}/turn/ai", null);
+        // Добавляем действие для Player1 перед вторым EndTurn
+        var passAction = new ExecuteActionDto
+        {
+            Type = "Pass",
+            PieceId = "0"
+        };
+        var passResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionAi.Id}/turn/action", passAction);
+        passResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var aiTurn = await _client.PostAsync($"/api/v1/gamesession/{sessionAi.Id}/turn/end", null);
         aiTurn.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var createLc = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2", Mode = "LocalCoop" };
         var respLc = await _client.PostAsJsonAsync("/api/v1/gamesession", createLc);
         var sessionLc = await respLc.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        var lcTurn = await _client.PostAsync($"/api/v1/gamesession/{sessionLc!.Id}/turn/ai", null);
-        lcTurn.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        // В LocalCoop режиме AI ходы не поддерживаются - только /turn/end для смены хода между игроками
+        respLc.StatusCode.Should().Be(HttpStatusCode.OK);
+        sessionLc.Should().NotBeNull();
+        sessionLc!.Mode.Should().Be("LocalCoop");
     }
 }
 

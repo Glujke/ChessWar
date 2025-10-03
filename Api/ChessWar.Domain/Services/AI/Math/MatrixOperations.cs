@@ -12,12 +12,12 @@ public static class MatrixOperations
     {
         var rows = matrix.GetLength(0);
         var cols = matrix.GetLength(1);
-        
+
         if (cols != vector.Length)
             throw new ArgumentException("Matrix columns must match vector length");
-        
+
         var result = new double[rows];
-        
+
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
@@ -25,25 +25,25 @@ public static class MatrixOperations
                 result[i] += matrix[i, j] * vector[j];
             }
         }
-        
+
         return result;
     }
-    
+
     /// <summary>
     /// Создать единичную матрицу
     /// </summary>
     public static double[,] CreateIdentityMatrix(int size)
     {
         var matrix = new double[size, size];
-        
+
         for (int i = 0; i < size; i++)
         {
             matrix[i, i] = 1.0;
         }
-        
+
         return matrix;
     }
-    
+
     /// <summary>
     /// Нормализовать строки матрицы (сумма каждой строки = 1)
     /// </summary>
@@ -52,7 +52,7 @@ public static class MatrixOperations
         var rows = matrix.GetLength(0);
         var cols = matrix.GetLength(1);
         var normalized = new double[rows, cols];
-        
+
         for (int i = 0; i < rows; i++)
         {
             var rowSum = 0.0;
@@ -60,7 +60,7 @@ public static class MatrixOperations
             {
                 rowSum += matrix[i, j];
             }
-            
+
             if (rowSum > 0)
             {
                 for (int j = 0; j < cols; j++)
@@ -76,10 +76,10 @@ public static class MatrixOperations
                 }
             }
         }
-        
+
         return normalized;
     }
-    
+
     /// <summary>
     /// Найти максимальный элемент в матрице
     /// </summary>
@@ -88,7 +88,7 @@ public static class MatrixOperations
         var max = double.MinValue;
         var rows = matrix.GetLength(0);
         var cols = matrix.GetLength(1);
-        
+
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
@@ -97,10 +97,10 @@ public static class MatrixOperations
                     max = matrix[i, j];
             }
         }
-        
+
         return max;
     }
-    
+
     /// <summary>
     /// Найти минимальный элемент в матрице
     /// </summary>
@@ -109,7 +109,7 @@ public static class MatrixOperations
         var min = double.MaxValue;
         var rows = matrix.GetLength(0);
         var cols = matrix.GetLength(1);
-        
+
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
@@ -118,7 +118,7 @@ public static class MatrixOperations
                     min = matrix[i, j];
             }
         }
-        
+
         return min;
     }
 }

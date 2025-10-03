@@ -18,12 +18,12 @@ public interface IAiFallbackStrategy
     /// <param name="config">Конфигурация баланса</param>
     /// <returns>True если действие выполнено успешно</returns>
     bool TryExecute(GameSession session, Turn turn, Player active, BalanceConfig config);
-    
+
     /// <summary>
     /// Приоритет стратегии (чем меньше, тем выше приоритет)
     /// </summary>
     int Priority { get; }
-    
+
     /// <summary>
     /// Название стратегии для логирования
     /// </summary>

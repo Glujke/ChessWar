@@ -2,7 +2,8 @@ using ChessWar.Application.Interfaces.Pieces;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.ValueObjects;
-using ChessWar.Domain.Interfaces.DataAccess; using ChessWar.Domain.Interfaces.Configuration;
+using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.Configuration;
 
 namespace ChessWar.Application.Services.Pieces;
 
@@ -79,7 +80,7 @@ public class PieceService : IPieceService
             throw new InvalidOperationException("Piece not found");
 
         if (hp.HasValue) piece.HP = hp.Value;
-        if (atk.HasValue) piece.ATK = atk.Value;;
+        if (atk.HasValue) piece.ATK = atk.Value; ;
         if (xp.HasValue) piece.XP = xp.Value;
 
         await _pieceRepository.UpdateAsync(piece, cancellationToken);

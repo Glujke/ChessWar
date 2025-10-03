@@ -12,7 +12,7 @@ public interface IAiMode : IGameModeBase
     /// Сложность ИИ
     /// </summary>
     AiDifficulty Difficulty { get; }
-    
+
     /// <summary>
     /// ID игрока
     /// </summary>

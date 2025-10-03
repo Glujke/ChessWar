@@ -28,7 +28,7 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
             availableMp = 3
         };
 
-        var response = await _client.PostAsync("/api/v1/test/insufficient-mp", 
+        var response = await _client.PostAsync("/api/v1/test/insufficient-mp",
             new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -36,7 +36,7 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
 
         var content = await response.Content.ReadAsStringAsync();
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(content);
-        
+
         problemDetails!.Status.Should().Be(400);
         problemDetails.Type.Should().Be("https://tools.ietf.org/html/rfc7231#section-6.5.1");
         problemDetails.Title.Should().Be("Bad Request");
@@ -54,7 +54,7 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
             requiredCondition = "Defeat all enemies"
         };
 
-        var response = await _client.PostAsync("/api/v1/test/stage-not-completed", 
+        var response = await _client.PostAsync("/api/v1/test/stage-not-completed",
             new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -62,7 +62,7 @@ public class ProblemDetailsIntegrationTests : IClassFixture<WebApplicationFactor
 
         var content = await response.Content.ReadAsStringAsync();
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(content);
-        
+
         problemDetails!.Status.Should().Be(409);
         problemDetails.Type.Should().Be("https://tools.ietf.org/html/rfc7231#section-6.5.9");
         problemDetails.Title.Should().Be("Conflict");

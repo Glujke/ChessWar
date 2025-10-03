@@ -6,15 +6,15 @@ namespace ChessWar.Persistence.Core.Configurations;
 
 public sealed class GlobalRulesDtoConfiguration : IEntityTypeConfiguration<GlobalRulesDto>
 {
-  public void Configure(EntityTypeBuilder<GlobalRulesDto> builder)
-  {
-    builder.HasKey(g => g.Id);
+    public void Configure(EntityTypeBuilder<GlobalRulesDto> builder)
+    {
+        builder.HasKey(g => g.Id);
 
-    builder.Property(g => g.MpRegenPerTurn).IsRequired();
-    builder.Property(g => g.CooldownTickPhase)
-      .IsRequired()
-      .HasMaxLength(50);
-  }
+        builder.Property(g => g.MpRegenPerTurn).IsRequired();
+        builder.Property(g => g.CooldownTickPhase)
+          .IsRequired()
+          .HasMaxLength(50);
+    }
 }
 
 

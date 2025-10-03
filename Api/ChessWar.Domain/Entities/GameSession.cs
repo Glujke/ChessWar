@@ -16,7 +16,7 @@ public class GameSession
     public GameResult? Result { get; private set; }
     public Turn? CurrentTurn { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public string Mode { get; private set; } = "AI"; 
+    public string Mode { get; private set; } = "AI";
     public Guid? TutorialSessionId { get; private set; }
 
     public GameSession(Participant player1, Participant player2, string mode = "AI")
@@ -43,7 +43,7 @@ public class GameSession
             throw new InvalidOperationException("Game is already active");
 
         Status = Enums.GameStatus.Active;
-        
+
         CurrentTurn = new Turn(1, Player1);
     }
 
@@ -91,7 +91,7 @@ public class GameSession
             throw new InvalidOperationException("No current turn to end");
 
         var nextPlayer = CurrentTurn.ActiveParticipant.Id == Player1.Id ? Player2 : Player1;
-        
+
         var nextTurnNumber = CurrentTurn.Number + 1;
         CurrentTurn = new Turn(nextTurnNumber, nextPlayer);
     }
@@ -106,9 +106,9 @@ public class GameSession
 
         var currentPlayer = CurrentTurn.ActiveParticipant;
         var nextPlayer = currentPlayer.Id == Player1.Id ? Player2 : Player1;
-        
+
         currentPlayer.Restore(manaRegen);
-        
+
         var nextTurnNumber = CurrentTurn.Number + 1;
         CurrentTurn = new Turn(nextTurnNumber, nextPlayer);
     }
@@ -166,7 +166,7 @@ public class GameSession
     {
         return Board.Pieces.Where(p => p.IsAlive).ToList();
     }
-    
+
     /// <summary>
     /// Получает фигуру по ID
     /// </summary>
@@ -174,7 +174,7 @@ public class GameSession
     {
         return GetAllPieces().FirstOrDefault(p => p.Id.ToString() == pieceId);
     }
-    
+
     /// <summary>
     /// Получает фигуру по позиции
     /// </summary>

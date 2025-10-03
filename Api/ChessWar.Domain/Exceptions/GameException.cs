@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Base exception for all game-related errors
+/// Базовое исключение для всех игровых ошибок.
 /// </summary>
 public abstract class GameException : Exception
 {

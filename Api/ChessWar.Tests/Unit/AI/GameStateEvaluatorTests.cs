@@ -33,13 +33,13 @@ public class GameStateEvaluatorTests
     {
         var session = CreateEmptyGameSession();
         var player = session.Player1;
-        
+
         var king = new Piece(PieceType.King, Team.Elves, new Position(0, 0));
         king.HP = 10; // Устанавливаем HP для живой фигуры
         king.Owner = player;
         player.AddPiece(king);
         session.GetBoard().PlacePiece(king);
-        
+
         var piece = new Piece(PieceType.Queen, Team.Elves, new Position(3, 3));
         piece.HP = 10; // Устанавливаем HP для живой фигуры
         piece.Owner = player;
@@ -57,7 +57,7 @@ public class GameStateEvaluatorTests
         var session = CreateEmptyGameSession();
         var player = session.Player1;
         var enemy = session.Player2;
-        
+
         var enemyPiece = new Piece(PieceType.Queen, Team.Orcs, new Position(3, 3));
         enemyPiece.HP = 10; // Устанавливаем HP для живой фигуры
         enemyPiece.Owner = enemy;
@@ -100,7 +100,7 @@ public class GameStateEvaluatorTests
     {
         var session = CreateEmptyGameSession();
         var player = session.Player1;
-        
+
         var king = new Piece(PieceType.King, Team.Elves, new Position(3, 3));
         king.Owner = player;
         player.AddPiece(king);
@@ -116,11 +116,11 @@ public class GameStateEvaluatorTests
         var session = CreateEmptyGameSession();
         var player = session.Player1;
         var enemy = session.Player2;
-        
+
         var king = new Piece(PieceType.King, Team.Elves, new Position(3, 3));
         king.Owner = player;
         player.AddPiece(king);
-        
+
         var enemyPiece = new Piece(PieceType.Queen, Team.Orcs, new Position(4, 4));
         enemyPiece.Owner = enemy;
         enemy.AddPiece(enemyPiece);
@@ -135,7 +135,7 @@ public class GameStateEvaluatorTests
     {
         var session = CreateEmptyGameSession();
         var player = session.Player1;
-        
+
         var deadKing = new Piece(PieceType.King, Team.Elves, new Position(3, 3));
         deadKing.Owner = player;
         deadKing.HP = 0; // Мёртвый король
@@ -152,13 +152,13 @@ public class GameStateEvaluatorTests
         var session = CreateEmptyGameSession();
         var player = session.Player1;
         var enemy = session.Player2;
-        
+
         var playerPiece = new Piece(PieceType.Queen, Team.Elves, new Position(0, 0));
         playerPiece.HP = 10; // Устанавливаем HP для живой фигуры
         playerPiece.Owner = player;
         player.AddPiece(playerPiece);
         session.GetBoard().PlacePiece(playerPiece);
-        
+
         var enemyPiece = new Piece(PieceType.Queen, Team.Orcs, new Position(7, 7));
         enemyPiece.HP = 10; // Устанавливаем HP для живой фигуры
         enemyPiece.Owner = enemy;
@@ -176,13 +176,13 @@ public class GameStateEvaluatorTests
         var session = CreateEmptyGameSession();
         var player = session.Player1;
         var enemy = session.Player2;
-        
+
         var playerQueen = new Piece(PieceType.Queen, Team.Elves, new Position(0, 0));
         playerQueen.HP = 10; // Устанавливаем HP для живой фигуры
         playerQueen.Owner = player;
         player.AddPiece(playerQueen);
         session.GetBoard().PlacePiece(playerQueen);
-        
+
         var enemyPawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         enemyPawn.HP = 10; // Устанавливаем HP для живой фигуры
         enemyPawn.Owner = enemy;
@@ -200,13 +200,13 @@ public class GameStateEvaluatorTests
         var session = CreateEmptyGameSession();
         var player = session.Player1;
         var enemy = session.Player2;
-        
+
         var playerPawn = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         playerPawn.HP = 10; // Устанавливаем HP для живой фигуры
         playerPawn.Owner = player;
         player.AddPiece(playerPawn);
         session.GetBoard().PlacePiece(playerPawn);
-        
+
         var enemyQueen = new Piece(PieceType.Queen, Team.Orcs, new Position(7, 7));
         enemyQueen.HP = 10; // Устанавливаем HP для живой фигуры
         enemyQueen.Owner = enemy;

@@ -66,7 +66,7 @@ public class PieceValidationService : IPieceValidationService
 
     public bool IsPositionValid(Position position)
     {
-        return position.X >= 0 && position.X < BoardSize && 
+        return position.X >= 0 && position.X < BoardSize &&
                position.Y >= 0 && position.Y < BoardSize;
     }
 

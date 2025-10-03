@@ -31,7 +31,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         var pieces = await _context.Pieces.ToListAsync();
         _context.Pieces.RemoveRange(pieces);
         await _context.SaveChangesAsync();
-        
+
         await _context.DisposeAsync();
         _scope.Dispose();
         _client.Dispose();

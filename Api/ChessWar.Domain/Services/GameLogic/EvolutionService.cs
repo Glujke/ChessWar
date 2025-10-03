@@ -23,11 +23,11 @@ public class EvolutionService : IEvolutionService
     public bool CanEvolve(Piece piece)
     {
         if (piece == null) return false;
-        
+
         var config = _configProvider.GetActive();
         var possibleEvolutions = GetPossibleEvolutions(piece.Type);
         if (!possibleEvolutions.Any()) return false;
-        
+
         var reachedLastRank = piece.Type == PieceType.Pawn &&
             config.Evolution.ImmediateOnLastRank?.GetValueOrDefault("Pawn", false) == true &&
             ((piece.Team == Team.Elves && piece.Position.Y == 7) ||
@@ -40,7 +40,7 @@ public class EvolutionService : IEvolutionService
     {
         if (!CanEvolve(piece))
             throw new InvalidOperationException("Piece cannot evolve");
-        
+
         if (!MeetsEvolutionRequirements(piece, targetType))
         {
             var allowImmediate = piece.Type == PieceType.Pawn &&
@@ -49,10 +49,10 @@ public class EvolutionService : IEvolutionService
             if (!allowImmediate)
                 throw new InvalidOperationException("Piece does not meet evolution requirements");
         }
-        
+
         var evolvedPiece = CreateEvolvedPiece(targetType, piece.Team, piece.Position);
         LogEvolution(piece.Id, targetType);
-        
+
         return evolvedPiece;
     }
 
@@ -60,21 +60,21 @@ public class EvolutionService : IEvolutionService
     {
         var config = _configProvider.GetActive();
         var typeName = currentType.ToString();
-        
+
         if (!config.Evolution.Rules.TryGetValue(typeName, out var targetNames))
             return new List<PieceType>();
-            
+
         return targetNames.Select(name => Enum.Parse<PieceType>(name)).ToList();
     }
 
     public bool MeetsEvolutionRequirements(Piece piece, PieceType targetType)
     {
         if (piece == null) return false;
-        
+
         var config = _configProvider.GetActive();
         var possibleEvolutions = GetPossibleEvolutions(piece.Type);
         if (!possibleEvolutions.Contains(targetType)) return false;
-        
+
         var typeName = piece.Type.ToString();
         var requiredXP = config.Evolution.XpThresholds.GetValueOrDefault(typeName, 0);
         return piece.XP >= requiredXP;

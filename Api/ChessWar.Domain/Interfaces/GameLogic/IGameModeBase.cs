@@ -11,22 +11,22 @@ public interface IGameModeBase
     /// Уникальный идентификатор сессии
     /// </summary>
     Guid Id { get; }
-    
+
     /// <summary>
     /// Режим игры
     /// </summary>
     GameMode Mode { get; }
-    
+
     /// <summary>
     /// Статус игры
     /// </summary>
     GameStatus Status { get; }
-    
+
     /// <summary>
     /// Время создания сессии
     /// </summary>
     DateTime CreatedAt { get; }
-    
+
     /// <summary>
     /// Время последнего обновления
     /// </summary>

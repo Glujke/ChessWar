@@ -13,7 +13,7 @@ public interface IGameSessionFactory
     /// Создаёт новую игровую сессию
     /// </summary>
     GameSession CreateGameSession(CreateGameSessionDto dto);
-    
+
     /// <summary>
     /// Создаёт игрока с начальными фигурами
     /// </summary>

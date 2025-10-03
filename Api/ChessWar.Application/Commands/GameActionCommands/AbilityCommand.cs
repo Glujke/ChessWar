@@ -1,5 +1,6 @@
 using ChessWar.Domain.Entities;
-using ChessWar.Domain.Interfaces.GameLogic; using ChessWar.Domain.Interfaces.TurnManagement;
+using ChessWar.Domain.Interfaces.GameLogic;
+using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.ValueObjects;
 
 namespace ChessWar.Application.Commands.GameActionCommands;
@@ -36,12 +37,12 @@ public class AbilityCommand : ICommand
     {
         var allPieces = _gameSession.GetAllPieces();
         var success = _abilityService.UseAbility(_piece, _abilityName, _targetPosition, allPieces);
-        
+
         if (success)
         {
             _actionRecorder.RecordAction("Ability", _piece.Id.ToString(), _targetPosition, _abilityName);
         }
-        
+
         return await Task.FromResult(success);
     }
 }

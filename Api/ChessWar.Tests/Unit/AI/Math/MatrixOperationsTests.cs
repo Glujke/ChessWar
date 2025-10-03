@@ -47,7 +47,7 @@ public class MatrixOperationsTests
 
         Assert.Equal(size, result.GetLength(0));
         Assert.Equal(size, result.GetLength(1));
-        
+
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
@@ -74,18 +74,18 @@ public class MatrixOperationsTests
 
         Assert.Equal(3, result.GetLength(0));
         Assert.Equal(3, result.GetLength(1));
-        
-        Assert.Equal(1.0/6.0, result[0, 0], 10);
-        Assert.Equal(2.0/6.0, result[0, 1], 10);
-        Assert.Equal(3.0/6.0, result[0, 2], 10);
-        
-        Assert.Equal(4.0/15.0, result[1, 0], 10);
-        Assert.Equal(5.0/15.0, result[1, 1], 10);
-        Assert.Equal(6.0/15.0, result[1, 2], 10);
-        
-        Assert.Equal(1.0/3.0, result[2, 0], 10);
-        Assert.Equal(1.0/3.0, result[2, 1], 10);
-        Assert.Equal(1.0/3.0, result[2, 2], 10);
+
+        Assert.Equal(1.0 / 6.0, result[0, 0], 10);
+        Assert.Equal(2.0 / 6.0, result[0, 1], 10);
+        Assert.Equal(3.0 / 6.0, result[0, 2], 10);
+
+        Assert.Equal(4.0 / 15.0, result[1, 0], 10);
+        Assert.Equal(5.0 / 15.0, result[1, 1], 10);
+        Assert.Equal(6.0 / 15.0, result[1, 2], 10);
+
+        Assert.Equal(1.0 / 3.0, result[2, 0], 10);
+        Assert.Equal(1.0 / 3.0, result[2, 1], 10);
+        Assert.Equal(1.0 / 3.0, result[2, 2], 10);
     }
 
     [Fact]

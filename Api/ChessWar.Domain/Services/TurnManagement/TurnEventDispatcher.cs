@@ -27,7 +27,7 @@ public class TurnEventDispatcher : ITurnEventDispatcher
 
         try
         {
-            _logger.LogInformation("Turn {TurnNumber} started for participant {ParticipantId}", 
+            _logger.LogInformation("Turn {TurnNumber} started for participant {ParticipantId}",
                 turn.Number, turn.ActiveParticipant.Id);
         }
         catch (Exception ex)
@@ -43,7 +43,7 @@ public class TurnEventDispatcher : ITurnEventDispatcher
 
         try
         {
-            _logger.LogInformation("Turn {TurnNumber} ended for participant {ParticipantId}", 
+            _logger.LogInformation("Turn {TurnNumber} ended for participant {ParticipantId}",
                 turn.Number, turn.ActiveParticipant.Id);
         }
         catch (Exception ex)
@@ -59,7 +59,7 @@ public class TurnEventDispatcher : ITurnEventDispatcher
 
         try
         {
-            _logger.LogInformation("Piece {PieceId} moved from ({FromX},{FromY}) to ({ToX},{ToY})", 
+            _logger.LogInformation("Piece {PieceId} moved from ({FromX},{FromY}) to ({ToX},{ToY})",
                 piece.Id, fromPosition.X, fromPosition.Y, toPosition.X, toPosition.Y);
         }
         catch (Exception ex)
@@ -76,7 +76,7 @@ public class TurnEventDispatcher : ITurnEventDispatcher
 
         try
         {
-            _logger.LogInformation("Piece {AttackerId} attacked piece {TargetId} for {Damage} damage", 
+            _logger.LogInformation("Piece {AttackerId} attacked piece {TargetId} for {Damage} damage",
                 attacker.Id, target.Id, damage);
         }
         catch (Exception ex)

@@ -88,7 +88,7 @@ public class PlayerTests
 
         pawns.Should().HaveCount(8);
         pawns.Should().AllSatisfy(piece => piece.Type.Should().Be(PieceType.Pawn));
-        
+
         kings.Should().HaveCount(1);
         kings.Should().AllSatisfy(piece => piece.Type.Should().Be(PieceType.King));
     }
@@ -98,7 +98,7 @@ public class PlayerTests
     {
         var player = CreateTestPlayer();
         var pieces = player.Pieces.ToList();
-        
+
         TestHelpers.TakeDamage(pieces[0], 1000);
         TestHelpers.TakeDamage(pieces[1], 1000);
 
@@ -118,7 +118,7 @@ public class PlayerTests
 
         elvesPieces.Should().HaveCount(9);
         elvesPieces.Should().AllSatisfy(piece => piece.Team.Should().Be(Team.Elves));
-        
+
         orcsPieces.Should().BeEmpty();
     }
 
@@ -167,14 +167,14 @@ public class PlayerTests
     private static List<Piece> CreateTestPieces()
     {
         var pieces = new List<Piece>();
-        
+
         for (int i = 0; i < 8; i++)
         {
             pieces.Add(TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, i, 1));
         }
-        
+
         pieces.Add(TestHelpers.CreatePiece(PieceType.King, Team.Elves, 4, 0));
-        
+
         return pieces;
     }
 }

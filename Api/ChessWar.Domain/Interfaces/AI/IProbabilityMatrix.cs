@@ -12,17 +12,17 @@ public interface IProbabilityMatrix
     /// Получить вероятность перехода из состояния from в to при действии action
     /// </summary>
     double GetTransitionProbability(GameSession from, GameAction action, GameSession to);
-    
+
     /// <summary>
     /// Получить ожидаемую награду за действие action в состоянии session
     /// </summary>
     double GetReward(GameSession session, GameAction action);
-    
+
     /// <summary>
     /// Обновить политику - вероятность выбора действия action в состоянии session
     /// </summary>
     void UpdatePolicy(GameSession session, GameAction action, double probability);
-    
+
     /// <summary>
     /// Получить вероятность выбора действия action в состоянии session
     /// </summary>

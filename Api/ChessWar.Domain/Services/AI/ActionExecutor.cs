@@ -9,6 +9,9 @@ namespace ChessWar.Domain.Services.AI;
 /// <summary>
 /// Исполнитель действий для ИИ
 /// </summary>
+/// <summary>
+/// Выполняет сгенерированные действия ИИ последовательно до исчерпания очков хода.
+/// </summary>
 public class ActionExecutor : IActionExecutor
 {
     private readonly ITurnService _turnService;
@@ -20,6 +23,9 @@ public class ActionExecutor : IActionExecutor
         _abilityService = abilityService ?? throw new ArgumentNullException(nameof(abilityService));
     }
 
+    /// <summary>
+    /// Выполняет список действий и возвращает true, если выполнено хотя бы одно.
+    /// </summary>
     public bool ExecuteActions(GameSession session, Turn turn, List<GameAction> actions)
     {
         if (!actions.Any())
@@ -52,6 +58,9 @@ public class ActionExecutor : IActionExecutor
         return successCount > 0;
     }
 
+    /// <summary>
+    /// Выполняет одно действие соответствующего типа.
+    /// </summary>
     private bool ExecuteAction(GameSession session, Turn turn, GameAction action)
     {
         var piece = session.GetPieceById(action.PieceId);
@@ -69,6 +78,9 @@ public class ActionExecutor : IActionExecutor
         };
     }
 
+    /// <summary>
+    /// Выполняет способность фигуры с проверкой входных данных.
+    /// </summary>
     private bool ExecuteAbility(GameSession session, Turn turn, Piece piece, GameAction action)
     {
         try
@@ -78,10 +90,8 @@ public class ActionExecutor : IActionExecutor
                 return false;
             }
 
-            // Получаем все фигуры на доске
             var allPieces = session.GetAllPieces().ToList();
-            
-            // Выполняем способность
+
             return _abilityService.UseAbility(piece, action.AbilityName, action.TargetPosition, allPieces);
         }
         catch

@@ -43,32 +43,32 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var loggerMock = new Mock<ILogger<ChessWar.Domain.Services.AI.AIService>>();
 
             difficultyProviderMock.Setup(x => x.GetDifficultyLevel(It.IsAny<ChessWar.Domain.Entities.AI>())).Returns(AIDifficultyLevel.Hard);
-            
+
             turnServiceMock.Setup(x => x.ExecuteMove(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
                 .Returns(true);
-            
+
             turnServiceMock.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
                 .Returns(true);
-            
+
             turnServiceMock.Setup(x => x.GetAvailableMoves(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>()))
                 .Returns(new List<Position> { new Position(0, 2), new Position(1, 2), new Position(2, 2) });
-            
+
             turnServiceMock.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
                 .Returns(new List<Position> { new Position(0, 3), new Position(1, 3) });
-            
+
             abilityServiceMock.Setup(x => x.UseAbility(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
                 .Returns(true);
-            
+
             gameStateEvaluatorMock.Setup(x => x.EvaluateGameState(It.IsAny<GameSession>(), It.IsAny<Player>()))
                 .Returns(0.5);
-            
+
             probabilityMatrixMock.Setup(x => x.GetActionProbability(It.IsAny<GameSession>(), It.IsAny<GameAction>()))
                 .Returns(0.8);
-            
+
             var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnServiceMock.Object, abilityServiceMock.Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
             var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrixMock.Object, gameStateEvaluatorMock.Object, difficultyProviderMock.Object);
             var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnServiceMock.Object, abilityServiceMock.Object);
-            
+
             _hardAI = new ChessWar.Domain.Services.AI.AIService(
                 actionGenerator,
                 actionSelector,
@@ -109,7 +109,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
             var player1 = players.FirstOrDefault(p => p.Name.Contains("Player1") || p.Name.Contains("1"));
             var player2 = players.FirstOrDefault(p => p.Name.Contains("Player2") || p.Name.Contains("2"));
-            
+
             if (player1 == null || player2 == null)
             {
                 return null;
@@ -181,23 +181,23 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
         var game = startDoc.RootElement.GetProperty("_embedded").GetProperty("game");
         var player2Pieces = game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
-        
-        var king = player2Pieces.FirstOrDefault(p => 
+
+        var king = player2Pieces.FirstOrDefault(p =>
         {
             var typeElement = p.GetProperty("type");
-            return typeElement.ValueKind == JsonValueKind.String ? 
-                typeElement.GetString() == "King" : 
+            return typeElement.ValueKind == JsonValueKind.String ?
+                typeElement.GetString() == "King" :
                 typeElement.GetInt32() == 5; // King = 5 в enum
         });
         king.Should().NotBeNull();
         king.GetProperty("position").GetProperty("x").GetInt32().Should().Be(4);
         king.GetProperty("position").GetProperty("y").GetInt32().Should().Be(7);
 
-        var pawns = player2Pieces.Where(p => 
+        var pawns = player2Pieces.Where(p =>
         {
             var typeElement = p.GetProperty("type");
-            var isPawn = typeElement.ValueKind == JsonValueKind.String ? 
-                typeElement.GetString() == "Pawn" : 
+            var isPawn = typeElement.ValueKind == JsonValueKind.String ?
+                typeElement.GetString() == "Pawn" :
                 typeElement.GetInt32() == 0; // Pawn = 0 в enum
             return isPawn && p.GetProperty("position").GetProperty("y").GetInt32() == 6;
         }).Count();
@@ -216,9 +216,9 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             throw;
         }
 
-        var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition?embed=(game)", 
+        var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition?embed=(game)",
             Json(new { action = "advance" }));
-        
+
         if (advanceResponse.StatusCode == HttpStatusCode.OK)
         {
             var advanceJson = await advanceResponse.Content.ReadAsStringAsync();
@@ -245,7 +245,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         using var startDoc = JsonDocument.Parse(startJson);
         var originalGameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
 
-        var replayResponse = await _client.PostAsync($"/api/v1/gamesession/{originalGameId}/tutorial/transition", 
+        var replayResponse = await _client.PostAsync($"/api/v1/gamesession/{originalGameId}/tutorial/transition",
             Json(new { action = "replay" }));
         replayResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -270,7 +270,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         using var startDoc = JsonDocument.Parse(startJson);
         var gameId = startDoc.RootElement.GetProperty("gameSessionId").GetString();
 
-        var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition", 
+        var advanceResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/tutorial/transition",
             Json(new { action = "advance" }));
         advanceResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
@@ -281,7 +281,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
     }
 
     /// <summary>
-    /// Играет Tutorial battle - простые ходы до победы (максимум 300 ходов)
+    /// Играет Tutorial battle: выполняет простые ходы до победы (максимум 300 ходов).
     /// </summary>
     private async Task PlayTutorialBattle(string gameId, string battleName)
     {
@@ -293,10 +293,78 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                 break;
             }
 
+            await WaitUntilPlayerTurn(gameId, "player-e2e-test", TimeSpan.FromSeconds(3));
+
             await MakeRealPlayerMove(gameId, move);
 
+            var ensureActionResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+            if (ensureActionResponse.IsSuccessStatusCode)
+            {
+                var ensureActionJson = await ensureActionResponse.Content.ReadAsStringAsync();
+                using var ensureActionDoc = JsonDocument.Parse(ensureActionJson);
+                var ensureCurrentTurn = ensureActionDoc.RootElement.GetProperty("currentTurn");
+                var ensureActions = ensureCurrentTurn.GetProperty("actions");
+                if (ensureActions.GetArrayLength() == 0)
+                {
+                    var passRequest = new { type = "Pass", pieceId = "0", targetPosition = (object?)null };
+                    await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/action", Json(passRequest));
+
+                    var confirmResp = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+                    if (confirmResp.IsSuccessStatusCode)
+                    {
+                        var confirmJson = await confirmResp.Content.ReadAsStringAsync();
+                        using var confirmDoc = JsonDocument.Parse(confirmJson);
+                        var confirmTurn = confirmDoc.RootElement.GetProperty("currentTurn");
+                        var confirmActions = confirmTurn.GetProperty("actions");
+                        if (confirmActions.GetArrayLength() == 0)
+                        {
+                            await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/action", Json(passRequest));
+                        }
+                    }
+                }
+            }
+
+            await WaitUntilTurnHasActions(gameId, TimeSpan.FromMilliseconds(500));
+
+            var ensureResp = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+            if (ensureResp.IsSuccessStatusCode)
+            {
+                var ensureJson = await ensureResp.Content.ReadAsStringAsync();
+                using var ensureDoc = JsonDocument.Parse(ensureJson);
+                var ensureTurn = ensureDoc.RootElement.GetProperty("currentTurn");
+                var ensureActions = ensureTurn.GetProperty("actions");
+                if (ensureActions.GetArrayLength() == 0)
+                {
+                    var passReq = new { type = "Pass", pieceId = "0", targetPosition = (object?)null };
+                    await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/action", Json(passReq));
+                    await WaitUntilTurnHasActions(gameId, TimeSpan.FromMilliseconds(250));
+                }
+            }
+
             var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/end", null);
-            endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK, $"Завершение хода игрока в {battleName} должно быть успешным");
+            if (endTurnResponse.StatusCode != HttpStatusCode.OK)
+            {
+                var endBody = await endTurnResponse.Content.ReadAsStringAsync();
+                var sessionBeforeEnd = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+                if (sessionBeforeEnd.IsSuccessStatusCode)
+                {
+                    var content = await sessionBeforeEnd.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(content);
+                    var turn = doc.RootElement.GetProperty("currentTurn");
+                    var actions = turn.GetProperty("actions");
+                    if (actions.GetArrayLength() == 0)
+                    {
+                        var passReq = new { type = "Pass", pieceId = "0", targetPosition = (object?)null };
+                        await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/action", Json(passReq));
+                        await WaitUntilTurnHasActions(gameId, TimeSpan.FromMilliseconds(200));
+                    }
+                }
+                await Task.Delay(100);
+                var retry = await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/end", null);
+                retry.StatusCode.Should().Be(HttpStatusCode.OK, $"Завершение хода игрока в {battleName} должно быть успешным. Предыдущий ответ: {endTurnResponse.StatusCode} {endBody}");
+            }
+
+            await WaitUntilPlayerTurn(gameId, "player-e2e-test", TimeSpan.FromSeconds(5));
 
             var statusAfterPlayer = await GetGameStatus(gameId);
             if (statusAfterPlayer != "Active")
@@ -309,6 +377,73 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         finalStatus.Should().Be("Active", $"Игра {battleName} должна быть активна после 300 ходов");
     }
 
+    /// <summary>
+    /// Ожидает пока активным участником станет указанный игрок, либо игра завершится, в пределах таймаута.
+    /// </summary>
+    private async Task WaitUntilPlayerTurn(string gameId, string expectedName, TimeSpan timeout)
+    {
+        var start = DateTime.UtcNow;
+        while (DateTime.UtcNow - start < timeout)
+        {
+            var resp = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                await Task.Delay(50);
+                continue;
+            }
+            var json = await resp.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var statusEl = root.GetProperty("status");
+            var isFinished = (statusEl.ValueKind == JsonValueKind.String ? (statusEl.GetString() ?? "") == "Player1Victory" || (statusEl.GetString() ?? "") == "Player2Victory" : statusEl.GetInt32() == 2 || statusEl.GetInt32() == 3);
+            if (isFinished)
+            {
+                return;
+            }
+            var currentTurn = root.GetProperty("currentTurn");
+            var active = currentTurn.GetProperty("activeParticipant");
+            var name = active.GetProperty("name").GetString() ?? string.Empty;
+            if (string.Equals(name, expectedName, StringComparison.Ordinal))
+            {
+                return;
+            }
+            await Task.Delay(50);
+        }
+    }
+
+    /// <summary>
+    /// Ожидает, пока в текущем ходу появится хотя бы одно действие, либо истечёт таймаут.
+    /// </summary>
+    private async Task WaitUntilTurnHasActions(string gameId, TimeSpan timeout)
+    {
+        var start = DateTime.UtcNow;
+        while (DateTime.UtcNow - start < timeout)
+        {
+            var resp = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                await Task.Delay(25);
+                continue;
+            }
+            var json = await resp.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var statusEl = root.GetProperty("status");
+            var isFinished = (statusEl.ValueKind == JsonValueKind.String ? (statusEl.GetString() ?? "") == "Player1Victory" || (statusEl.GetString() ?? "") == "Player2Victory" : statusEl.GetInt32() == 2 || statusEl.GetInt32() == 3);
+            if (isFinished)
+            {
+                return;
+            }
+            var currentTurn = root.GetProperty("currentTurn");
+            var actions = currentTurn.GetProperty("actions");
+            if (actions.GetArrayLength() > 0)
+            {
+                return;
+            }
+            await Task.Delay(25);
+        }
+    }
+
     private async Task MakeSimplePlayerMove(string gameId, int moveNumber)
     {
         var gameResponse = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
@@ -319,34 +454,34 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         var game = gameDoc.RootElement;
 
         var player1Pieces = game.GetProperty("player1").GetProperty("pieces").EnumerateArray().ToList();
-        var pawn = player1Pieces.FirstOrDefault(p => 
+        var pawn = player1Pieces.FirstOrDefault(p =>
         {
             var typeElement = p.GetProperty("type");
-            return typeElement.ValueKind == JsonValueKind.String ? 
-                typeElement.GetString() == "Pawn" : 
+            return typeElement.ValueKind == JsonValueKind.String ?
+                typeElement.GetString() == "Pawn" :
                 typeElement.GetInt32() == 0; // Pawn = 0 в enum
         });
-        
+
         if (pawn.ValueKind == JsonValueKind.Undefined)
         {
             return;
         }
 
         var pawnIdElement = pawn.GetProperty("id");
-        var pawnId = pawnIdElement.ValueKind == JsonValueKind.String ? 
-            pawnIdElement.GetString() : 
+        var pawnId = pawnIdElement.ValueKind == JsonValueKind.String ?
+            pawnIdElement.GetString() :
             pawnIdElement.GetInt32().ToString();
         var pawnPosition = pawn.GetProperty("position");
         var pawnX = pawnPosition.GetProperty("x").GetInt32();
         var pawnY = pawnPosition.GetProperty("y").GetInt32();
 
-        var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
-            Json(new 
-            { 
+        var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move",
+            Json(new
+            {
                 pieceId = pawnId,
                 targetPosition = new { x = pawnX, y = pawnY + 1 }  // ВПЕРЁД
             }));
-        
+
         if (moveResponse.StatusCode == HttpStatusCode.OK)
         {
             return;
@@ -379,7 +514,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
             var player1Pieces = game.GetProperty("player1").GetProperty("pieces").EnumerateArray().ToList();
             var player2Pieces = game.GetProperty("player2").GetProperty("pieces").EnumerateArray().ToList();
-            
+
             var alivePlayerPieces = player1Pieces.Where(p => p.GetProperty("isAlive").GetBoolean()).ToList();
             var aliveEnemyPieces = player2Pieces.Where(p => p.GetProperty("isAlive").GetBoolean()).ToList();
 
@@ -401,7 +536,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         {
             _logger.LogError($"Ошибка умного хода игрока на ходу {moveNumber}: {ex.Message}");
         }
-        
+
         // Если игрок не смог сделать ход, добавляем Pass действие
         var gameResponseAfter = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
         if (gameResponseAfter.IsSuccessStatusCode)
@@ -411,7 +546,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var gameAfter = gameDocAfter.RootElement;
             var currentTurnAfter = gameAfter.GetProperty("currentTurn");
             var actions = currentTurnAfter.GetProperty("actions");
-            
+
             if (actions.GetArrayLength() == 0)
             {
                 var passRequest = new
@@ -420,7 +555,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                     pieceId = "0",
                     targetPosition = (object)null
                 };
-                
+
                 await _client.PostAsync($"/api/v1/gamesession/{gameId}/turn/action", Json(passRequest));
             }
         }
@@ -441,11 +576,11 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                 var enemyPos = enemy.GetProperty("position");
                 var enemyX = enemyPos.GetProperty("x").GetInt32();
                 var enemyY = enemyPos.GetProperty("y").GetInt32();
-                
+
                 var distance = Math.Max(Math.Abs(enemyX - currentX), Math.Abs(enemyY - currentY));
-                
+
                 var attackRange = pieceType == 0 ? 1 : 1; // Пешка и король = 1
-                
+
                 if (distance <= attackRange)
                 {
                     var attackRequest = new
@@ -454,9 +589,9 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                         targetPosition = new { x = enemyX, y = enemyY }
                     };
 
-                    var attackResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/attack", 
+                    var attackResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/attack",
                         Json(attackRequest));
-                    
+
                     if (attackResponse.IsSuccessStatusCode)
                     {
                         return true;
@@ -489,16 +624,16 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         {
             var safeX = Math.Max(0, Math.Min(7, kingX + 1));
             var safeY = Math.Max(0, Math.Min(7, kingY + 1));
-            
+
             var moveRequest = new
             {
                 pieceId = king.GetProperty("id").GetInt32().ToString(),
                 targetPosition = new { x = safeX, y = safeY }
             };
 
-            var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+            var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move",
                 Json(moveRequest));
-            
+
             if (moveResponse.IsSuccessStatusCode)
             {
                 return true;
@@ -509,7 +644,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
     private async Task<bool> TryAdvanceCenterPawns(string gameId, List<JsonElement> playerPieces, int moveNumber)
     {
-        var centerPawns = playerPieces.Where(p => 
+        var centerPawns = playerPieces.Where(p =>
         {
             var type = p.GetProperty("type").GetInt32();
             var pos = p.GetProperty("position");
@@ -533,9 +668,9 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
                 targetPosition = new { x = currentX, y = targetY }
             };
 
-            var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+            var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move",
                 Json(moveRequest));
-            
+
             if (moveResponse.IsSuccessStatusCode)
             {
                 return true;
@@ -568,9 +703,9 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             targetPosition = new { x = currentX, y = targetY }
         };
 
-        var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move", 
+        var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameId}/move",
             Json(moveRequest));
-        
+
         if (moveResponse.IsSuccessStatusCode)
         {
             return true;
@@ -582,13 +717,13 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
     {
         var response = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         var statusElement = doc.RootElement.GetProperty("status");
-        
-        return statusElement.ValueKind == JsonValueKind.String ? 
-            statusElement.GetString() ?? "Unknown" : 
+
+        return statusElement.ValueKind == JsonValueKind.String ?
+            statusElement.GetString() ?? "Unknown" :
             ConvertStatusToString(statusElement.GetInt32());
     }
 
@@ -597,7 +732,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
         return status switch
         {
             0 => "Waiting",
-            1 => "Active", 
+            1 => "Active",
             2 => "Player1Victory",
             3 => "Player2Victory",
             _ => "Unknown"

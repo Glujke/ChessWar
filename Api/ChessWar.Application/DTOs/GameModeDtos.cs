@@ -23,7 +23,7 @@ public class CreateOnlineSessionDto
     /// ID игрока-создателя
     /// </summary>
     public string HostPlayerId { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Максимальное количество игроков
     /// </summary>
@@ -39,7 +39,7 @@ public class CreateLocalSessionDto
     /// Имя первого игрока
     /// </summary>
     public string Player1Name { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Имя второго игрока
     /// </summary>
@@ -55,7 +55,7 @@ public class CreateAiSessionDto
     /// ID игрока
     /// </summary>
     public string PlayerId { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Сложность ИИ
     /// </summary>
@@ -91,8 +91,8 @@ public class TutorialSessionDto
 
 public class TutorialScenarioDto
 {
-    public string Type { get; set; } = string.Empty; 
-    public string Difficulty { get; set; } = string.Empty; 
+    public string Type { get; set; } = string.Empty;
+    public string Difficulty { get; set; } = string.Empty;
 }
 
 public class TutorialBoardDto

@@ -12,7 +12,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
     volumes:
       - chesswar_data:/app/data
-      - chesswar_logs:/app/Logs
+      - chesswar_logs:/app/logs
     restart: unless-stopped
 
     

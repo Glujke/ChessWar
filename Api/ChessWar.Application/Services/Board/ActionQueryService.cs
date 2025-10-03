@@ -1,5 +1,6 @@
 using ChessWar.Application.DTOs;
-using ChessWar.Application.Interfaces.Configuration; using ChessWar.Application.Interfaces.Board;
+using ChessWar.Application.Interfaces.Configuration;
+using ChessWar.Application.Interfaces.Board;
 using ChessWar.Application.Services.Common;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Interfaces.GameLogic;

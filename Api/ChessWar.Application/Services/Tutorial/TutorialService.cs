@@ -1,6 +1,8 @@
 using ChessWar.Application.Interfaces.Tutorial;
 using ChessWar.Application.Interfaces.GameManagement;
-using ChessWar.Domain.Interfaces.DataAccess; using ChessWar.Domain.Interfaces.Tutorial; using ChessWar.Domain.Interfaces.GameLogic;
+using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.Tutorial;
+using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.Entities;
 
@@ -81,7 +83,7 @@ public class TutorialService : ITutorialService
             throw new InvalidOperationException($"Tutorial session {sessionId} not found");
         }
 
-        session.AdvanceToNextStage(); 
+        session.AdvanceToNextStage();
 
         await _notificationService.NotifyTutorialAdvancedAsync(sessionId, session.CurrentStage.ToString(), cancellationToken);
 

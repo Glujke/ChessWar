@@ -40,7 +40,7 @@ public class TurnExecutionService : ITurnExecutionService
             throw new ArgumentNullException(nameof(dto));
 
         _logger.LogInformation("Executing action {ActionType} for piece {PieceId}", dto.Type, dto.PieceId);
-        
+
         return await _actionExecutionService.ExecuteActionAsync(gameSession, dto);
     }
 
@@ -50,7 +50,7 @@ public class TurnExecutionService : ITurnExecutionService
             throw new ArgumentNullException(nameof(gameSession));
 
         _logger.LogInformation("Ending turn for session {SessionId}", gameSession.Id);
-        
+
         await _turnOrchestrator.EndTurnAsync(gameSession);
     }
 
@@ -60,7 +60,7 @@ public class TurnExecutionService : ITurnExecutionService
             throw new ArgumentNullException(nameof(gameSession));
 
         _logger.LogInformation("Making AI turn for session {SessionId}", gameSession.Id);
-        
+
         return await _aiTurnService.MakeAiTurnAsync(gameSession);
     }
 
@@ -71,12 +71,12 @@ public class TurnExecutionService : ITurnExecutionService
         if (targetPosition == null)
             throw new ArgumentNullException(nameof(targetPosition));
 
-        _logger.LogInformation("Executing move for piece {PieceId} to position ({X}, {Y})", 
+        _logger.LogInformation("Executing move for piece {PieceId} to position ({X}, {Y})",
             pieceId, targetPosition.X, targetPosition.Y);
 
         var currentTurn = gameSession.GetCurrentTurn();
         var piece = gameSession.GetAllPieces().FirstOrDefault(p => p.Id == pieceId);
-        
+
         if (piece == null)
         {
             _logger.LogWarning("Piece {PieceId} not found", pieceId);
@@ -95,7 +95,7 @@ public class TurnExecutionService : ITurnExecutionService
         if (string.IsNullOrEmpty(actionType))
             throw new ArgumentException("Action type cannot be null or empty", nameof(actionType));
 
-        _logger.LogInformation("Getting available actions for piece {PieceId}, action type {ActionType}", 
+        _logger.LogInformation("Getting available actions for piece {PieceId}, action type {ActionType}",
             pieceId, actionType);
 
         var positionDtos = await _actionQueryService.GetAvailableActionsAsync(gameSession, pieceId, actionType, abilityName);

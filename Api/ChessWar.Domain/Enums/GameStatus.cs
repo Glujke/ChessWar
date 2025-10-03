@@ -9,12 +9,12 @@ public enum GameStatus
     /// Ожидание начала игры
     /// </summary>
     Waiting,
-    
+
     /// <summary>
     /// Игра активна
     /// </summary>
     Active,
-    
+
     /// <summary>
     /// Игра завершена
     /// </summary>

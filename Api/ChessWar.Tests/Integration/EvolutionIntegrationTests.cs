@@ -43,12 +43,12 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         {
             var currentState = await GetGameState(session.Id);
             var targetPiece = currentState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
-            
+
             if (targetPiece == null || targetPiece.HP <= 0)
             {
                 break; // Цель убита
             }
-            
+
             var attackAction = new ExecuteActionDto { Type = "Attack", PieceId = pawn.Id.ToString(), TargetPosition = attackPos };
             var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
             attackResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -98,12 +98,12 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         {
             var currentState = await GetGameState(session.Id);
             var targetPiece = currentState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
-            
+
             if (targetPiece == null || targetPiece.HP <= 0)
             {
                 break; // Цель убита
             }
-            
+
             var attackAction = new ExecuteActionDto { Type = "Attack", PieceId = pawn.Id.ToString(), TargetPosition = attackPos };
             var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
             attackResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -113,7 +113,7 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var finalMove = new ExecuteActionDto { Type = "Move", PieceId = pawn.Id.ToString(), TargetPosition = new PositionDto { X = 1, Y = 7 } };
         var finalMoveResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", finalMove);
         finalMoveResp.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var finalState = await GetGameState(session.Id);
         var finalPawn = finalState.Player1.Pieces.First(p => p.Id == pawn.Id);
         var prev = finalPawn.Position;
@@ -163,12 +163,12 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         {
             var currentState = await GetGameState(session.Id);
             var targetPiece = currentState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
-            
+
             if (targetPiece == null || targetPiece.HP <= 0)
             {
                 break; // Цель убита
             }
-            
+
             var attackAction = new ExecuteActionDto { Type = "Attack", PieceId = pawn.Id.ToString(), TargetPosition = attackPos2 };
             var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
             attackResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -178,7 +178,7 @@ public class EvolutionIntegrationTests : IntegrationTestBase, IClassFixture<Test
         var finalMove = new ExecuteActionDto { Type = "Move", PieceId = pawn.Id.ToString(), TargetPosition = new PositionDto { X = 1, Y = 7 } };
         var finalMoveResp = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", finalMove);
         finalMoveResp.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var finalState = await GetGameState(session.Id);
         var finalPawn = finalState.Player1.Pieces.First(p => p.Id == pawn.Id);
         var prev = finalPawn.Position;

@@ -11,12 +11,12 @@ public enum AIDifficultyLevel
     /// Легкий - случайные действия с базовыми приоритетами
     /// </summary>
     Easy = 1,
-    
+
     /// <summary>
     /// Средний - вероятностное планирование на 2-3 хода
     /// </summary>
     Medium = 2,
-    
+
     /// <summary>
     /// Сложный - полное вероятностное планирование с Monte Carlo
     /// </summary>
@@ -32,17 +32,17 @@ public interface IAIDifficultyLevel
     /// Получить уровень сложности для участника
     /// </summary>
     AIDifficultyLevel GetDifficultyLevel(Participant participant);
-    
+
     /// <summary>
     /// Получить температуру для softmax (τ)
     /// </summary>
     double GetTemperature(AIDifficultyLevel level);
-    
+
     /// <summary>
     /// Получить глубину планирования
     /// </summary>
     int GetPlanningDepth(AIDifficultyLevel level);
-    
+
     /// <summary>
     /// Получить коэффициент дисконтирования (γ)
     /// </summary>

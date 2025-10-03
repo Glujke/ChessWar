@@ -64,7 +64,7 @@ public class TurnManaTests
         var player = new Player("TestPlayer", new List<Piece>());
         player.SetMana(20, 50);
         var turn = new Turn(1, player);
-        
+
         player.Spend(5);
 
         turn.UpdateRemainingMP();

@@ -7,27 +7,27 @@ namespace ChessWar.Domain.ValueObjects;
 public static class ErrorCodes
 {
     #region Game Action Errors
-    
+
     /// <summary>
     /// Error when a piece doesn't have enough MP to perform an action
     /// </summary>
     public static readonly ErrorCode InsufficientMp = new("InsufficientMp", "Insufficient MP to perform this action");
-    
+
     /// <summary>
     /// Error when trying to use an ability that's currently on cooldown
     /// </summary>
     public static readonly ErrorCode AbilityOnCooldown = new("AbilityOnCooldown", "Ability is currently on cooldown");
-    
+
     /// <summary>
     /// Error when target is out of range for the action
     /// </summary>
     public static readonly ErrorCode OutOfRange = new("OutOfRange", "Target is out of range");
-    
+
     /// <summary>
     /// Error when line of sight is blocked for the action
     /// </summary>
     public static readonly ErrorCode LineOfSightBlocked = new("LineOfSightBlocked", "Line of sight is blocked");
-    
+
     /// <summary>
     /// Error when trying to switch pieces during a turn when it's not allowed
     /// </summary>
@@ -36,12 +36,12 @@ public static class ErrorCodes
     #endregion
 
     #region Tutorial Errors
-    
+
     /// <summary>
     /// Error when trying to advance tutorial stage that's not completed
     /// </summary>
     public static readonly ErrorCode StageNotCompleted = new("StageNotCompleted", "Current stage is not completed");
-    
+
     /// <summary>
     /// Error when tutorial session is not found
     /// </summary>
@@ -56,7 +56,7 @@ public static class ErrorCodes
         OutOfRange,
         LineOfSightBlocked,
         PieceSwitchForbidden,
-        
+
         StageNotCompleted,
         TutorialNotFound
     };
@@ -76,7 +76,7 @@ public static class ErrorCodes
     public static ErrorCode GetByCode(string code)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code, nameof(code));
-        
+
         var errorCode = _allErrorCodes.FirstOrDefault(ec => ec.Code == code);
         if (errorCode == null)
         {
@@ -94,7 +94,7 @@ public static class ErrorCodes
     {
         if (string.IsNullOrWhiteSpace(code))
             return false;
-            
+
         return _allErrorCodes.Any(ec => ec.Code == code);
     }
 }

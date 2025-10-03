@@ -19,7 +19,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResponse.IsSuccessStatusCode.Should().BeTrue();
-        
+
         var session = await createResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         session.Should().NotBeNull();
         session!.Status.Should().Be(GameStatus.Active);
@@ -27,40 +27,40 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         var initialState = await GetGameState(session.Id);
         var attacker = initialState.Player1.Pieces.First(p => p.Type == PieceType.Pawn);
         var target = initialState.Player2.Pieces.First(p => p.Type == PieceType.Pawn);
-        
-        
+
+
         var initialAttackerXP = attacker.XP;
         var initialAttackerPosition = attacker.Position;
         var targetPosition = target.Position;
 
-        
+
         var moveAction1 = new ExecuteActionDto
         {
             Type = "Move",
             PieceId = attacker.Id.ToString(),
             TargetPosition = new PositionDto { X = 0, Y = 3 }
         };
-        
+
         var moveResponse1 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", moveAction1);
         moveResponse1.IsSuccessStatusCode.Should().BeTrue("Первый ход пешки должен быть успешным");
-        
+
         var moveAction2 = new ExecuteActionDto
         {
             Type = "Move",
             PieceId = attacker.Id.ToString(),
             TargetPosition = new PositionDto { X = 0, Y = 4 }
         };
-        
+
         var moveResponse2 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", moveAction2);
         moveResponse2.IsSuccessStatusCode.Should().BeTrue("Второй ход пешки должен быть успешным");
-        
+
         var moveAction3 = new ExecuteActionDto
         {
             Type = "Move",
             PieceId = attacker.Id.ToString(),
             TargetPosition = new PositionDto { X = 0, Y = 5 }
         };
-        
+
         var moveResponse3 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", moveAction3);
         moveResponse3.IsSuccessStatusCode.Should().BeTrue("Третий ход пешки должен быть успешным");
 
@@ -71,14 +71,14 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
             TargetPosition = new PositionDto { X = 1, Y = 6 },
             Description = "Breakthrough"
         };
-        
+
         var breakthroughResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", breakthroughAction);
         breakthroughResponse.IsSuccessStatusCode.Should().BeTrue("Способность Прорыв должна быть успешной");
 
         var attackTargetPosition = new PositionDto { X = 1, Y = 6 };
         var attackCount = 0;
         var maxAttacks = 10; // Защита от бесконечного цикла
-        
+
         while (attackCount < maxAttacks)
         {
             var attackAction = new ExecuteActionDto
@@ -87,21 +87,21 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
                 PieceId = attacker.Id.ToString(),
                 TargetPosition = attackTargetPosition
             };
-            
+
             var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
             attackResponse.IsSuccessStatusCode.Should().BeTrue($"Атака {attackCount + 1} должна быть успешной");
-            
+
             var currentState = await GetGameState(session.Id);
             var targetPiece = currentState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
-            
+
             if (targetPiece == null || targetPiece.HP <= 0)
             {
                 break; // Цель убита
             }
-            
+
             attackCount++;
         }
-        
+
         attackCount.Should().BeLessThan(maxAttacks, "Цель должна быть убита за разумное количество атак");
 
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{session.Id}/turn/end", null);
@@ -109,7 +109,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
 
         var finalState = await GetGameState(session.Id);
         var finalAttacker = finalState.Player1.Pieces.First(p => p.Id == attacker.Id);
-        
+
         var attackedPawn = finalState.Player2.Pieces.FirstOrDefault(p => p.Position != null && p.Position.X == 1 && p.Position.Y == 6);
 
 
@@ -132,7 +132,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResponse.IsSuccessStatusCode.Should().BeTrue();
-        
+
         var session = await createResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         session.Should().NotBeNull();
 
@@ -149,11 +149,11 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
                 PieceId = attacker.Id.ToString(),
                 TargetPosition = new PositionDto { X = attacker.Position.X + 1, Y = attacker.Position.Y }
             };
-            
+
             var moveResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", moveAction);
             if (!moveResponse.IsSuccessStatusCode)
                 break;
-                
+
             state = await GetGameState(session.Id);
         }
 
@@ -163,7 +163,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
             PieceId = attacker.Id.ToString(),
             TargetPosition = new PositionDto { X = target.Position.X, Y = target.Position.Y }
         };
-        
+
         var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
 
         if (!attackResponse.IsSuccessStatusCode)
@@ -180,7 +180,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResponse.IsSuccessStatusCode.Should().BeTrue();
-        
+
         var session = await createResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         session.Should().NotBeNull();
 
@@ -194,7 +194,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
             PieceId = attacker.Id.ToString(),
             TargetPosition = new PositionDto { X = ally.Position.X, Y = ally.Position.Y }
         };
-        
+
         var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
 
         attackResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest, "Атака союзника должна провалиться");
@@ -206,7 +206,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
         var createDto = new CreateGameSessionDto { Player1Name = "P1", Player2Name = "P2" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/gamesession", createDto);
         createResponse.IsSuccessStatusCode.Should().BeTrue();
-        
+
         var session = await createResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         session.Should().NotBeNull();
 
@@ -220,7 +220,7 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
             PieceId = attacker.Id.ToString(),
             TargetPosition = new PositionDto { X = 7, Y = 7 } // Далёкая позиция
         };
-        
+
         var attackResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{session.Id}/turn/action", attackAction);
 
         attackResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest, "Атака далёкой цели должна провалиться");
@@ -244,13 +244,13 @@ public class AttackIntegrationTests : IntegrationTestBase, IClassFixture<TestWeb
 
     private PositionDto CalculateValidPawnPosition(PositionDto from, PositionDto to)
     {
-        
+
         var dx = to.X - from.X;
         var dy = to.Y - from.Y;
-        
+
         if (dx != 0) dx = dx > 0 ? 1 : -1;
         if (dy != 0) dy = dy > 0 ? 1 : -1;
-        
+
         return new PositionDto { X = to.X - dx, Y = to.Y - dy };
     }
 }

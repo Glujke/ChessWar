@@ -31,7 +31,7 @@ public class BoardServiceTests
             new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 },
             new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2)) { HP = 10 }
         };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(pieces);
@@ -51,7 +51,7 @@ public class BoardServiceTests
             new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 },
             new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2)) { HP = 10 }
         };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(pieces);
@@ -84,11 +84,11 @@ public class BoardServiceTests
         var team = Team.Elves;
         var position = new Position(1, 1);
         var expectedPiece = new Piece(type, team, position) { HP = 10 };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -113,7 +113,7 @@ public class BoardServiceTests
         var team = Team.Elves;
         var invalidPosition = new Position(-1, 1);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             _boardService.PlacePieceAsync(type, team, invalidPosition));
     }
 
@@ -124,12 +124,12 @@ public class BoardServiceTests
         var team = Team.Elves;
         var position = new Position(1, 1);
         var existingPiece = new Piece(PieceType.Knight, Team.Orcs, position);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _boardService.PlacePieceAsync(type, team, position));
     }
 
@@ -139,15 +139,15 @@ public class BoardServiceTests
         var pieceId = 1;
         var newPosition = new Position(3, 3);
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(newPosition, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.UpdateAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -164,12 +164,12 @@ public class BoardServiceTests
         var pieceId = 1;
         var invalidPosition = new Position(10, 10);
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             _boardService.MovePieceAsync(pieceId, invalidPosition));
     }
 
@@ -180,16 +180,16 @@ public class BoardServiceTests
         var occupiedPosition = new Position(2, 2);
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 };
         var pieceAtPosition = new Piece(PieceType.Knight, Team.Orcs, occupiedPosition) { HP = 10 };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(occupiedPosition, It.IsAny<CancellationToken>()))
             .ReturnsAsync(pieceAtPosition);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _boardService.MovePieceAsync(pieceId, occupiedPosition));
     }
 
@@ -198,12 +198,12 @@ public class BoardServiceTests
     {
         var pieceId = 999;
         var newPosition = new Position(3, 3);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _boardService.MovePieceAsync(pieceId, newPosition));
     }
 
@@ -212,7 +212,7 @@ public class BoardServiceTests
     {
         var position = new Position(1, 1);
         var expectedPiece = new Piece(PieceType.Pawn, Team.Elves, position) { HP = 10 };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPiece);
@@ -227,7 +227,7 @@ public class BoardServiceTests
     public async Task GetPieceAtPositionAsync_WithNoPiece_ShouldReturnNull()
     {
         var position = new Position(1, 1);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
@@ -241,7 +241,7 @@ public class BoardServiceTests
     public async Task IsPositionFreeAsync_WithFreePosition_ShouldReturnTrue()
     {
         var position = new Position(1, 1);
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
@@ -256,7 +256,7 @@ public class BoardServiceTests
     {
         var position = new Position(1, 1);
         var piece = new Piece(PieceType.Pawn, Team.Elves, position) { HP = 10 };
-        
+
         _pieceRepositoryMock
             .Setup(x => x.GetByPositionAsync(position, It.IsAny<CancellationToken>()))
             .ReturnsAsync(piece);

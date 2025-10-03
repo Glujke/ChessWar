@@ -11,7 +11,7 @@ public interface ITutorialHintService
     /// Получает подсказки для конкретного этапа
     /// </summary>
     Task<List<string>> GetHintsForStageAsync(TutorialStage stage, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Получает контекстные подсказки на основе состояния игры
     /// </summary>

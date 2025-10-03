@@ -22,20 +22,20 @@ public class BalanceConfigIntegrationTests : IDisposable
     public BalanceConfigIntegrationTests()
     {
         var services = new ServiceCollection();
-        
+
         services.AddDbContext<ChessWarDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-        
+
         services.AddScoped<IBalanceVersionRepository, ChessWar.Infrastructure.Repositories.BalanceVersionRepository>();
         services.AddScoped<IBalancePayloadRepository, ChessWar.Infrastructure.Repositories.BalancePayloadRepository>();
         services.AddSingleton<IBalanceConfigProvider, BalanceConfigProvider>();
         services.AddScoped<IBalanceConfigValidator, ChessWar.Api.Services.BalanceConfigValidator>();
         services.AddLogging();
-        
+
         _serviceProvider = services.BuildServiceProvider();
         _context = _serviceProvider.GetRequiredService<ChessWarDbContext>();
         _configProvider = _serviceProvider.GetRequiredService<IBalanceConfigProvider>();
-        
+
         _context.Database.EnsureCreated();
     }
 
@@ -91,7 +91,7 @@ public class BalanceConfigIntegrationTests : IDisposable
         };
 
         var version = await configService.CreateConfigVersionAsync("2.0.0", "Test config", CancellationToken.None);
-        
+
         var jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

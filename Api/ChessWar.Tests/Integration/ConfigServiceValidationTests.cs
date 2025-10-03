@@ -18,10 +18,10 @@ public class ConfigServiceValidationTests : IDisposable
     public ConfigServiceValidationTests()
     {
         var services = new ServiceCollection();
-        
+
         services.AddDbContext<ChessWarDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-        
+
         services.AddScoped<IBalanceVersionRepository, BalanceVersionRepository>();
         services.AddScoped<IBalancePayloadRepository, BalancePayloadRepository>();
         services.AddMemoryCache();
@@ -29,11 +29,11 @@ public class ConfigServiceValidationTests : IDisposable
         services.AddScoped<IBalanceConfigValidator, ChessWar.Api.Services.BalanceConfigValidator>();
         services.AddScoped<IConfigService, ConfigService>();
         services.AddLogging();
-        
+
         _serviceProvider = services.BuildServiceProvider();
         _context = _serviceProvider.GetRequiredService<ChessWarDbContext>();
         _configService = _serviceProvider.GetRequiredService<IConfigService>();
-        
+
         _context.Database.EnsureCreated();
     }
 
@@ -41,7 +41,7 @@ public class ConfigServiceValidationTests : IDisposable
     public async Task SavePayloadAsync_ValidJson_ShouldSucceed()
     {
         var version = await _configService.CreateConfigVersionAsync("1.0.0", "Test version");
-        
+
         var validJson = """
         {
           "globals": {
@@ -104,7 +104,7 @@ public class ConfigServiceValidationTests : IDisposable
         """;
 
         await _configService.SavePayloadAsync(version.Id, validJson);
-        
+
         var savedPayload = await _configService.GetPayloadAsync(version.Id);
         Assert.NotNull(savedPayload);
         Assert.Contains("Pawn", savedPayload);

@@ -53,7 +53,7 @@ public class LocalModeStrategy : BaseGameModeStrategy
         {
             throw new InvalidOperationException("Player must perform at least one action before ending turn");
         }
-        
+
         await _turnOrchestrator.EndTurnAsync(session);
         return _mapper.Map<GameSessionDto>(session);
     }

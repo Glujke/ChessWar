@@ -23,7 +23,7 @@ public class BalanceVersionRepository : IBalanceVersionRepository
             .Include(v => v.EvolutionRules)
             .Include(v => v.Globals!)
             .FirstOrDefaultAsync(v => v.Status == "Active", cancellationToken);
-            
+
         return dto != null ? MapToDomain(dto) : null;
     }
 
@@ -35,7 +35,7 @@ public class BalanceVersionRepository : IBalanceVersionRepository
             .Include(v => v.EvolutionRules)
             .Include(v => v.Globals!)
             .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
-            
+
         return dto != null ? MapToDomain(dto) : null;
     }
 
@@ -47,7 +47,7 @@ public class BalanceVersionRepository : IBalanceVersionRepository
             .Include(v => v.EvolutionRules)
             .Include(v => v.Globals!)
             .ToListAsync(cancellationToken);
-            
+
         return dtos.Select(MapToDomain).ToList();
     }
 
@@ -61,10 +61,10 @@ public class BalanceVersionRepository : IBalanceVersionRepository
     public async Task UpdateAsync(BalanceVersion version, CancellationToken cancellationToken = default)
     {
         var dto = MapToDto(version);
-        
+
         var existingEntity = _context.ChangeTracker.Entries<BalanceVersionDto>()
             .FirstOrDefault(e => e.Entity.Id == dto.Id);
-            
+
         if (existingEntity != null)
         {
             existingEntity.CurrentValues.SetValues(dto);
@@ -73,25 +73,25 @@ public class BalanceVersionRepository : IBalanceVersionRepository
         {
             _context.Entry(dto).State = EntityState.Modified;
         }
-        
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<(IReadOnlyList<BalanceVersion> Items, int TotalCount)> GetPagedAsync(
-        int page, 
-        int pageSize, 
-        string? status = null, 
+        int page,
+        int pageSize,
+        string? status = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.BalanceVersions.AsNoTracking();
-        
+
         if (!string.IsNullOrEmpty(status))
             query = query.Where(v => v.Status == status);
 
         var totalCount = await query.CountAsync(cancellationToken);
-        
+
         var allDtos = await query.ToListAsync(cancellationToken);
-        
+
         var dtos = allDtos
             .OrderByDescending(v => v.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -99,7 +99,7 @@ public class BalanceVersionRepository : IBalanceVersionRepository
             .ToList();
 
         var items = dtos.Select(MapToDomain).ToList();
-        
+
         return (items, totalCount);
     }
 

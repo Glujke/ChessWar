@@ -1,5 +1,6 @@
 using ChessWar.Application.DTOs;
-using ChessWar.Application.Interfaces.GameManagement; using ChessWar.Application.Interfaces.Configuration;
+using ChessWar.Application.Interfaces.GameManagement;
+using ChessWar.Application.Interfaces.Configuration;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.Interfaces.DataAccess;
@@ -42,9 +43,9 @@ public class GameSessionManagementService : IGameSessionManagementService
         }
 
         var player1 = _playerManagementService.CreatePlayerWithInitialPieces(dto.Player1Name, Team.Elves);
-        
+
         Participant player2;
-        if (string.Equals(mode, "AI", StringComparison.OrdinalIgnoreCase) || 
+        if (string.Equals(mode, "AI", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(mode, "Tutorial", StringComparison.OrdinalIgnoreCase))
         {
             player2 = _playerManagementService.CreateAIWithInitialPieces(Team.Orcs);
@@ -55,15 +56,15 @@ public class GameSessionManagementService : IGameSessionManagementService
         }
 
         var gameSession = new GameSession(player1, player2, mode);
-        
-        
+
+
         if (dto.TutorialSessionId.HasValue)
         {
             gameSession.SetTutorialSessionId(dto.TutorialSessionId.Value);
         }
-        
+
         await _sessionRepository.SaveAsync(gameSession, cancellationToken);
-        
+
         return gameSession;
     }
 

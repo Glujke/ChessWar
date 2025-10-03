@@ -21,7 +21,7 @@ public class GameHub : Hub, IGameHub
     public async Task JoinGame(string gameId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
-        _logger.LogInformation("Player {ConnectionId} joined game {GameId}", 
+        _logger.LogInformation("Player {ConnectionId} joined game {GameId}",
             Context.ConnectionId, gameId);
     }
 
@@ -31,7 +31,7 @@ public class GameHub : Hub, IGameHub
     public async Task LeaveGame(string gameId)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
-        _logger.LogInformation("Player {ConnectionId} left game {GameId}", 
+        _logger.LogInformation("Player {ConnectionId} left game {GameId}",
             Context.ConnectionId, gameId);
     }
 
@@ -41,15 +41,15 @@ public class GameHub : Hub, IGameHub
     public override async Task OnConnectedAsync()
     {
         _logger.LogInformation("Client connected: {ConnectionId}", Context.ConnectionId);
-        
+
         var sessionId = Context.GetHttpContext().Request.Query["sessionId"];
         if (!string.IsNullOrEmpty(sessionId))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, sessionId);
-            _logger.LogInformation("Client {ConnectionId} automatically joined group {SessionId}", 
+            _logger.LogInformation("Client {ConnectionId} automatically joined group {SessionId}",
                 Context.ConnectionId, sessionId);
         }
-        
+
         await base.OnConnectedAsync();
     }
 

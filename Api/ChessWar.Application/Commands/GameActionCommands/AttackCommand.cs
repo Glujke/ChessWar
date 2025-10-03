@@ -35,7 +35,7 @@ public class AttackCommand : ICommand
     public async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var result = await Task.FromResult(_turnService.ExecuteAttack(_gameSession, _turn, _attacker, _targetPosition));
-        
+
         return result;
     }
 }

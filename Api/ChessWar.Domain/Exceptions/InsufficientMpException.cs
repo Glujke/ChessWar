@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when a piece doesn't have enough MP to perform an action
+/// Исключение при недостатке MP для выполнения действия.
 /// </summary>
 public class InsufficientMpException : GameException
 {

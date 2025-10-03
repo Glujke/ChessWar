@@ -1,4 +1,4 @@
-using ChessWar.Application.Interfaces.Pieces; 
+using ChessWar.Application.Interfaces.Pieces;
 using ChessWar.Application.Interfaces.Board;
 using ChessWar.Application.Interfaces;
 using ChessWar.Application.Services.Common;

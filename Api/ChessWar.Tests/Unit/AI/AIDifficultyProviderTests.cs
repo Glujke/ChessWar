@@ -92,7 +92,7 @@ public class AIDifficultyProviderTests
 
         _provider.SetDifficultyLevel(player1, AIDifficultyLevel.Easy);
         _provider.SetDifficultyLevel(player2, AIDifficultyLevel.Hard);
-        
+
         var result1 = _provider.GetDifficultyLevel(player1);
         var result2 = _provider.GetDifficultyLevel(player2);
 
@@ -113,7 +113,7 @@ public class AIDifficultyProviderTests
     {
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new Player("Player 2", new List<Piece>());
-        
+
         _provider.SetDifficultyLevel(player1, AIDifficultyLevel.Easy);
         _provider.SetDifficultyLevel(player2, AIDifficultyLevel.Hard);
 

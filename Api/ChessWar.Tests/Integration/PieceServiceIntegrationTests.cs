@@ -75,7 +75,7 @@ public class PieceServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
 
         elvesPieces.Should().HaveCount(2);
         elvesPieces.Should().AllSatisfy(p => p.Team.Should().Be(Team.Elves));
-        
+
         orcsPieces.Should().HaveCount(1);
         orcsPieces.Should().AllSatisfy(p => p.Team.Should().Be(Team.Orcs));
     }
@@ -89,7 +89,7 @@ public class PieceServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         var result = await _pieceService.UpdatePiecePositionAsync(piece.Id, newPosition);
 
         result.Position.Should().Be(newPosition);
-        
+
         var retrievedPiece = await _pieceService.GetPieceByIdAsync(piece.Id);
         retrievedPiece!.Position.Should().Be(newPosition);
     }
@@ -104,7 +104,7 @@ public class PieceServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         result.HP.Should().Be(15);
         result.ATK.Should().Be(5);
         result.XP.Should().Be(10);
-        
+
         var retrievedPiece = await _pieceService.GetPieceByIdAsync(piece.Id);
         retrievedPiece!.HP.Should().Be(15);
         retrievedPiece.ATK.Should().Be(5);
@@ -149,7 +149,7 @@ public class PieceServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         var position = new Position(1, 1);
         await _pieceService.CreatePieceAsync(PieceType.Pawn, Team.Elves, position);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _pieceService.CreatePieceAsync(PieceType.Knight, Team.Orcs, position));
     }
 
@@ -159,7 +159,7 @@ public class PieceServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         var piece1 = await _pieceService.CreatePieceAsync(PieceType.Pawn, Team.Elves, new Position(1, 1));
         var piece2 = await _pieceService.CreatePieceAsync(PieceType.Knight, Team.Orcs, new Position(2, 2));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _pieceService.UpdatePiecePositionAsync(piece1.Id, piece2.Position));
     }
 

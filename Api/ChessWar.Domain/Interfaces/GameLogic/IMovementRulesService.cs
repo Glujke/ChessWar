@@ -16,7 +16,7 @@ public interface IMovementRulesService
     /// <param name="boardPieces">Все фигуры на доске для проверки блокировок</param>
     /// <returns>True, если движение возможно</returns>
     bool CanMoveTo(Piece piece, Position targetPosition, IReadOnlyList<Piece> boardPieces);
-    
+
     /// <summary>
     /// Получает все возможные ходы для фигуры
     /// </summary>
@@ -29,7 +29,7 @@ public interface IMovementRulesService
     /// Получает доступные ходы для фигуры (алиас для совместимости)
     /// </summary>
     List<Position> GetAvailableMoves(Piece piece, List<Piece> allPieces);
-    
+
     /// <summary>
     /// Проверяет, находится ли позиция в пределах доски 8x8
     /// </summary>

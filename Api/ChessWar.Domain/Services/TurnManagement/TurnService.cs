@@ -50,8 +50,8 @@ public class TurnService : ITurnService
 
         var turnNumber = gameSession.CurrentTurn?.Number + 1 ?? 1;
         var turn = new Turn(turnNumber, activeParticipant);
-        
-        _logger.LogInformation("Started turn {TurnNumber} for participant {ParticipantId}", 
+
+        _logger.LogInformation("Started turn {TurnNumber} for participant {ParticipantId}",
             turnNumber, activeParticipant.Id);
 
         return turn;
@@ -78,14 +78,14 @@ public class TurnService : ITurnService
             }
 
             _pieceDomainService.MoveTo(piece, targetPosition);
-            
+
             var movementCosts = _configProvider.GetActive().PlayerMana.MovementCosts;
-            var moveCost = movementCosts.ContainsKey(piece.Type.ToString()) 
-                ? movementCosts[piece.Type.ToString()] 
-                : 1; // Дефолтная стоимость
+            var moveCost = movementCosts.ContainsKey(piece.Type.ToString())
+                ? movementCosts[piece.Type.ToString()]
+                : 1;
             turn.SpendMP(moveCost);
             piece.Owner.Spend(moveCost);
-            
+
             turn.AddAction(new TurnAction("Move", piece.Id.ToString(), targetPosition));
 
             _logger.LogInformation("Piece {PieceId} moved to ({X},{Y}). Remaining MP: {MP}", piece.Id, targetPosition.X, targetPosition.Y, turn.RemainingMP);
@@ -106,8 +106,7 @@ public class TurnService : ITurnService
 
         try
         {
-            _logger.LogInformation("[DEBUG] ExecuteAttack: attacker={AttackerId}, target=({X},{Y})", attacker.Id, targetPosition.X, targetPosition.Y);
-            
+
             if (attacker.Owner != turn.ActiveParticipant)
             {
                 _logger.LogWarning("Attacker piece {AttackerId} does not belong to active participant {ParticipantId}", attacker.Id, turn.ActiveParticipant.Id);
@@ -115,7 +114,6 @@ public class TurnService : ITurnService
             }
 
             var targetPiece = session.GetBoard().GetPieceAt(targetPosition);
-            _logger.LogInformation("[DEBUG] Target piece found: {TargetPieceId}", targetPiece?.Id);
             if (targetPiece == null)
             {
                 _logger.LogWarning("No piece found at target position ({X},{Y})", targetPosition.X, targetPosition.Y);
@@ -123,7 +121,6 @@ public class TurnService : ITurnService
             }
 
             var canAttack = _attackRulesService.CanAttack(attacker, targetPosition, session.GetBoard().Pieces.ToList());
-            _logger.LogInformation("[DEBUG] CanAttack result: {CanAttack}", canAttack);
             if (!canAttack)
             {
                 _logger.LogWarning("Attacker {AttackerId} cannot attack target at ({X},{Y}) based on rules", attacker.Id, targetPosition.X, targetPosition.Y);
@@ -134,21 +131,20 @@ public class TurnService : ITurnService
             var attackCost = _configProvider.GetActive().PlayerMana.AttackCost;
             turn.SpendMP(attackCost);
             attacker.Owner.Spend(attackCost);
-            
+
             if (_pieceDomainService.IsDead(targetPiece))
             {
-                // Начисляем опыт за убийство
                 var config = _configProvider.GetActive();
                 var experienceReward = config.KillRewards.GetRewardForPieceType(targetPiece.Type);
                 attacker.GainExperience(experienceReward);
-                
+
                 session.GetBoard().RemovePiece(targetPiece);
                 session.GetBoard().MovePiece(attacker, targetPosition);
-                
-                _logger.LogInformation("Target {TargetPieceId} killed, attacker {AttackerId} moved to position ({X},{Y}), gained {XP} XP", 
+
+                _logger.LogInformation("Target {TargetPieceId} killed, attacker {AttackerId} moved to position ({X},{Y}), gained {XP} XP",
                     targetPiece.Id, attacker.Id, targetPosition.X, targetPosition.Y, experienceReward);
             }
-            
+
             turn.AddAction(new TurnAction("Attack", attacker.Id.ToString(), targetPosition));
 
             _logger.LogInformation("Attacker {AttackerId} attacked target {TargetPieceId}. Turn MP: {TurnMP}, Target HP: {TargetHP}",
@@ -228,7 +224,7 @@ public class TurnService : ITurnService
             }
 
             _evolutionService.EvolvePiece(piece, piece.Type);
-            
+
             turn.AddAction(new TurnAction("Evolve", piece.Id.ToString(), piece.Position));
 
             _logger.LogInformation("Piece {PieceId} evolved successfully", piece.Id);
@@ -244,12 +240,24 @@ public class TurnService : ITurnService
     public void EndTurn(Turn turn)
     {
         if (turn == null) throw new ArgumentNullException(nameof(turn));
-        
+
         _logger.LogInformation("Ending turn {TurnNumber}", turn.Number);
-        
+
         foreach (var piece in turn.ActiveParticipant.Pieces)
         {
-            _pieceDomainService.TickCooldowns(piece);
+            if (piece.AbilityCooldowns.ContainsKey("__FortressBuff"))
+            {
+                if (piece.AbilityCooldowns["__FortressBuff"] > 0)
+                {
+                    piece.AbilityCooldowns["__FortressBuff"]--;
+                }
+
+                if (piece.AbilityCooldowns["__FortressBuff"] <= 0)
+                {
+                    piece.HP = _pieceDomainService.GetMaxHP(piece.Type);
+                    piece.AbilityCooldowns.Remove("__FortressBuff");
+                }
+            }
         }
     }
 
@@ -258,6 +266,6 @@ public class TurnService : ITurnService
     {
         return attacker.Attack;
     }
-    
+
 
 }

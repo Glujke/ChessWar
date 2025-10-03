@@ -7,6 +7,9 @@ namespace ChessWar.Domain.Services.AI;
 /// <summary>
 /// Селектор действий для ИИ
 /// </summary>
+/// <summary>
+/// Выбирает наиболее ценные действия ИИ на основе вероятностей, вознаграждений и оценки состояния.
+/// </summary>
 public class ActionSelector : IActionSelector
 {
     private readonly IProbabilityMatrix _probabilityMatrix;
@@ -23,6 +26,9 @@ public class ActionSelector : IActionSelector
         _difficultyProvider = difficultyProvider ?? throw new ArgumentNullException(nameof(difficultyProvider));
     }
 
+    /// <summary>
+    /// Возвращает список отобранных действий ИИ, отсортированных по ценности в пределах лимита сложности.
+    /// </summary>
     public List<GameAction> SelectActions(GameSession session, Turn turn, Participant active, List<GameAction> availableActions)
     {
         if (!availableActions.Any())
@@ -31,8 +37,7 @@ public class ActionSelector : IActionSelector
         }
 
         var difficulty = _difficultyProvider.GetDifficultyLevel(active);
-        
-        // Оцениваем и сортируем действия по их ценности
+
         var scoredActions = availableActions
             .Select(action => new
             {
@@ -51,19 +56,22 @@ public class ActionSelector : IActionSelector
             .ToList();
     }
 
+    /// <summary>
+    /// Рассчитывает интегральную оценку действия для приоритезации.
+    /// </summary>
     private double CalculateActionScore(GameSession session, Turn turn, Participant active, GameAction action)
     {
-        // Базовая оценка из матрицы вероятностей
         var probability = _probabilityMatrix.GetActionProbability(session, action);
         var reward = _probabilityMatrix.GetReward(session, action);
-        
-        // Оценка состояния игры
+
         var stateEvaluation = _evaluator.EvaluateGameState(session, active);
-        
-        // Комбинированная оценка
+
         return probability * reward + stateEvaluation * 0.1;
     }
 
+    /// <summary>
+    /// Возвращает максимально допустимое число действий для уровня сложности.
+    /// </summary>
     private int GetMaxActionsForDifficulty(AIDifficultyLevel difficulty)
     {
         return difficulty switch

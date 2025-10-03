@@ -29,7 +29,7 @@ public class BattlePresetService : IBattlePresetService
 
         playerPieces.Clear();
         enemyPieces.Clear();
-        
+
         session.Player1.ClearPieces();
         session.Player2.ClearPieces();
 

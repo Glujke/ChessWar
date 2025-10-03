@@ -130,11 +130,11 @@ public class EvolutionCommandBugTests
         var player1 = new Player("TestPlayer1", Team.Orcs);
         var player2 = new Player("TestPlayer2", Team.Elves);
         var gameSession = new GameSession(player1, player2, "TestGame");
-        
+
         var piece = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
         piece.Owner = player1;
         player1.Pieces.Add(piece);
-        
+
         return gameSession;
     }
 }

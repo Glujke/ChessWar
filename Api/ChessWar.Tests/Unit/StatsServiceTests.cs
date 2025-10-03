@@ -17,7 +17,7 @@ public class StatsServiceTests
     {
         var playerId = "player123";
 
-        await Assert.ThrowsAsync<NotImplementedException>(() => 
+        await Assert.ThrowsAsync<NotImplementedException>(() =>
             _service.GetPlayerStatsAsync(playerId));
     }
 
@@ -33,7 +33,7 @@ public class StatsServiceTests
             CompletedAt = DateTime.UtcNow
         };
 
-        await Assert.ThrowsAsync<NotImplementedException>(() => 
+        await Assert.ThrowsAsync<NotImplementedException>(() =>
             _service.UpdatePlayerStatsAsync(playerId, result));
     }
 }

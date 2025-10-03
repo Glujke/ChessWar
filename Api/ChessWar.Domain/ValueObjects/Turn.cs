@@ -34,10 +34,10 @@ public class Turn
     {
         if (piece == null)
             throw new ArgumentNullException(nameof(piece));
-        
+
         if (piece.Owner?.Id != ActiveParticipant.Id)
             throw new InvalidOperationException("Cannot select piece that doesn't belong to active participant");
-        
+
         SelectedPiece = piece;
     }
 
@@ -91,7 +91,7 @@ public class Turn
     {
         if (!CanAfford(manaCost))
             return false;
-        
+
         RemainingMP -= manaCost;
         return true;
     }

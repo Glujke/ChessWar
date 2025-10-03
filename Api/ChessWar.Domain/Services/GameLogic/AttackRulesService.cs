@@ -13,15 +13,15 @@ public class AttackRulesService : IAttackRulesService
     private const int BoardSize = 8;
     private const int MinPosition = 0;
     private const int MaxPosition = BoardSize - 1;
-    
+
     public bool CanAttack(Piece attacker, Position targetPosition, IEnumerable<Piece> boardPieces)
     {
         if (!HasValidTarget(attacker, targetPosition, boardPieces))
             return false;
-        
+
         if (!IsWithinAttackRange(attacker, targetPosition, boardPieces))
             return false;
-        
+
         return true;
     }
 
@@ -31,22 +31,22 @@ public class AttackRulesService : IAttackRulesService
     public bool HasValidTarget(Piece attacker, Position targetPosition, IEnumerable<Piece> boardPieces)
     {
         var targetPiece = boardPieces.FirstOrDefault(p => p.Position.Equals(targetPosition));
-        
+
         if (targetPiece == null)
         {
             return false;
         }
-        
+
         if (!targetPiece.IsAlive)
         {
-            return false; 
+            return false;
         }
-        
+
         if (!IsEnemy(attacker, targetPiece))
         {
             return false;
         }
-        
+
         return true;
     }
 
@@ -96,7 +96,7 @@ public class AttackRulesService : IAttackRulesService
     public IEnumerable<Position> GetAttackablePositions(Piece attacker, IEnumerable<Piece> boardPieces)
     {
         var maxRange = GetMaxAttackRange(attacker.Type);
-        var boardPiecesList = boardPieces.ToList(); 
+        var boardPiecesList = boardPieces.ToList();
 
         for (int x = MinPosition; x < BoardSize; x++)
         {
@@ -105,7 +105,7 @@ public class AttackRulesService : IAttackRulesService
                 var position = new Position(x, y);
                 if (CanAttack(attacker, position, boardPiecesList))
                 {
-                    yield return position; 
+                    yield return position;
                 }
             }
         }
@@ -155,7 +155,7 @@ public class AttackRulesService : IAttackRulesService
 
     private bool IsValidPosition(Position position)
     {
-        return position.X >= MinPosition && position.X < BoardSize && 
+        return position.X >= MinPosition && position.X < BoardSize &&
                position.Y >= MinPosition && position.Y < BoardSize;
     }
 

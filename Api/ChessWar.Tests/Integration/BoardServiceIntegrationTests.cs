@@ -58,18 +58,18 @@ public class BoardServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
 
         var result = await _boardService.GetBoardAsync();
         result.Pieces.Should().HaveCount(18); // 8 pawns + 1 king for each team
-        
+
         var elvesPieces = result.Pieces.Where(p => p.Team == Team.Elves).ToList();
         var orcsPieces = result.Pieces.Where(p => p.Team == Team.Orcs).ToList();
-        
+
         elvesPieces.Should().HaveCount(9); // 8 pawns + 1 king
         orcsPieces.Should().HaveCount(9); // 8 pawns + 1 king
-        
+
         var elvesPawns = elvesPieces.Where(p => p.Type == PieceType.Pawn).ToList();
         var elvesKings = elvesPieces.Where(p => p.Type == PieceType.King).ToList();
         var orcsPawns = orcsPieces.Where(p => p.Type == PieceType.Pawn).ToList();
         var orcsKings = orcsPieces.Where(p => p.Type == PieceType.King).ToList();
-        
+
         elvesPawns.Should().HaveCount(8);
         elvesKings.Should().HaveCount(1);
         orcsPawns.Should().HaveCount(8);
@@ -98,7 +98,7 @@ public class BoardServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         var position = new Position(1, 1);
         await _boardService.PlacePieceAsync(PieceType.Pawn, Team.Elves, position);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _boardService.PlacePieceAsync(PieceType.Knight, Team.Orcs, position));
     }
 
@@ -111,10 +111,10 @@ public class BoardServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         var result = await _boardService.MovePieceAsync(piece.Id, newPosition);
 
         result.Position.Should().Be(newPosition);
-        
+
         var pieceAtOldPosition = await _boardService.GetPieceAtPositionAsync(new Position(1, 1));
         pieceAtOldPosition.Should().BeNull();
-        
+
         var pieceAtNewPosition = await _boardService.GetPieceAtPositionAsync(newPosition);
         pieceAtNewPosition.Should().NotBeNull();
         pieceAtNewPosition!.Id.Should().Be(piece.Id);
@@ -126,7 +126,7 @@ public class BoardServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         var piece1 = await _boardService.PlacePieceAsync(PieceType.Pawn, Team.Elves, new Position(1, 1));
         var piece2 = await _boardService.PlacePieceAsync(PieceType.Knight, Team.Orcs, new Position(2, 2));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _boardService.MovePieceAsync(piece1.Id, piece2.Position));
     }
 

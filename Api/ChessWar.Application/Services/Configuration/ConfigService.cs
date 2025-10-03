@@ -1,4 +1,5 @@
-using ChessWar.Application.Interfaces.Configuration; using ChessWar.Application.Interfaces.Pieces;
+using ChessWar.Application.Interfaces.Configuration;
+using ChessWar.Application.Interfaces.Pieces;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Interfaces.DataAccess;
 
@@ -25,9 +26,9 @@ public class ConfigService : IConfigService
     }
 
     public async Task<(IReadOnlyList<BalanceVersion> Items, int TotalCount)> GetConfigVersionsAsync(
-        int page, 
-        int pageSize, 
-        string? status = null, 
+        int page,
+        int pageSize,
+        string? status = null,
         CancellationToken cancellationToken = default)
     {
         return await _balanceVersionRepository.GetPagedAsync(page, pageSize, status, cancellationToken);
@@ -58,11 +59,11 @@ public class ConfigService : IConfigService
         var balanceVersion = await _balanceVersionRepository.GetByIdAsync(id, cancellationToken);
         if (balanceVersion == null)
             throw new InvalidOperationException("Config version not found");
-        
+
         if (balanceVersion.Status != "Draft")
             throw new InvalidOperationException("Only Draft versions can be updated");
 
-        if (balanceVersion.Version != version && 
+        if (balanceVersion.Version != version &&
             await _balanceVersionRepository.ExistsByVersionAsync(version, cancellationToken))
         {
             throw new InvalidOperationException($"Version '{version}' already exists.");
@@ -80,7 +81,7 @@ public class ConfigService : IConfigService
         var balanceVersion = await _balanceVersionRepository.GetByIdAsync(id, cancellationToken);
         if (balanceVersion == null)
             throw new InvalidOperationException("Config version not found");
-        
+
         if (balanceVersion.Status != "Draft")
             throw new InvalidOperationException("Only Draft versions can be published");
 

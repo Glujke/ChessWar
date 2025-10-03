@@ -23,10 +23,10 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddGameModeServices(this IServiceCollection services)
     {
         services.AddScoped<IGameHubClient, ChessWar.Api.Services.SignalRGameHubClient>();
-        
+
         services.AddScoped<ITutorialService, ChessWar.Application.Services.Tutorial.TutorialService>();
         services.AddScoped<ITutorialHintService, ChessWar.Application.Services.Tutorial.TutorialHintService>();
-        
+
         return services;
     }
 }

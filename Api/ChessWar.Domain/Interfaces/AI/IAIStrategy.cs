@@ -12,22 +12,22 @@ public interface IAIStrategy
     /// Приоритет стратегии (меньше = выше приоритет)
     /// </summary>
     int Priority { get; }
-    
+
     /// <summary>
     /// Название стратегии
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     /// Может ли стратегия выполнить действие в текущем состоянии
     /// </summary>
     bool CanExecute(GameSession session, Turn turn, Participant active);
-    
+
     /// <summary>
     /// Выполнить действие согласно стратегии
     /// </summary>
     bool Execute(GameSession session, Turn turn, Participant active);
-    
+
     /// <summary>
     /// Рассчитать вероятность успеха действия
     /// </summary>

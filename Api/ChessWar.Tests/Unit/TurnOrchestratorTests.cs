@@ -5,6 +5,7 @@ using ChessWar.Domain.Interfaces.Configuration;
 using ChessWar.Application.Services.Board;
 using ChessWar.Application.Interfaces.AI;
 using ChessWar.Domain.Interfaces.GameLogic;
+using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Entities.Config;
 using ChessWar.Domain.Enums;
@@ -27,6 +28,7 @@ public class TurnOrchestratorTests
     private readonly Mock<IGameSessionRepository> _sessionRepositoryMock;
     private readonly Mock<IBalanceConfigProvider> _configProviderMock;
     private readonly Mock<ILogger<TurnOrchestrator>> _loggerMock;
+    private readonly Mock<ITurnProcessingQueue> _turnQueueMock;
     private readonly TurnOrchestrator _turnOrchestrator;
 
     private void AddActionToCurrentTurn(GameSession gameSession)
@@ -76,173 +78,116 @@ public class TurnOrchestratorTests
                 }
             });
 
+        var turnProcessorMock = new Mock<ITurnProcessor>();
+        var notificationDispatcherMock = new Mock<INotificationDispatcher>();
+        var gameStateManagerMock = new Mock<IGameStateManager>();
+        var aiSchedulerMock = new Mock<IAITurnScheduler>();
+        var lockingServiceMock = new Mock<IOptimisticLockingService>();
+        lockingServiceMock
+            .Setup(x => x.ExecuteWithLockAsync(It.IsAny<Guid>(), It.IsAny<Func<Task<bool>>>(), It.IsAny<CancellationToken>()))
+            .Returns<Guid, Func<Task<bool>>, CancellationToken>(async (id, op, ct) => await op());
+        lockingServiceMock
+            .Setup(x => x.ExecuteWithLockAsync<object?>(It.IsAny<Guid>(), It.IsAny<Func<Task<object?>>>(), It.IsAny<CancellationToken>()))
+            .Returns<Guid, Func<Task<object?>>, CancellationToken>(async (id, op, ct) => await op());
+        _turnQueueMock = new Mock<ITurnProcessingQueue>();
+
+        aiSchedulerMock.Setup(x => x.ShouldScheduleAI(It.IsAny<GameSession>())).Returns(true);
+        _turnQueueMock.Setup(x => x.EnqueueTurnAsync(It.IsAny<ChessWar.Application.Services.Board.TurnRequest>()))
+            .ReturnsAsync(true);
+
+        var turnServiceMock = new Mock<ITurnService>();
+        turnServiceMock.Setup(x => x.GetAvailableMoves(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>()))
+            .Returns(new List<Position>());
+        turnServiceMock.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
+            .Returns(new List<Position>());
+
         _turnOrchestrator = new TurnOrchestrator(
-            _turnCompletionServiceMock.Object,
-            _aiServiceMock.Object,
-            _gameStateServiceMock.Object,
-            _notificationServiceMock.Object,
-            _sessionRepositoryMock.Object,
-            _configProviderMock.Object,
+            turnProcessorMock.Object,
+            notificationDispatcherMock.Object,
+            gameStateManagerMock.Object,
+            aiSchedulerMock.Object,
+            lockingServiceMock.Object,
+            _turnQueueMock.Object,
+            turnServiceMock.Object,
             _loggerMock.Object);
     }
 
     [Fact]
-    public async Task EndTurnAsync_ShouldSwitchTurnBackToPlayer_AfterAiTurn()
+    public async Task EndTurnAsync_ShouldEnqueueProcessing_WhenAiShouldBeScheduled()
     {
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
-        _turnCompletionServiceMock
-            .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .Callback<GameSession, CancellationToken>((session, ct) =>
-            {
-                // После завершения хода игрока активный игрок становится Player2 (ИИ)
-                var aiTurn = new Turn(2, aiPlayer);
-                session.SetCurrentTurn(aiTurn);
-            });
-
-        _aiServiceMock
-            .Setup(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        _gameStateServiceMock
-            .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
-            .Returns((GameResult?)null);
-
         AddActionToCurrentTurn(gameSession);
+
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // После завершения хода игрока активный игрок должен стать AI
-        var finalActivePlayer = gameSession.GetCurrentTurn().ActiveParticipant;
-        finalActivePlayer.Should().Be(aiPlayer, "ход должен переключиться на ИИ после завершения хода игрока");
-        
-        // ИИ должен автоматически вызываться в EndTurnAsync
-        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Once);
+        // Проверяем постановку в очередь вместо прямого вызова AI
+        _turnQueueMock.Verify(x => x.EnqueueTurnAsync(It.IsAny<ChessWar.Application.Services.Board.TurnRequest>()), Times.Once);
     }
 
     [Fact]
-    public async Task EndTurnAsync_ShouldNotExecuteAiTurn_WhenNotAiMode()
+    public async Task EndTurnAsync_ShouldEnqueueProcessing_ForAllModes()
     {
         var player1 = new Player("Player1", new List<Piece>());
         var player2 = new Player("Player2", new List<Piece>());
         var gameSession = new GameSession(player1, player2, "LocalCoop");
         gameSession.StartGame();
 
-        _turnCompletionServiceMock
-            .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _gameStateServiceMock
-            .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
-            .Returns((GameResult?)null);
-
         AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()), Times.Never);
-        _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(It.IsAny<Guid>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
+        _turnQueueMock.Verify(x => x.EnqueueTurnAsync(It.IsAny<ChessWar.Application.Services.Board.TurnRequest>()), Times.Once);
     }
 
     [Fact]
-    public async Task EndTurnAsync_ShouldNotExecuteAiTurn_WhenPlayer1Turn()
+    public async Task EndTurnAsync_ShouldEnqueueProcessing_OnlyOnce_ForPlayerPhase()
     {
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new Player("AI", new List<Piece>());
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
-        _turnCompletionServiceMock
-            .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        _gameStateServiceMock
-            .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
-            .Returns((GameResult?)null);
-
         AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()), Times.Never);
+        _turnQueueMock.Verify(x => x.EnqueueTurnAsync(It.IsAny<ChessWar.Application.Services.Board.TurnRequest>()), Times.Once);
     }
 
     [Fact]
-    public async Task EndTurnAsync_ShouldSendNotificationWithAiMoveDetails()
+    public async Task EndTurnAsync_ShouldNotSendAiNotifications_SinceProcessingIsQueued()
     {
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
-        _turnCompletionServiceMock
-            .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .Callback<GameSession, CancellationToken>((session, ct) =>
-            {
-                // Сначала переключаем ход на ИИ
-                var aiTurn = new Turn(2, aiPlayer);
-                session.SetCurrentTurn(aiTurn);
-            });
-
-        _aiServiceMock
-            .Setup(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        _gameStateServiceMock
-            .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
-            .Returns((GameResult?)null);
-
         AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // ИИ должен автоматически вызываться в EndTurnAsync
-        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Once);
         _notificationServiceMock.Verify(x => x.NotifyAiMoveAsync(
-            gameSession.Id,
+            It.IsAny<Guid>(),
             It.IsAny<object>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task EndTurnAsync_ShouldRestorePlayerMana_AfterAiTurn()
+    public async Task EndTurnAsync_ShouldNotChangeTurnSynchronously_WhenQueued()
     {
         var player1 = new Player("Player1", new List<Piece>());
         var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
-        
-        var config = _configProviderMock.Object.GetActive();
-        player1.SetMana(config.PlayerMana.InitialMana, config.PlayerMana.MaxMana);
-        aiPlayer.SetMana(config.PlayerMana.InitialMana, config.PlayerMana.MaxMana);
-        
         var gameSession = new GameSession(player1, aiPlayer, "AI");
         gameSession.StartGame();
 
-        var initialPlayerMana = player1.MP;
-
-        _turnCompletionServiceMock
-            .Setup(x => x.EndTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .Callback<GameSession, CancellationToken>((session, ct) =>
-            {
-                // Сначала переключаем ход на ИИ
-                var aiTurn = new Turn(2, aiPlayer);
-                session.SetCurrentTurn(aiTurn);
-            });
-
-        _aiServiceMock
-            .Setup(x => x.MakeAiTurnAsync(It.IsAny<GameSession>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        _gameStateServiceMock
-            .Setup(x => x.CheckVictory(It.IsAny<GameSession>()))
-            .Returns((GameResult?)null);
+        var activeBefore = gameSession.GetCurrentTurn().ActiveParticipant;
 
         AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // После завершения хода игрока активный игрок должен стать AI
-        var finalActivePlayer = gameSession.GetCurrentTurn().ActiveParticipant;
-        finalActivePlayer.Should().Be(aiPlayer, "ход должен переключиться на ИИ после завершения хода игрока");
-        
-        // ИИ должен автоматически вызываться в EndTurnAsync
-        _aiServiceMock.Verify(x => x.MakeAiTurnAsync(gameSession, It.IsAny<CancellationToken>()), Times.Once);
+        // На юнит-уровне фаза не должна меняться синхронно — только постановка в очередь
+        var activeAfter = gameSession.GetCurrentTurn().ActiveParticipant;
+        activeAfter.Should().Be(activeBefore);
     }
 }

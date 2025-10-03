@@ -16,9 +16,9 @@ namespace ChessWar.Tests.Unit.AI
         public void EvaluateKingThreat_WithNullPlayer_ShouldNotThrowException()
         {
             var session = CreateGameSession();
-            
+
             var result = _evaluator.EvaluateKingThreat(session, null);
-            
+
             Assert.True(result >= -1000 && result <= 1000);
         }
 
@@ -26,9 +26,9 @@ namespace ChessWar.Tests.Unit.AI
         public void EvaluateMaterialAdvantage_WithNullPlayer_ShouldNotThrowException()
         {
             var session = CreateGameSession();
-            
+
             var result = _evaluator.EvaluateMaterialAdvantage(session, null);
-            
+
             Assert.True(result >= -1000 && result <= 1000);
         }
 
@@ -36,9 +36,9 @@ namespace ChessWar.Tests.Unit.AI
         public void EvaluateGameState_WithNullPlayer_ShouldNotThrowException()
         {
             var session = CreateGameSession();
-            
+
             var result = _evaluator.EvaluateGameState(session, null);
-            
+
             Assert.True(result >= -1000 && result <= 1000);
         }
 

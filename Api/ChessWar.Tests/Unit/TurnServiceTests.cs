@@ -39,7 +39,7 @@ public class TurnServiceTests
         _configProvider = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
 
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        
+
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(x => x.GetService(typeof(IEnumerable<IDomainEventHandler<PieceKilledEvent>>)))
             .Returns(new List<IDomainEventHandler<PieceKilledEvent>>
@@ -48,9 +48,9 @@ public class TurnServiceTests
                 new BoardCleanupHandler(),
                 new PositionSwapHandler()
             });
-        
+
         var eventDispatcher = new DomainEventDispatcher(serviceProviderMock.Object);
-        
+
         _turnService = new TurnService(
             _movementRulesServiceMock.Object,
             _attackRulesServiceMock.Object,
@@ -118,11 +118,11 @@ public class TurnServiceTests
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
-        
+
         _gameSession.GetBoard().PlacePiece(piece);
-        
+
         turn.SelectPiece(piece);
-        
+
         _movementRulesServiceMock
             .Setup(x => x.CanMoveTo(piece, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
@@ -141,9 +141,9 @@ public class TurnServiceTests
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
-        
+
         turn.SelectPiece(piece);
-        
+
         _movementRulesServiceMock
             .Setup(x => x.CanMoveTo(piece, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(false);
@@ -163,15 +163,15 @@ public class TurnServiceTests
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
-        
+
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
         target.HP = 10; // Устанавливаем HP для живой фигуры
-        
+
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);
-        
+
         turn.SelectPiece(attacker);
-        
+
         _attackRulesServiceMock
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
@@ -190,9 +190,9 @@ public class TurnServiceTests
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
-        
+
         turn.SelectPiece(attacker);
-        
+
         _attackRulesServiceMock
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(false);
@@ -210,7 +210,7 @@ public class TurnServiceTests
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         player.Pieces.Add(piece);
-        
+
         turn.AddAction(new TurnAction("Move", piece.Id.ToString(), new Position(1, 2)));
 
         _turnService.EndTurn(turn);
@@ -225,7 +225,7 @@ public class TurnServiceTests
         player.SetMana(0, 50); // У игрока нет маны
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
-        
+
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
         _turnService.EndTurn(turn);
@@ -241,7 +241,7 @@ public class TurnServiceTests
         player.SetMana(48, 50); // У игрока почти полная мана
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
-        
+
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
         _turnService.EndTurn(turn);
@@ -251,22 +251,22 @@ public class TurnServiceTests
     }
 
     [Fact]
-    public void EndTurn_ShouldTickDownAbilityCooldowns()
+    public void EndTurn_ShouldNotTickAbilityCooldowns_AfterPolicyChange()
     {
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(pawn, "TestAbility", 2));
-        
+
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
         _turnService.EndTurn(turn);
 
-        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(pawn), Times.Once);
+        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(pawn), Times.Never);
     }
 
     [Fact]
-    public void EndTurn_ShouldApplyRegenAndCooldownTick_ToAllActivePlayerPieces()
+    public void EndTurn_ShouldNotChangeCooldowns_ForActivePlayerPieces()
     {
         var player = CreateTestPlayer("TestPlayer");
         player.SetMana(0, 50); // У игрока нет маны
@@ -275,29 +275,29 @@ public class TurnServiceTests
         var p2 = CreateTestPiece("p2", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(p1, "A", 1));
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(p2, "B", 2));
-        
+
         turn.AddAction(new TurnAction("Move", p1.Id.ToString(), new Position(0, 2)));
 
         _turnService.EndTurn(turn);
 
-        player.MP.Should().Be(0); // Игрок не получил ману в EndTurn
-        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(p1), Times.Once);
-        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(p2), Times.Once);
+        player.MP.Should().Be(0);
+        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(p1), Times.Never);
+        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(p2), Times.Never);
     }
 
     [Fact]
-    public void EndTurn_CooldownsShouldNotGoBelowZero()
+    public void EndTurn_ShouldNotAffectCooldowns_WhenZero()
     {
         var player = CreateTestPlayer("TestPlayer");
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         _pieceDomainServiceMock.Setup(x => x.SetAbilityCooldown(pawn, "A", 0));
-        
+
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
         _turnService.EndTurn(turn);
 
-        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(pawn), Times.Once);
+        _pieceDomainServiceMock.Verify(x => x.TickCooldowns(pawn), Times.Never);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public class TurnServiceTests
         player.SetMana(0, 50); // У игрока нет маны
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
-        
+
         turn.AddAction(new TurnAction("Move", pawn.Id.ToString(), new Position(0, 2)));
 
         _turnService.EndTurn(turn);
@@ -354,19 +354,19 @@ public class TurnServiceTests
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
-        
+
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
         target.HP = 1; // Низкое HP для гарантированного убийства
-        
+
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);
-        
+
         turn.SelectPiece(attacker);
-        
+
         _attackRulesServiceMock
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);
-            
+
         _pieceDomainServiceMock
             .Setup(x => x.TakeDamage(target, It.IsAny<int>()))
             .Callback<Piece, int>((piece, damage) => piece.HP -= damage);
@@ -390,15 +390,15 @@ public class TurnServiceTests
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
         var originalPosition = attacker.Position;
-        
+
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
         target.HP = 100; // Высокое HP чтобы не убить
-        
+
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);
-        
+
         turn.SelectPiece(attacker);
-        
+
         _attackRulesServiceMock
             .Setup(x => x.CanAttack(attacker, targetPosition, It.IsAny<List<Piece>>()))
             .Returns(true);

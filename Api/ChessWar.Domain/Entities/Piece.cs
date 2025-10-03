@@ -13,7 +13,7 @@ public class Piece
     public Team Team { get; set; }
     public Position Position { get; set; } = new(0, 0);
     public Participant? Owner { get; set; }
-    
+
     public int HP { get; set; }
     public int ATK { get; set; }
     public int Attack => ATK;
@@ -21,11 +21,11 @@ public class Piece
     public int Movement { get; set; }
     public int XP { get; set; }
     public int XPToEvolve { get; set; }
-    
+
     public bool CanEvolve => XP >= XPToEvolve;
     public bool IsAlive => HP > 0;
     public bool IsFirstMove { get; set; } = true;
-    
+
     public Dictionary<string, int> AbilityCooldowns { get; set; } = new();
 
     /// <summary>
@@ -35,9 +35,9 @@ public class Piece
     {
         XP += experience;
     }
-    
+
     public Piece() { }
-    
+
     /// <summary>
     /// Создает новую фигуру
     /// </summary>

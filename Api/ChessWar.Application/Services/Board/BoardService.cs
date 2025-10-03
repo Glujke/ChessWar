@@ -23,7 +23,7 @@ public class BoardService : IBoardService
     {
         var pieces = await _pieceRepository.GetAllAsync(cancellationToken);
         var gameBoard = new GameBoard();
-        
+
         foreach (var piece in pieces)
         {
             if (piece.IsAlive && piece.Position != null)
@@ -31,7 +31,7 @@ public class BoardService : IBoardService
                 gameBoard.SetPieceAt(piece.Position, piece);
             }
         }
-        
+
         return gameBoard;
     }
 
@@ -47,13 +47,13 @@ public class BoardService : IBoardService
     public async Task SetupInitialPositionAsync(CancellationToken cancellationToken = default)
     {
         var pieces = new List<Piece>();
-        
+
         for (int i = 0; i < 8; i++)
         {
             pieces.Add(_pieceFactory.CreatePiece(PieceType.Pawn, Team.Elves, new Position(i, 1)));
         }
         pieces.Add(_pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 0)));
-        
+
         for (int i = 0; i < 8; i++)
         {
             pieces.Add(_pieceFactory.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(i, 6)));

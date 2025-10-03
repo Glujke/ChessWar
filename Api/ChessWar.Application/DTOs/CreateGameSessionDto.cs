@@ -7,6 +7,6 @@ public class CreateGameSessionDto
 {
     public string Player1Name { get; set; } = string.Empty;
     public string Player2Name { get; set; } = string.Empty;
-    public string Mode { get; set; } = "AI"; 
-    public Guid? TutorialSessionId { get; set; } 
+    public string Mode { get; set; } = "AI";
+    public Guid? TutorialSessionId { get; set; }
 }

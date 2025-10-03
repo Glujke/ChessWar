@@ -452,7 +452,7 @@ public class AttackRulesServiceTests
     {
         var attacker = new Piece(PieceType.Pawn, Team.Elves, new Position(3, 3));
         attacker.HP = 10;
-        
+
         var boardPieces = new List<Piece>
         {
             new Piece(PieceType.Pawn, Team.Orcs, new Position(2, 2)) { HP = 10 },

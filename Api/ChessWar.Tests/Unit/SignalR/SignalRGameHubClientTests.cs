@@ -18,10 +18,10 @@ public class SignalRGameHubClientTests
         _hubContextMock = new Mock<IHubContext<GameHub>>();
         _clientsMock = new Mock<IHubClients>();
         _clientProxyMock = new Mock<IClientProxy>();
-        
+
         _hubContextMock.Setup(x => x.Clients).Returns(_clientsMock.Object);
         _clientsMock.Setup(x => x.Group(It.IsAny<string>())).Returns(_clientProxyMock.Object);
-        
+
         _service = new SignalRGameHubClient(_hubContextMock.Object);
     }
 
@@ -43,8 +43,8 @@ public class SignalRGameHubClientTests
     [InlineData("tutorial-session-456", "TutorialAdvanced", "Battle2")]
     [InlineData("ai-session-789", "AiMoved", "MoveData")]
     public async Task SendToGroupAsync_Should_Handle_Different_Group_Names_And_Methods(
-        string groupName, 
-        string method, 
+        string groupName,
+        string method,
         string data)
     {
         var cancellationToken = CancellationToken.None;

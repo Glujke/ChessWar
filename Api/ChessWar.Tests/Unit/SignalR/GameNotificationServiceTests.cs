@@ -88,9 +88,9 @@ public class GameNotificationServiceTests
             .Setup(x => x.SendToGroupAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.NotifyGameEndedAsync(sessionId, result, message));
-        
+
         exception.Should().Be(expectedException);
     }
 

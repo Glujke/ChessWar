@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when trying to advance tutorial stage that's not completed
+/// Исключение при попытке перейти к незавершённому этапу обучения.
 /// </summary>
 public class StageNotCompletedException : GameException
 {

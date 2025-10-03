@@ -21,14 +21,14 @@ public class PawnAbilitiesTests
 
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
-        
+
         pieceDomainService
             .Setup(x => x.TakeDamage(enemy, It.IsAny<int>()))
             .Callback<Piece, int>((piece, damage) => piece.HP -= damage);
         pieceDomainService
             .Setup(x => x.SetAbilityCooldown(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<int>()))
             .Callback<Piece, string, int>((piece, ability, cooldown) => piece.AbilityCooldowns[ability] = cooldown);
-        
+
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
 
         var ok = svc.UseAbility(pawn, "ShieldBash", enemy.Position, all);
@@ -51,14 +51,14 @@ public class PawnAbilitiesTests
 
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
-        
+
         pieceDomainService
             .Setup(x => x.TakeDamage(enemy, It.IsAny<int>()))
             .Callback<Piece, int>((piece, damage) => piece.HP -= damage);
         pieceDomainService
             .Setup(x => x.SetAbilityCooldown(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<int>()))
             .Callback<Piece, string, int>((piece, ability, cooldown) => piece.AbilityCooldowns[ability] = cooldown);
-        
+
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
 
         var ok = svc.UseAbility(pawn, "Breakthrough", enemy.Position, all);

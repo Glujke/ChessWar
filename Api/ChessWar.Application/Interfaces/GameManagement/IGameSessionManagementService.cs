@@ -12,17 +12,17 @@ public interface IGameSessionManagementService
     /// Создаёт новую игровую сессию
     /// </summary>
     Task<GameSession> CreateGameSessionAsync(CreateGameSessionDto dto, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Начинает игру
     /// </summary>
     Task StartGameAsync(GameSession gameSession, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Завершает игру
     /// </summary>
     Task CompleteGameAsync(GameSession gameSession, Domain.Enums.GameResult result, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Получает игровую сессию по ID
     /// </summary>

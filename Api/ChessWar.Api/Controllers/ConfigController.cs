@@ -6,17 +6,26 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ChessWar.Api.Controllers;
 
+/// <summary>
+/// Контроллер для управления конфигурациями баланса (версии, публикация, полезные данные)
+/// </summary>
 public class ConfigController : BaseController
 {
     private readonly IConfigService _configService;
     private readonly IMapper _mapper;
 
+    /// <summary>
+    /// Создаёт контроллер конфигураций
+    /// </summary>
     public ConfigController(IConfigService configService, IMapper mapper, ILogger<ConfigController> logger) : base(logger)
     {
         _configService = configService;
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Возвращает активную версию конфигурации
+    /// </summary>
     [HttpGet("active")]
     public async Task<IActionResult> GetActiveConfig(CancellationToken ct)
     {
@@ -24,7 +33,7 @@ public class ConfigController : BaseController
         {
             LogInformation("Getting active config");
             var version = await _configService.GetActiveConfigAsync(ct);
-            if (version is null) 
+            if (version is null)
             {
                 LogWarning("No active config found");
                 return NotFound();
@@ -41,15 +50,18 @@ public class ConfigController : BaseController
         }
     }
 
+    /// <summary>
+    /// Возвращает постраничный список версий конфигураций
+    /// </summary>
     [HttpGet("versions")]
     public async Task<IActionResult> GetVersions(
-        int page = 1, 
-        int pageSize = 50, 
+        int page = 1,
+        int pageSize = 50,
         string? status = null,
         CancellationToken ct = default)
     {
         var (items, total) = await _configService.GetConfigVersionsAsync(page, pageSize, status, ct);
-        
+
         var itemsDto = _mapper.Map<List<ConfigVersionDto>>(items);
         var response = new ConfigVersionListDto
         {
@@ -62,6 +74,9 @@ public class ConfigController : BaseController
         return Ok(response);
     }
 
+    /// <summary>
+    /// Создаёт новую версию конфигурации
+    /// </summary>
     [HttpPost("versions")]
     public async Task<IActionResult> CreateVersion([FromBody] CreateConfigVersionDto dto, CancellationToken ct)
     {
@@ -77,6 +92,9 @@ public class ConfigController : BaseController
         }
     }
 
+    /// <summary>
+    /// Обновляет существующую версию конфигурации
+    /// </summary>
     [HttpPut("versions/{id:guid}")]
     public async Task<IActionResult> UpdateVersion(Guid id, [FromBody] UpdateConfigVersionDto dto, CancellationToken ct)
     {
@@ -92,6 +110,9 @@ public class ConfigController : BaseController
         }
     }
 
+    /// <summary>
+    /// Публикует указанную версию конфигурации
+    /// </summary>
     [HttpPost("versions/{id:guid}/publish")]
     public async Task<IActionResult> PublishVersion(Guid id, CancellationToken ct)
     {
@@ -107,14 +128,20 @@ public class ConfigController : BaseController
         }
     }
 
-    [HttpPut("versions/{id:guid}/payload")] 
+    /// <summary>
+    /// Сохраняет JSON-полезную нагрузку для указанной версии
+    /// </summary>
+    [HttpPut("versions/{id:guid}/payload")]
     public async Task<IActionResult> SavePayload(Guid id, [FromBody] SavePayloadRequest request, CancellationToken ct)
     {
         await _configService.SavePayloadAsync(id, request.Json, ct);
         return NoContent();
     }
 
-    [HttpGet("versions/{id:guid}/payload")] 
+    /// <summary>
+    /// Возвращает JSON-полезную нагрузку для указанной версии
+    /// </summary>
+    [HttpGet("versions/{id:guid}/payload")]
     public async Task<IActionResult> GetPayload(Guid id, CancellationToken ct)
     {
         var json = await _configService.GetPayloadAsync(id, ct);

@@ -14,17 +14,17 @@ public class BossScenario : IScenario
     public string Description { get; private set; }
     public bool IsCompleted { get; private set; }
     public int Progress { get; private set; }
-    
+
     /// <summary>
     /// Тип босса
     /// </summary>
     public BossType BossType { get; private set; }
-    
+
     /// <summary>
     /// Фигуры босса
     /// </summary>
     public List<Piece> BossPieces { get; private set; }
-    
+
     /// <summary>
     /// Показывать ли подсказки игроку
     /// </summary>
@@ -38,7 +38,7 @@ public class BossScenario : IScenario
         IsCompleted = false;
         Progress = 0;
         BossPieces = new List<Piece>();
-        
+
         (Name, Description) = GetBossInfo(bossType);
     }
 
@@ -57,7 +57,7 @@ public class BossScenario : IScenario
     public void UpdateProgress(int progress)
     {
         Progress = Math.Clamp(progress, 0, 100);
-        
+
         if (Progress >= 100)
         {
             CompleteScenario();
@@ -100,7 +100,7 @@ public class BossScenario : IScenario
     private void SetupBossPieces(GameBoard board, Team playerTeam)
     {
         var bossTeam = playerTeam == Team.Elves ? Team.Orcs : Team.Elves;
-        
+
         var piecesToPlace = BossType switch
         {
             BossType.KingAndQueen => GetKingAndQueenPieces(bossTeam),
@@ -160,7 +160,7 @@ public enum BossType
     /// Король и ферзь
     /// </summary>
     KingAndQueen = 1,
-    
+
     /// <summary>
     /// Полная армия
     /// </summary>

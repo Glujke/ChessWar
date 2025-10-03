@@ -22,7 +22,7 @@ public class KingQueenAbilitiesTests
 
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
-        
+
         pieceDomainService
             .Setup(x => x.Heal(fallen, It.IsAny<int>()))
             .Callback<Piece, int>((piece, heal) => piece.HP += heal);
@@ -36,7 +36,7 @@ public class KingQueenAbilitiesTests
                 PieceType.Knight => 12,
                 _ => 10
             });
-        
+
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
 
         var ok = svc.UseAbility(queen, "Resurrection", fallen.Position, owner.Pieces);
@@ -60,11 +60,11 @@ public class KingQueenAbilitiesTests
 
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
-        
+
         pieceDomainService
             .Setup(x => x.SetAbilityCooldown(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<int>()))
             .Callback<Piece, string, int>((piece, ability, cooldown) => piece.AbilityCooldowns[ability] = cooldown);
-        
+
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
 
         var ok = svc.UseAbility(king, "RoyalCommand", ally.Position, owner.Pieces);

@@ -43,14 +43,14 @@ public class ProbabilisticAIServiceIntegrationTests
         var evaluator = new GameStateEvaluator();
         var matrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyProvider = new AIDifficultyProvider();
-        
+
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
         var logger = loggerFactory.CreateLogger<ChessWar.Domain.Services.AI.AIService>();
-        
+
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(CreateMockTurnService().Object, CreateMockAbilityService().Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(matrix, evaluator, difficultyProvider);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(CreateMockTurnService().Object, CreateMockAbilityService().Object);
-        
+
         var service = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, logger);
 
         var result = service.MakeAiTurn(session);
@@ -65,11 +65,11 @@ public class ProbabilisticAIServiceIntegrationTests
         var evaluator = new GameStateEvaluator();
         var matrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyProvider = new AIDifficultyProvider();
-        
+
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(CreateMockTurnService().Object, CreateMockAbilityService().Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(matrix, evaluator, difficultyProvider);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(CreateMockTurnService().Object, CreateMockAbilityService().Object);
-        
+
         var service = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, _mockLogger.Object);
 
         var result = service.MakeAiTurn(session);
@@ -84,11 +84,11 @@ public class ProbabilisticAIServiceIntegrationTests
         var evaluator = new GameStateEvaluator();
         var matrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyProvider = new AIDifficultyProvider();
-        
+
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(CreateMockTurnService().Object, CreateMockAbilityService().Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(matrix, evaluator, difficultyProvider);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(CreateMockTurnService().Object, CreateMockAbilityService().Object);
-        
+
         var service = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, _mockLogger.Object);
 
         difficultyProvider.SetDifficultyLevel(session.Player2, AIDifficultyLevel.Easy);
@@ -111,11 +111,11 @@ public class ProbabilisticAIServiceIntegrationTests
         var evaluator = new GameStateEvaluator();
         var matrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyProvider = new AIDifficultyProvider();
-        
+
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(CreateMockTurnService().Object, CreateMockAbilityService().Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(matrix, evaluator, difficultyProvider);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(CreateMockTurnService().Object, CreateMockAbilityService().Object);
-        
+
         var service = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, _mockLogger.Object);
 
         for (int i = 0; i < 5; i++)
@@ -133,11 +133,11 @@ public class ProbabilisticAIServiceIntegrationTests
         var evaluator = new GameStateEvaluator();
         var matrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyProvider = new AIDifficultyProvider();
-        
+
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(CreateMockTurnService().Object, CreateMockAbilityService().Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(matrix, evaluator, difficultyProvider);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(CreateMockTurnService().Object, CreateMockAbilityService().Object);
-        
+
         var service = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, _mockLogger.Object);
 
         var result = service.MakeAiTurn(session);
@@ -152,11 +152,11 @@ public class ProbabilisticAIServiceIntegrationTests
         var evaluator = new GameStateEvaluator();
         var matrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyProvider = new AIDifficultyProvider();
-        
+
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(CreateMockTurnService().Object, CreateMockAbilityService().Object, Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(matrix, evaluator, difficultyProvider);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(CreateMockTurnService().Object, CreateMockAbilityService().Object);
-        
+
         var service = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, _mockLogger.Object);
 
         var result = service.MakeAiTurn(session);
@@ -168,29 +168,29 @@ public class ProbabilisticAIServiceIntegrationTests
     {
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
-        
+
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.HP = 10; // Устанавливаем HP для живой фигуры
         piece1.Owner = player1;
         player1.AddPiece(piece1);
-        
+
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(3, 1));
         piece2.HP = 10; // Устанавливаем HP для живой фигуры
         piece2.Owner = player2;
         player2.AddPiece(piece2);
-        
+
         player1.SetMana(10, 10);
         player2.SetMana(10, 10);
-        
+
         var session = new GameSession(player1, player2, "Test");
-        
+
         session.GetBoard().PlacePiece(piece1);
         session.GetBoard().PlacePiece(piece2);
-        
+
         session.StartGame();
-        
+
         session.EndCurrentTurn();
-        
+
         return session;
     }
 
@@ -198,10 +198,10 @@ public class ProbabilisticAIServiceIntegrationTests
     {
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
-        
+
         player1.SetMana(10, 10);
         player2.SetMana(10, 10);
-        
+
         var session = new GameSession(player1, player2, "Test");
         session.StartGame();
         return session;
@@ -211,29 +211,29 @@ public class ProbabilisticAIServiceIntegrationTests
     {
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
-        
+
         var piece1 = new Piece(PieceType.Queen, Team.Elves, new Position(3, 3));
         piece1.HP = 10; // Устанавливаем HP для живой фигуры
         piece1.Owner = player1;
         player1.AddPiece(piece1);
-        
+
         var piece2 = new Piece(PieceType.Queen, Team.Orcs, new Position(4, 4));
         piece2.HP = 10; // Устанавливаем HP для живой фигуры
         piece2.Owner = player2;
         player2.AddPiece(piece2);
-        
+
         player1.SetMana(10, 10);
         player2.SetMana(10, 10);
-        
+
         var session = new GameSession(player1, player2, "Test");
-        
+
         session.GetBoard().PlacePiece(piece1);
         session.GetBoard().PlacePiece(piece2);
-        
+
         session.StartGame();
-        
+
         session.EndCurrentTurn();
-        
+
         return session;
     }
 
@@ -241,29 +241,29 @@ public class ProbabilisticAIServiceIntegrationTests
     {
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
-        
+
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.HP = 10; // Устанавливаем HP для живой фигуры
         piece1.Owner = player1;
         player1.AddPiece(piece1);
-        
+
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(3, 1));
         piece2.HP = 10; // Устанавливаем HP для живой фигуры
         piece2.Owner = player2;
         player2.AddPiece(piece2);
-        
+
         player1.SetMana(10, 10);
         player2.SetMana(10, 10);
-        
+
         var session = new GameSession(player1, player2, "Test");
-        
+
         session.GetBoard().PlacePiece(piece1);
         session.GetBoard().PlacePiece(piece2);
-        
+
         session.StartGame();
-        
+
         session.EndCurrentTurn();
-        
+
         return session;
     }
 

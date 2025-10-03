@@ -46,7 +46,7 @@ public class GameModeController : BaseController
             Player1Name = string.IsNullOrWhiteSpace(dto.PlayerId) ? "P1" : dto.PlayerId!,
             Player2Name = "AI",
             Mode = "Tutorial",
-            TutorialSessionId = session.SessionId 
+            TutorialSessionId = session.SessionId
         });
         await _sessionManagementService.StartGameAsync(game);
         await _battlePresetService.ApplyPresetAsync(game, "Battle1");
@@ -93,7 +93,7 @@ public class GameModeController : BaseController
     public async Task<ActionResult<OnlineSessionDto>> StartOnlineGame([FromBody] CreateOnlineSessionDto dto)
     {
         LogInformation("Starting online session for host {HostPlayerId}", dto.HostPlayerId);
-        
+
         var session = await _gameModeService.StartOnlineGameAsync(dto);
         return Ok(session);
     }
@@ -105,7 +105,7 @@ public class GameModeController : BaseController
     public async Task<ActionResult<GameSessionDto>> StartLocalGame([FromBody] CreateLocalSessionDto dto)
     {
         LogInformation("Starting local session for players {Player1} vs {Player2}", dto.Player1Name, dto.Player2Name);
-        
+
         var session = await _gameModeService.StartLocalGameAsync(dto);
         return Ok(session);
     }
@@ -117,7 +117,7 @@ public class GameModeController : BaseController
     public async Task<ActionResult<AiSessionDto>> StartAiGame([FromBody] CreateAiSessionDto dto)
     {
         LogInformation("Starting AI session for player {PlayerId} with difficulty {Difficulty}", dto.PlayerId, dto.Difficulty);
-        
+
         var session = await _gameModeService.StartAiGameAsync(dto);
         return Ok(session);
     }
@@ -129,7 +129,7 @@ public class GameModeController : BaseController
     public async Task<ActionResult<PlayerStatsDto>> GetPlayerStats(string playerId)
     {
         LogInformation("Getting stats for player {PlayerId}", playerId);
-        
+
         var stats = await _gameModeService.GetPlayerStatsAsync(playerId);
         return Ok(stats);
     }

@@ -185,7 +185,7 @@ public class MovementRulesServiceTests
 
         possibleMoves.Should().NotContain(new Position(1, 4), "Diagonal move should not be in possible moves");
         canMoveDiagonally.Should().BeFalse("Should not be able to move diagonally without enemy");
-        
+
         possibleMoves.Should().Contain(new Position(0, 4), "Should be able to move forward");
     }
 

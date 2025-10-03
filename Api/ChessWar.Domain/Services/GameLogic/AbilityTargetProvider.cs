@@ -18,37 +18,37 @@ public class AbilityTargetProvider : IAbilityTargetProvider
         switch (abilityName)
         {
             case "ShieldBash":
-            {
-                foreach (var enemy in allPieces.Where(p => attackRulesService.IsEnemy(caster, p)))
                 {
-                    var d = attackRulesService.CalculateChebyshevDistance(caster.Position, enemy.Position);
-                    if (d <= Math.Max(1, spec.Range))
-                        targets.Add(enemy.Position);
+                    foreach (var enemy in allPieces.Where(p => attackRulesService.IsEnemy(caster, p)))
+                    {
+                        var d = attackRulesService.CalculateChebyshevDistance(caster.Position, enemy.Position);
+                        if (d <= Math.Max(1, spec.Range))
+                            targets.Add(enemy.Position);
+                    }
+                    break;
                 }
-                break;
-            }
             case "Breakthrough":
-            {
-                var forwardStep = caster.Team == Team.Elves ? 1 : -1;
-                foreach (var enemy in allPieces.Where(p => attackRulesService.IsEnemy(caster, p)))
                 {
-                    var dx = Math.Abs(enemy.Position.X - caster.Position.X);
-                    var dy = enemy.Position.Y - caster.Position.Y;
-                    if (dx == 1 && dy == forwardStep)
-                        targets.Add(enemy.Position);
+                    var forwardStep = caster.Team == Team.Elves ? 1 : -1;
+                    foreach (var enemy in allPieces.Where(p => attackRulesService.IsEnemy(caster, p)))
+                    {
+                        var dx = Math.Abs(enemy.Position.X - caster.Position.X);
+                        var dy = enemy.Position.Y - caster.Position.Y;
+                        if (dx == 1 && dy == forwardStep)
+                            targets.Add(enemy.Position);
+                    }
+                    break;
                 }
-                break;
-            }
             case "RoyalCommand":
-            {
-                foreach (var ally in allPieces.Where(p => p.Team == caster.Team && p.Id != caster.Id))
                 {
-                    var d = attackRulesService.CalculateChebyshevDistance(caster.Position, ally.Position);
-                    if (d <= Math.Max(1, spec.Range))
-                        targets.Add(ally.Position);
+                    foreach (var ally in allPieces.Where(p => p.Team == caster.Team && p.Id != caster.Id))
+                    {
+                        var d = attackRulesService.CalculateChebyshevDistance(caster.Position, ally.Position);
+                        if (d <= Math.Max(1, spec.Range))
+                            targets.Add(ally.Position);
+                    }
+                    break;
                 }
-                break;
-            }
             default:
                 break;
         }

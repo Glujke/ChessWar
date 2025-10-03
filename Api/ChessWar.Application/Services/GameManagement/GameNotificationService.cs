@@ -1,4 +1,5 @@
-using ChessWar.Application.Interfaces.GameManagement; using ChessWar.Application.Interfaces.Configuration;
+using ChessWar.Application.Interfaces.GameManagement;
+using ChessWar.Application.Interfaces.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ChessWar.Application.Services.GameManagement;

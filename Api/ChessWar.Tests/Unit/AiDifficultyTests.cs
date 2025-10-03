@@ -17,66 +17,11 @@ using ChessWar.Domain.Services.AI;
 namespace ChessWar.Tests.Unit;
 
 /// <summary>
-/// Тесты для уровней сложности ИИ (RED PHASE)
+/// Тесты для уровней сложности ИИ.
 /// </summary>
 public class AiDifficultyTests
 {
-   /* [Fact]
-    public void Ai_ShouldRespectEasyDifficulty_ManaLimit()
-    {
-        var p1 = new Player("P1", new List<Piece>());
-        var enemyPawn1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, new Position(2, 2), p1);
-        var enemyPawn2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, new Position(3, 2), p1);
-        var enemyPawn3 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, new Position(4, 2), p1);
-        p1.Pieces.Add(enemyPawn1);
-        p1.Pieces.Add(enemyPawn2);
-        p1.Pieces.Add(enemyPawn3);
 
-        var aiPlayer = new ChessWar.Domain.Entities.AI("AI-Easy", Team.Orcs); // Имя с уровнем сложности
-        var aiPawn1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(2, 3), aiPlayer); // Под врагом
-        var aiPawn2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 3), aiPlayer); // Под врагом
-        var aiPawn3 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(4, 3), aiPlayer); // Под врагом
-        aiPlayer.Pieces.Add(aiPawn1);
-        aiPlayer.Pieces.Add(aiPawn2);
-        aiPlayer.Pieces.Add(aiPawn3);
-        aiPlayer.SetMana(50, 50); // Полная мана
-
-        var session = new GameSession(p1, aiPlayer, "AI");
-        session.StartGame();
-        session.EndCurrentTurn(); // ход ИИ
-
-        var versionRepo = new Mock<IBalanceVersionRepository>();
-        var payloadRepo = new Mock<IBalancePayloadRepository>();
-        versionRepo.Setup(x => x.GetActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync((BalanceVersion?)null);
-        var logger = Mock.Of<ILogger<BalanceConfigProvider>>();
-        var cfg = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
-
-        var difficultyProviderMock = new Mock<IAIDifficultyLevel>();
-        difficultyProviderMock.Setup(x => x.GetDifficultyLevel(It.IsAny<ChessWar.Domain.Entities.AI>())).Returns(AIDifficultyLevel.Easy);
-
-        var movementRulesLogger = Mock.Of<ILogger<MovementRulesService>>();
-        var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        var turnService = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
-        var evaluator = new GameStateEvaluator();
-        var probabilityMatrix = new ChessWarProbabilityMatrix(evaluator);
-        var difficultyLevelProvider = new Mock<IAIDifficultyLevel>();
-        difficultyLevelProvider.Setup(x => x.GetDifficultyLevel(It.IsAny<ChessWar.Domain.Entities.AI>())).Returns(AIDifficultyLevel.Medium);
-        difficultyLevelProvider.Setup(x => x.GetTemperature(It.IsAny<AIDifficultyLevel>())).Returns(1.0);
-        var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnService, Mock.Of<IAbilityService>(), Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
-        var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrix, evaluator, difficultyLevelProvider.Object);
-        var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnService, Mock.Of<IAbilityService>());
-        
-        IAIService ai = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, Mock.Of<ILogger<ChessWar.Domain.Services.AI.AIService>>());
-
-        var manaBefore = aiPlayer.MP;
-
-        var result = ai.MakeAiTurn(session);
-
-        result.Should().BeTrue();
-        var manaSpent = manaBefore - aiPlayer.MP;
-        manaSpent.Should().BeInRange(5, 15, "ИИ уровня Easy должен тратить 5-15 маны за ход");
-    }*/
 
     [Fact]
     public void MediumDifficulty_ShouldCallEvaluator_AndUseTopKSelection()
@@ -89,18 +34,18 @@ public class AiDifficultyTests
         p1.Pieces.Add(enemyPawn2);
         p1.Pieces.Add(enemyPawn3);
 
-        var aiPlayer = new ChessWar.Domain.Entities.AI("AI-Medium", Team.Orcs); // Имя с уровнем сложности
-        var aiPawn1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(2, 3), aiPlayer); // Под врагом
-        var aiPawn2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 3), aiPlayer); // Под врагом
-        var aiPawn3 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(4, 3), aiPlayer); // Под врагом
+        var aiPlayer = new ChessWar.Domain.Entities.AI("AI-Medium", Team.Orcs);
+        var aiPawn1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(2, 3), aiPlayer);
+        var aiPawn2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 3), aiPlayer);
+        var aiPawn3 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(4, 3), aiPlayer);
         aiPlayer.Pieces.Add(aiPawn1);
         aiPlayer.Pieces.Add(aiPawn2);
         aiPlayer.Pieces.Add(aiPawn3);
-        aiPlayer.SetMana(50, 50); // Полная мана
+        aiPlayer.SetMana(50, 50);
 
         var session = new GameSession(p1, aiPlayer, "AI");
         session.StartGame();
-        session.EndCurrentTurn(); // ход ИИ
+        session.EndCurrentTurn();
 
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
@@ -118,7 +63,8 @@ public class AiDifficultyTests
         turnService.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
             .Returns(new List<Position> { new Position(5, 5), new Position(6, 6) });
         turnService.Setup(x => x.ExecuteMove(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
-            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) => {
+            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) =>
+            {
                 turn.SpendMP(1);
                 turn.ActiveParticipant.Spend(1);
                 piece.Position = position;
@@ -126,7 +72,8 @@ public class AiDifficultyTests
             })
             .Returns(true);
         turnService.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
-            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) => {
+            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) =>
+            {
                 turn.SpendMP(2);
                 turn.ActiveParticipant.Spend(2);
                 var target = session.GetAllPieces()
@@ -142,7 +89,7 @@ public class AiDifficultyTests
                 turn.UpdateRemainingMP();
             })
             .Returns(true);
-        
+
         var evaluator = new GameStateEvaluator();
         var probabilityMatrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyLevelProvider = new Mock<IAIDifficultyLevel>();
@@ -151,7 +98,7 @@ public class AiDifficultyTests
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnService.Object, Mock.Of<IAbilityService>(), Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrix, evaluator, difficultyLevelProvider.Object);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnService.Object, Mock.Of<IAbilityService>());
-        
+
         IAIService ai = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, Mock.Of<ILogger<ChessWar.Domain.Services.AI.AIService>>());
 
         var result = ai.MakeAiTurn(session);
@@ -170,18 +117,18 @@ public class AiDifficultyTests
         p1.Pieces.Add(enemyPawn2);
         p1.Pieces.Add(enemyPawn3);
 
-        var aiPlayer = new ChessWar.Domain.Entities.AI("AI-Hard", Team.Orcs); // Имя с уровнем сложности
-        var aiPawn1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(2, 3), aiPlayer); // Под врагом
-        var aiPawn2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 3), aiPlayer); // Под врагом
-        var aiPawn3 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(4, 3), aiPlayer); // Под врагом
+        var aiPlayer = new ChessWar.Domain.Entities.AI("AI-Hard", Team.Orcs);
+        var aiPawn1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(2, 3), aiPlayer);
+        var aiPawn2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 3), aiPlayer);
+        var aiPawn3 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(4, 3), aiPlayer);
         aiPlayer.Pieces.Add(aiPawn1);
         aiPlayer.Pieces.Add(aiPawn2);
         aiPlayer.Pieces.Add(aiPawn3);
-        aiPlayer.SetMana(50, 50); // Полная мана
+        aiPlayer.SetMana(50, 50);
 
         var session = new GameSession(p1, aiPlayer, "AI");
         session.StartGame();
-        session.EndCurrentTurn(); // ход ИИ
+        session.EndCurrentTurn();
 
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
@@ -199,7 +146,8 @@ public class AiDifficultyTests
         turnService.Setup(x => x.GetAvailableAttacks(It.IsAny<Turn>(), It.IsAny<Piece>()))
             .Returns(new List<Position> { new Position(5, 5), new Position(6, 6) });
         turnService.Setup(x => x.ExecuteMove(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
-            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) => {
+            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) =>
+            {
                 turn.SpendMP(1);
                 turn.ActiveParticipant.Spend(1);
                 piece.Position = position;
@@ -207,7 +155,8 @@ public class AiDifficultyTests
             })
             .Returns(true);
         turnService.Setup(x => x.ExecuteAttack(It.IsAny<GameSession>(), It.IsAny<Turn>(), It.IsAny<Piece>(), It.IsAny<Position>()))
-            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) => {
+            .Callback<GameSession, Turn, Piece, Position>((session, turn, piece, position) =>
+            {
                 turn.SpendMP(2);
                 turn.ActiveParticipant.Spend(2);
                 var target = session.GetAllPieces()
@@ -223,7 +172,7 @@ public class AiDifficultyTests
                 turn.UpdateRemainingMP();
             })
             .Returns(true);
-        
+
         var evaluator = new GameStateEvaluator();
         var probabilityMatrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyLevelProvider = new Mock<IAIDifficultyLevel>();
@@ -232,7 +181,7 @@ public class AiDifficultyTests
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnService.Object, Mock.Of<IAbilityService>(), Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrix, evaluator, difficultyLevelProvider.Object);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnService.Object, Mock.Of<IAbilityService>());
-        
+
         IAIService ai = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, Mock.Of<ILogger<ChessWar.Domain.Services.AI.AIService>>());
 
         var result = ai.MakeAiTurn(session);
@@ -250,11 +199,11 @@ public class AiDifficultyTests
         var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         var aiQueen = TestHelpers.CreatePiece(PieceType.Queen, Team.Orcs, new Position(3, 3), aiPlayer);
         aiPlayer.Pieces.Add(aiQueen);
-        aiPlayer.SetMana(50, 50); // Полная мана
+        aiPlayer.SetMana(50, 50);
 
         var session = new GameSession(p1, aiPlayer, "AI");
         session.StartGame();
-        session.EndCurrentTurn(); // ход ИИ
+        session.EndCurrentTurn();
 
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
@@ -274,7 +223,7 @@ public class AiDifficultyTests
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnService, Mock.Of<IAbilityService>(), Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrix, evaluator, difficultyLevelProvider.Object);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnService, Mock.Of<IAbilityService>());
-        
+
         IAIService ai = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, Mock.Of<ILogger<ChessWar.Domain.Services.AI.AIService>>());
 
         var turnBefore = session.GetCurrentTurn();
@@ -321,7 +270,7 @@ public class AiDifficultyTests
         var actionGenerator = new ChessWar.Domain.Services.AI.ActionGenerator(turnService, Mock.Of<IAbilityService>(), Mock.Of<ILogger<ChessWar.Domain.Services.AI.ActionGenerator>>());
         var actionSelector = new ChessWar.Domain.Services.AI.ActionSelector(probabilityMatrix, evaluator, difficultyLevelProvider.Object);
         var actionExecutor = new ChessWar.Domain.Services.AI.ActionExecutor(turnService, Mock.Of<IAbilityService>());
-        
+
         IAIService ai = new ChessWar.Domain.Services.AI.AIService(actionGenerator, actionSelector, actionExecutor, Mock.Of<ILogger<ChessWar.Domain.Services.AI.AIService>>());
 
         var result = ai.MakeAiTurn(session);

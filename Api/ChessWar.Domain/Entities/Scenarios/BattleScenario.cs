@@ -14,17 +14,17 @@ public class BattleScenario : IScenario
     public string Description { get; private set; }
     public bool IsCompleted { get; private set; }
     public int Progress { get; private set; }
-    
+
     /// <summary>
     /// Сложность ИИ противника
     /// </summary>
     public AiDifficulty Difficulty { get; private set; }
-    
+
     /// <summary>
     /// Фигуры противника (ИИ)
     /// </summary>
     public List<Piece> EnemyPieces { get; private set; }
-    
+
     /// <summary>
     /// Показывать ли подсказки игроку
     /// </summary>
@@ -38,7 +38,7 @@ public class BattleScenario : IScenario
         IsCompleted = false;
         Progress = 0;
         EnemyPieces = new List<Piece>();
-        
+
         (Name, Description) = GetScenarioInfo(difficulty);
     }
 
@@ -57,7 +57,7 @@ public class BattleScenario : IScenario
     public void UpdateProgress(int progress)
     {
         Progress = Math.Clamp(progress, 0, 100);
-        
+
         if (Progress >= 100)
         {
             CompleteScenario();
@@ -93,7 +93,7 @@ public class BattleScenario : IScenario
     private void SetupEnemyPieces(GameBoard board, Team playerTeam)
     {
         var enemyTeam = playerTeam == Team.Elves ? Team.Orcs : Team.Elves;
-        
+
         var piecesToPlace = Difficulty switch
         {
             AiDifficulty.Easy => GetEasyEnemyPieces(enemyTeam),

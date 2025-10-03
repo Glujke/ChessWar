@@ -169,14 +169,14 @@ public class GameSessionTests
     private static Player CreateTestPlayer(string name)
     {
         var pieces = new List<Piece>();
-        
+
         for (int i = 0; i < 8; i++)
         {
             pieces.Add(new Piece(PieceType.Pawn, Team.Elves, new Position(i, 1)));
         }
-        
+
         pieces.Add(new Piece(PieceType.King, Team.Elves, new Position(4, 0)));
-        
+
         return new Player(name, pieces);
     }
 }

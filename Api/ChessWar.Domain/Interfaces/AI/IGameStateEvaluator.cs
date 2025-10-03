@@ -14,17 +14,17 @@ public interface IGameStateEvaluator
     /// <param name="participant">Участник для которого оцениваем</param>
     /// <returns>Оценка от -100 (очень плохо) до +100 (очень хорошо)</returns>
     double EvaluateGameState(GameSession session, Participant participant);
-    
+
     /// <summary>
     /// Оценить позицию фигуры на доске
     /// </summary>
     double EvaluatePiecePosition(Piece piece, GameSession session);
-    
+
     /// <summary>
     /// Оценить угрозу для короля
     /// </summary>
     double EvaluateKingThreat(GameSession session, Participant participant);
-    
+
     /// <summary>
     /// Оценить материальное преимущество
     /// </summary>

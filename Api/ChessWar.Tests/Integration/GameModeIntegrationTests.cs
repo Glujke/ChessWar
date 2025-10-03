@@ -30,13 +30,13 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
         var response = await _client.PostAsync("/api/v1/game/tutorial", content);
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
         var session = JsonSerializer.Deserialize<TutorialSessionDto>(responseContent, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
-        
+
         Assert.NotNull(session);
         Assert.Equal("Tutorial", session.Mode);
         Assert.NotEmpty(session.SignalRUrl);
@@ -106,7 +106,7 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
         var response = await _client.GetAsync("/api/v1/game/modes");
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-        
+
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("tutorial", content);
         Assert.Contains("online", content);

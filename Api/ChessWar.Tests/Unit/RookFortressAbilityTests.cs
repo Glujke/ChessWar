@@ -20,7 +20,7 @@ public class RookFortressAbilityTests
         var rook = TestHelpers.CreatePiece(PieceType.Rook, Team.Elves, new Position(1, 1), owner);
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
-        
+
         pieceDomainService
             .Setup(x => x.SetAbilityCooldown(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<int>()))
             .Callback<Piece, string, int>((piece, ability, cooldown) => piece.AbilityCooldowns[ability] = cooldown);
@@ -31,7 +31,7 @@ public class RookFortressAbilityTests
                 PieceType.Rook => 15,
                 _ => 10
             });
-        
+
         var svc = new AbilityService(_TestConfig.CreateProvider(), eventDispatcher.Object, pieceDomainService.Object);
         var baseHp = rook.HP;
 
@@ -44,19 +44,19 @@ public class RookFortressAbilityTests
         var cfg = _TestConfig.CreateProvider();
         var movementRulesLogger = Mock.Of<ILogger<MovementRulesService>>();
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        var turnSvc = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
+        var turnSvc = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), pieceDomainService.Object, turnServiceLogger);
         var enemy = new Player("P2", new List<Piece>());
         var dummySession = new GameSession(owner, enemy);
         dummySession.StartGame();
         var turn = dummySession.GetCurrentTurn();
         turn.SelectPiece(rook);
-        
+
         var action = new TurnAction("Move", rook.Id.ToString(), new Position(0, 1));
         turn.AddAction(action);
-        
+
         turnSvc.EndTurn(turn);
 
-        rook.HP.Should().BeLessOrEqualTo(TestHelpers.GetMaxHP(rook));
+        rook.HP.Should().BeLessOrEqualTo(15); // Максимальное HP ладьи
     }
 }
 

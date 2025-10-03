@@ -13,42 +13,42 @@ public interface IBoardService
     /// Получает текущее состояние доски
     /// </summary>
     Task<GameBoard> GetBoardAsync(CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Сбрасывает доску (удаляет все фигуры)
     /// </summary>
     Task ResetBoardAsync(CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Настраивает начальную расстановку фигур
     /// </summary>
     Task SetupInitialPositionAsync(CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Размещает фигуру на доске
     /// </summary>
     Task<Piece> PlacePieceAsync(PieceType type, Team team, Position position, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Перемещает фигуру на новую позицию
     /// </summary>
     Task<Piece> MovePieceAsync(int pieceId, Position newPosition, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Получает фигуру по позиции
     /// </summary>
     Task<Piece?> GetPieceAtPositionAsync(Position position, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Проверяет, свободна ли позиция
     /// </summary>
     Task<bool> IsPositionFreeAsync(Position position, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Проверяет, находится ли позиция в пределах доски
     /// </summary>
     bool IsPositionOnBoard(Position position);
-    
+
     /// <summary>
     /// Получает размер доски
     /// </summary>

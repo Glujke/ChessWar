@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when target is out of range for the action
+/// Исключение при выходе цели за пределы допустимой дистанции для действия.
 /// </summary>
 public class OutOfRangeException : GameException
 {

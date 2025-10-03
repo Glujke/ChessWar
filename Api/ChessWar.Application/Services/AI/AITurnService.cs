@@ -24,14 +24,14 @@ public class AITurnService : IAITurnService
     public async Task<bool> MakeAiTurnAsync(GameSession gameSession, CancellationToken cancellationToken = default)
     {
         if (gameSession.Mode != "AI" && gameSession.Mode != "Tutorial" && gameSession.Mode != "Test") return false;
-        
+
         var success = await _aiService.MakeAiTurnAsync(gameSession, cancellationToken);
-        
+
         if (!success)
         {
             gameSession.CompleteGame(Domain.Enums.GameResult.Player1Victory);
         }
-        
+
         await _sessionRepository.SaveAsync(gameSession, cancellationToken);
         return success;
     }

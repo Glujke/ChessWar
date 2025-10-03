@@ -24,7 +24,7 @@ public class PieceFactory : IPieceFactory
     {
         var config = _configProvider.GetActive();
         var pieceTypeName = type.ToString();
-        
+
         if (!config.Pieces.TryGetValue(pieceTypeName, out var stats))
         {
             throw new InvalidOperationException($"No stats found for piece type: {pieceTypeName}");
@@ -46,7 +46,7 @@ public class PieceFactory : IPieceFactory
             IsFirstMove = true,
             AbilityCooldowns = new Dictionary<string, int>()
         };
-        
+
 
         return piece;
     }

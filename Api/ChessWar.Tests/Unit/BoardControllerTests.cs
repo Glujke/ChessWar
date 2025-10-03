@@ -25,12 +25,12 @@ public class BoardControllerTests
         _boardServiceMock = new Mock<IBoardService>();
         _mapperMock = new Mock<IMapper>();
         _loggerMock = new Mock<ILogger<BoardController>>();
-        
+
         _mapperMock.Setup(x => x.Map<GameBoardDto>(It.IsAny<GameBoard>()))
             .Returns(new GameBoardDto());
         _mapperMock.Setup(x => x.Map<PieceDto>(It.IsAny<Domain.Entities.Piece>()))
             .Returns(new PieceDto());
-        
+
         _controller = new BoardController(_boardServiceMock.Object, _mapperMock.Object, _loggerMock.Object);
         _cancellationToken = CancellationToken.None;
     }
@@ -41,9 +41,9 @@ public class BoardControllerTests
         var gameBoard = new GameBoard();
         gameBoard.SetPieceAt(new Position(1, 1), TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1));
         gameBoard.SetPieceAt(new Position(2, 2), TestHelpers.CreatePiece(PieceType.Knight, Team.Orcs, 2, 2));
-        
+
         var gameBoardDto = new GameBoardDto();
-        
+
         _boardServiceMock
             .Setup(x => x.GetBoardAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(gameBoard);
@@ -95,7 +95,7 @@ public class BoardControllerTests
             X = 1,
             Y = 1
         };
-        
+
         var expectedPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
         _boardServiceMock
             .Setup(x => x.PlacePieceAsync(It.IsAny<PieceType>(), It.IsAny<Team>(), It.IsAny<Position>(), It.IsAny<CancellationToken>()))
@@ -166,7 +166,7 @@ public class BoardControllerTests
             X = 1,
             Y = 1
         };
-        
+
         var existingPiece = TestHelpers.CreatePiece(PieceType.Knight, Team.Orcs, 1, 1);
         _boardServiceMock
             .Setup(x => x.PlacePieceAsync(It.IsAny<PieceType>(), It.IsAny<Team>(), It.IsAny<Position>(), It.IsAny<CancellationToken>()))
@@ -183,7 +183,7 @@ public class BoardControllerTests
         var pieceId = 1;
         var moveDto = new UpdatePieceDto { X = 3, Y = 3 };
         var existingPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
-        
+
         _boardServiceMock
             .Setup(x => x.MovePieceAsync(pieceId, It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
@@ -200,7 +200,7 @@ public class BoardControllerTests
     {
         var pieceId = 999;
         var moveDto = new UpdatePieceDto { X = 3, Y = 3 };
-        
+
         _boardServiceMock
             .Setup(x => x.MovePieceAsync(pieceId, It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Piece not found"));
@@ -215,7 +215,7 @@ public class BoardControllerTests
     {
         var pieceId = 1;
         var moveDto = new UpdatePieceDto { X = -1, Y = 1 };
-        
+
         _boardServiceMock
             .Setup(x => x.MovePieceAsync(It.IsAny<int>(), It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ArgumentException("Position is outside the board boundaries"));
@@ -232,7 +232,7 @@ public class BoardControllerTests
         var moveDto = new UpdatePieceDto { X = 2, Y = 2 };
         var existingPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
         var pieceAtPosition = TestHelpers.CreatePiece(PieceType.Knight, Team.Orcs, 2, 2);
-        
+
         _boardServiceMock
             .Setup(x => x.MovePieceAsync(pieceId, It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Position is occupied"));
@@ -248,7 +248,7 @@ public class BoardControllerTests
         var x = 1;
         var y = 1;
         var expectedPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
-        
+
         _boardServiceMock
             .Setup(x => x.GetPieceAtPositionAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPiece);
@@ -265,7 +265,7 @@ public class BoardControllerTests
     {
         var x = 1;
         var y = 1;
-        
+
         _boardServiceMock
             .Setup(x => x.GetPieceAtPositionAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
@@ -291,7 +291,7 @@ public class BoardControllerTests
     {
         var x = 1;
         var y = 1;
-        
+
         _boardServiceMock
             .Setup(x => x.IsPositionFreeAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -309,7 +309,7 @@ public class BoardControllerTests
         var x = 1;
         var y = 1;
         var piece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
-        
+
         _boardServiceMock
             .Setup(x => x.IsPositionFreeAsync(It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);

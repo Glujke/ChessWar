@@ -25,12 +25,12 @@ public class PiecesControllerTests
         _pieceServiceMock = new Mock<IPieceService>();
         _mapperMock = new Mock<IMapper>();
         _loggerMock = new Mock<ILogger<PiecesController>>();
-        
+
         _mapperMock.Setup(x => x.Map<List<PieceDto>>(It.IsAny<IEnumerable<Domain.Entities.Piece>>()))
             .Returns(new List<PieceDto>());
         _mapperMock.Setup(x => x.Map<PieceDto>(It.IsAny<Domain.Entities.Piece>()))
             .Returns(new PieceDto());
-        
+
         _controller = new PiecesController(_pieceServiceMock.Object, _mapperMock.Object, _loggerMock.Object);
         _cancellationToken = CancellationToken.None;
     }
@@ -45,10 +45,10 @@ public class PiecesControllerTests
             X = 1,
             Y = 1
         };
-        
+
         var expectedPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
         var expectedPieceDto = new PieceDto();
-        
+
         _pieceServiceMock
             .Setup(x => x.CreatePieceAsync(It.IsAny<PieceType>(), It.IsAny<Team>(), It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPiece);
@@ -117,7 +117,7 @@ public class PiecesControllerTests
     {
         var pieceId = 1;
         var expectedPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
-        
+
         _pieceServiceMock
             .Setup(x => x.GetPieceByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPiece);
@@ -133,7 +133,7 @@ public class PiecesControllerTests
     public async Task GetPiece_WithNonExistingId_ShouldReturnNotFound()
     {
         var pieceId = 999;
-        
+
         _pieceServiceMock
             .Setup(x => x.GetPieceByIdAsync(pieceId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Piece?)null);
@@ -151,7 +151,7 @@ public class PiecesControllerTests
             TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1),
             TestHelpers.CreatePiece(PieceType.Knight, Team.Orcs, 2, 2)
         };
-        
+
         _pieceServiceMock
             .Setup(x => x.GetAllPiecesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPieces);
@@ -172,7 +172,7 @@ public class PiecesControllerTests
             TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1),
             TestHelpers.CreatePiece(PieceType.Knight, Team.Elves, 2, 2)
         };
-        
+
         _pieceServiceMock
             .Setup(x => x.GetPiecesByTeamAsync(Team.Elves, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPieces);
@@ -204,7 +204,7 @@ public class PiecesControllerTests
         };
         expectedPieces[0].HP = 10;
         expectedPieces[1].HP = 20;
-        
+
         _pieceServiceMock
             .Setup(x => x.GetAlivePiecesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedPieces);
@@ -227,9 +227,9 @@ public class PiecesControllerTests
             MP = 8,
             XP = 10
         };
-        
+
         var existingPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
-        
+
         _pieceServiceMock
             .Setup(x => x.UpdatePieceStatsAsync(It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
@@ -246,7 +246,7 @@ public class PiecesControllerTests
     {
         var pieceId = 999;
         var updateDto = new UpdatePieceDto { HP = 15 };
-        
+
         _pieceServiceMock
             .Setup(x => x.UpdatePieceStatsAsync(It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Piece not found"));
@@ -262,7 +262,7 @@ public class PiecesControllerTests
         var pieceId = 1;
         var updateDto = new UpdatePieceDto { X = 3, Y = 3 };
         var existingPiece = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 1, 1);
-        
+
         _pieceServiceMock
             .Setup(x => x.UpdatePiecePositionAsync(It.IsAny<int>(), It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPiece);
@@ -279,7 +279,7 @@ public class PiecesControllerTests
     {
         var pieceId = 1;
         var updateDto = new UpdatePieceDto { X = -1, Y = 1 };
-        
+
         _pieceServiceMock
             .Setup(x => x.UpdatePiecePositionAsync(It.IsAny<int>(), It.IsAny<Position>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ArgumentException("Invalid position"));
@@ -293,7 +293,7 @@ public class PiecesControllerTests
     public async Task DeletePiece_WithExistingPiece_ShouldReturnNoContent()
     {
         var pieceId = 1;
-        
+
         _pieceServiceMock
             .Setup(x => x.DeletePieceAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -307,7 +307,7 @@ public class PiecesControllerTests
     public async Task DeletePiece_WithNonExistingPiece_ShouldReturnNotFound()
     {
         var pieceId = 999;
-        
+
         _pieceServiceMock
             .Setup(x => x.DeletePieceAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Piece not found"));

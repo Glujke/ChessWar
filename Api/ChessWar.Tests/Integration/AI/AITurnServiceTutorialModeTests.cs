@@ -3,6 +3,8 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
+using ChessWar.Application.DTOs;
+using System.Net.Http.Json;
 
 namespace ChessWar.Tests.Integration.AI;
 
@@ -21,31 +23,66 @@ public class AITurnServiceTutorialModeTests : IClassFixture<WebApplicationFactor
     private static StringContent Json(object obj) => new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json");
 
     /// <summary>
+    /// Небольшой helper: ждёт пока активным станет указанный игрок или игра завершится, в пределах таймаута
+    /// </summary>
+    private static async Task WaitUntilPlayerTurnAsync(HttpClient client, string gameSessionId, string expectedName, TimeSpan timeout)
+    {
+        var start = DateTime.UtcNow;
+        while (DateTime.UtcNow - start < timeout)
+        {
+            var resp = await client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                await Task.Delay(50);
+                continue;
+            }
+            var json = await resp.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var statusEl = root.GetProperty("status");
+            var isFinished = (statusEl.ValueKind == JsonValueKind.String ? (statusEl.GetString() ?? "") == "Player1Victory" || (statusEl.GetString() ?? "") == "Player2Victory" : statusEl.GetInt32() == 2 || statusEl.GetInt32() == 3);
+            if (isFinished)
+            {
+                return;
+            }
+            var currentTurn = root.GetProperty("currentTurn");
+            var active = currentTurn.GetProperty("activeParticipant");
+            var name = active.GetProperty("name").GetString() ?? string.Empty;
+            if (string.Equals(name, expectedName, StringComparison.Ordinal))
+            {
+                return;
+            }
+            await Task.Delay(50);
+        }
+    }
+
+    /// <summary>
     /// Тест: AITurnService должен поддерживать Tutorial режим, а не только AI режим
     /// </summary>
     [Fact]
     public async Task AITurnService_ShouldSupportTutorialMode_NotOnlyAIMode()
     {
-        var createResponse = await _client.PostAsync("/api/v1/gamesession", Json(new { 
-            player1Name = "TestPlayer", 
-            player2Name = "AI", 
-            mode = "AI" 
+        var createResponse = await _client.PostAsync("/api/v1/gamesession", Json(new
+        {
+            player1Name = "TestPlayer",
+            player2Name = "AI",
+            mode = "AI"
         }));
-        
+
         Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
         var createContent = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createContent);
         var gameSessionId = createDoc.RootElement.GetProperty("id").GetString();
-        
+
         Assert.NotNull(gameSessionId);
 
         var sessionResponse = await _client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
         Assert.Equal(HttpStatusCode.OK, sessionResponse.StatusCode);
-        
+
         var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
         using var sessionDoc = JsonDocument.Parse(sessionContent);
         var mode = sessionDoc.RootElement.GetProperty("mode").GetString();
-        
+
         Assert.Equal("AI", mode);
 
         var pieces = sessionDoc.RootElement.GetProperty("player1").GetProperty("pieces");
@@ -53,54 +90,57 @@ public class AITurnServiceTutorialModeTests : IClassFixture<WebApplicationFactor
         foreach (var piece in pieces.EnumerateArray())
         {
             var team = piece.GetProperty("team").GetInt32();
-            if (team == 1) // Elves
+            if (team == 1)
             {
                 playerPieceId = piece.GetProperty("id").GetInt32().ToString();
                 break;
             }
         }
-        
+
         Assert.NotNull(playerPieceId);
 
         var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/move",
             Json(new { pieceId = playerPieceId, targetPosition = new { x = 0, y = 2 } }));
-        
+
         Assert.Equal(HttpStatusCode.OK, moveResponse.StatusCode);
 
-        var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
+        var passAction = new { type = "Pass", pieceId = "0", targetPosition = (object)null };
+        var passResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/action", Json(passAction));
+        if (passResponse.StatusCode != HttpStatusCode.OK)
+        {
+            var errorContent = await passResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Pass action failed: {passResponse.StatusCode} - {errorContent}");
+        }
 
-        Assert.Equal(HttpStatusCode.OK, endTurnResponse.StatusCode);
-        
-        // Вызываем ход ИИ
-        var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/ai", Json(new { }));
+        var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
+        if (endTurnResponse.StatusCode != HttpStatusCode.OK)
+        {
+            var errorContent = await endTurnResponse.Content.ReadAsStringAsync();
+            throw new Exception($"EndTurn failed: {endTurnResponse.StatusCode} - {errorContent}");
+        }
+
+        var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
         Assert.Equal(HttpStatusCode.OK, aiTurnResponse.StatusCode);
-        
-        // Завершаем ход ИИ, чтобы переключиться обратно на игрока
-        var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
-        Assert.Equal(HttpStatusCode.OK, endAiTurnResponse.StatusCode);
-        
+
+        await WaitUntilPlayerTurnAsync(_client, gameSessionId!, "TestPlayer", TimeSpan.FromSeconds(5));
+
         var finalSessionResponse = await _client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
         Assert.Equal(HttpStatusCode.OK, finalSessionResponse.StatusCode);
-        
         var finalSessionContent = await finalSessionResponse.Content.ReadAsStringAsync();
         using var finalSessionDoc = JsonDocument.Parse(finalSessionContent);
-        
+
         var gameStatus = finalSessionDoc.RootElement.GetProperty("status").GetInt32();
         Assert.True(gameStatus == 1 || gameStatus == 2, $"Ожидался статус Active (1) или Finished (2), получен {gameStatus}");
-        
+
         var currentTurn = finalSessionDoc.RootElement.GetProperty("currentTurn");
-        
-        if (gameStatus == 2) // Finished
+        if (gameStatus == 2)
         {
             Assert.True(currentTurn.ValueKind == JsonValueKind.Null, "currentTurn должен быть null для завершенной игры");
-            return; // Завершаем тест, так как игра закончена
+            return;
         }
-        
-        Assert.NotNull(currentTurn);
-        
+
         var activeParticipant = currentTurn.GetProperty("activeParticipant");
         var activeParticipantName = activeParticipant.GetProperty("name").GetString();
-        
         Assert.Equal("TestPlayer", activeParticipantName);
     }
 }

@@ -29,17 +29,17 @@ public class GameModeService : IGameModeService
     {
         var player = new Player(dto.PlayerId ?? "Tutorial Player", Team.Elves);
         var tutorialSession = new TutorialSession(player, showHints: true);
-        
+
         await _gameModeRepository.SaveModeAsync(tutorialSession, cancellationToken);
-        
+
         await _gameHubClient.SendToGroupAsync(
-            tutorialSession.Id.ToString(), 
-            "SessionCreated", 
-            new { SessionId = tutorialSession.Id, Mode = "Tutorial" }, 
+            tutorialSession.Id.ToString(),
+            "SessionCreated",
+            new { SessionId = tutorialSession.Id, Mode = "Tutorial" },
             cancellationToken);
-        
+
         var result = _mapper.Map<TutorialSessionDto>(tutorialSession);
-        result.Id = tutorialSession.Id; 
+        result.Id = tutorialSession.Id;
         result.Mode = "Tutorial";
         result.SignalRUrl = "/gameHub";
         result.CurrentStage = tutorialSession.CurrentStage;
@@ -48,7 +48,7 @@ public class GameModeService : IGameModeService
         result.Board = new TutorialBoardDto { Width = Domain.Entities.GameBoard.Size, Height = Domain.Entities.GameBoard.Size };
         result.Pieces = new List<PieceDto>();
         result.Scenario = new TutorialScenarioDto { Type = "Battle", Difficulty = "Easy" };
-        
+
         return result;
     }
 

@@ -48,36 +48,36 @@ public class GameSessionFactory : IGameSessionFactory
         Participant player2 = dto.Player2Name == "AI" ? CreateAIWithInitialPieces("AI", Team.Orcs) : CreatePlayerWithInitialPieces(dto.Player2Name, Team.Orcs);
 
         var gameSession = new GameSession(player1, player2, string.Equals(mode, "LocalCoop", StringComparison.OrdinalIgnoreCase) ? "LocalCoop" : "AI");
-        
-        
+
+
         if (dto.TutorialSessionId.HasValue)
         {
             gameSession.SetTutorialSessionId(dto.TutorialSessionId.Value);
         }
         else
         {
-            
+
         }
-        
+
         return gameSession;
     }
 
     public Player CreatePlayerWithInitialPieces(string name, Team team)
     {
         var player = new Player(name, team);
-        
+
         var config = _configProvider.GetActive();
         player.SetMana(config.PlayerMana.InitialMana, config.PlayerMana.MaxMana);
-        
+
         var pieces = new List<Piece>();
-        
+
         for (int i = 0; i < 8; i++)
         {
             var y = team == Team.Elves ? 1 : 6;
             var pawn = _pieceFactory.CreatePiece(PieceType.Pawn, team, new Position(i, y), player);
             pieces.Add(pawn);
         }
-        
+
         var kingY = team == Team.Elves ? 0 : 7;
         var king = _pieceFactory.CreatePiece(PieceType.King, team, new Position(4, kingY), player);
         pieces.Add(king);
@@ -86,26 +86,26 @@ public class GameSessionFactory : IGameSessionFactory
         {
             player.AddPiece(piece);
         }
-        
+
         return player;
     }
 
     public ChessWar.Domain.Entities.AI CreateAIWithInitialPieces(string name, Team team)
     {
         var ai = new ChessWar.Domain.Entities.AI(name, team);
-        
+
         var config = _configProvider.GetActive();
         ai.SetMana(config.PlayerMana.InitialMana, config.PlayerMana.MaxMana);
-        
+
         var pieces = new List<Piece>();
-        
+
         for (int i = 0; i < 8; i++)
         {
             var y = team == Team.Elves ? 1 : 6;
             var pawn = _pieceFactory.CreatePiece(PieceType.Pawn, team, new Position(i, y), ai);
             pieces.Add(pawn);
         }
-        
+
         var kingY = team == Team.Elves ? 0 : 7;
         var king = _pieceFactory.CreatePiece(PieceType.King, team, new Position(4, kingY), ai);
         pieces.Add(king);
@@ -114,7 +114,7 @@ public class GameSessionFactory : IGameSessionFactory
         {
             ai.AddPiece(piece);
         }
-        
+
         return ai;
     }
 }

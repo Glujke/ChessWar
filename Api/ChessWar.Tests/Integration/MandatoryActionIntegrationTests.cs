@@ -28,14 +28,14 @@ public class MandatoryActionIntegrationTests : IClassFixture<TestWebApplicationF
 
         var createResponse = await _client.PostAsJsonAsync("/api/v1/gamesession", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var gameSession = await createResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         var sessionId = gameSession!.Id;
 
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
 
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        
+
         var errorContent = await endTurnResponse.Content.ReadAsStringAsync();
         errorContent.Should().Contain("хотя бы одного действия");
     }
@@ -51,7 +51,7 @@ public class MandatoryActionIntegrationTests : IClassFixture<TestWebApplicationF
 
         var createResponse = await _client.PostAsJsonAsync("/api/v1/gamesession", createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var gameSession = await createResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         var sessionId = gameSession!.Id;
 

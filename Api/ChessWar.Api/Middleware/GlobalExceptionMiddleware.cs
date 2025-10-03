@@ -17,6 +17,9 @@ public class GlobalExceptionMiddleware
         _logger = logger;
     }
 
+    /// <summary>
+    /// Выполняет конвейер обработки запроса и перехватывает необработанные исключения
+    /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -30,6 +33,9 @@ public class GlobalExceptionMiddleware
         }
     }
 
+    /// <summary>
+    /// Преобразует исключение в унифицированный JSON-ответ об ошибке
+    /// </summary>
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";

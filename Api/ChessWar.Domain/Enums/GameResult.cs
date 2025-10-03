@@ -9,12 +9,12 @@ public enum GameResult
     /// Победа первого игрока
     /// </summary>
     Player1Victory,
-    
+
     /// <summary>
     /// Победа второго игрока
     /// </summary>
     Player2Victory,
-    
+
     /// <summary>
     /// Ничья
     /// </summary>

@@ -52,7 +52,7 @@ public class AIService : IAIService
         try
         {
             var availableActions = _actionGenerator.GenerateActions(session, turn, active);
-            
+
             if (!availableActions.Any())
             {
                 _logger.LogWarning("No available actions found");
@@ -60,7 +60,7 @@ public class AIService : IAIService
             }
 
             var selectedActions = _actionSelector.SelectActions(session, turn, active, availableActions);
-            
+
             if (!selectedActions.Any())
             {
                 _logger.LogWarning("No actions selected");
@@ -68,7 +68,7 @@ public class AIService : IAIService
             }
 
             var success = _actionExecutor.ExecuteActions(session, turn, selectedActions);
-            
+
             if (!success)
             {
                 _logger.LogWarning("Failed to execute turn");

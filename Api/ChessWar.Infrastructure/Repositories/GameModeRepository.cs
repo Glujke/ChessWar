@@ -21,7 +21,7 @@ public class GameModeRepository : IGameModeRepository
     public Task<T?> GetModeByIdAsync<T>(Guid modeId, CancellationToken cancellationToken = default) where T : IGameModeBase
     {
         var cacheKey = GetCacheKey(modeId);
-        
+
         if (_cache.TryGetValue(cacheKey, out IGameModeBase? mode) && mode is T typedMode)
         {
             return Task.FromResult<T?>(typedMode);
@@ -36,7 +36,7 @@ public class GameModeRepository : IGameModeRepository
             throw new ArgumentNullException(nameof(mode));
 
         var cacheKey = GetCacheKey(mode.Id);
-        
+
         var cacheOptions = new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = _cacheExpiration,
@@ -45,7 +45,7 @@ public class GameModeRepository : IGameModeRepository
         };
 
         _cache.Set(cacheKey, mode, cacheOptions);
-        
+
         return Task.CompletedTask;
     }
 

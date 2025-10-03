@@ -26,7 +26,7 @@ public class AbilityServiceTests
             .ReturnsAsync((BalanceVersion?)null);
         var logger = Mock.Of<ILogger<BalanceConfigProvider>>();
         var provider = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
-        
+
         var pieceDomainService = new Mock<IPieceDomainService>();
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(x => x.GetService(typeof(IEnumerable<IDomainEventHandler<PieceKilledEvent>>)))
@@ -36,9 +36,9 @@ public class AbilityServiceTests
                 new BoardCleanupHandler(),
                 new PositionSwapHandler()
             });
-        
+
         var eventDispatcher = new DomainEventDispatcher(serviceProviderMock.Object);
-        
+
         _abilityService = new AbilityService(provider, eventDispatcher, pieceDomainService.Object);
     }
 
@@ -147,14 +147,14 @@ public class AbilityServiceTests
         var pawn = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 2, 2);
         pawn.Owner = owner;
         owner.Pieces.Add(pawn);
-        
+
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 3, 2);
         enemy.Owner = enemyOwner;
         enemy.HP = 1; // Низкое HP для гарантированного убийства
-        
+
         var allPieces = new List<Piece> { pawn, enemy };
-        
+
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
         var result = testAbilityService.UseAbility(pawn, "ShieldBash", enemy.Position, allPieces);
@@ -172,14 +172,14 @@ public class AbilityServiceTests
         var bishop = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
         bishop.Owner = owner;
         owner.Pieces.Add(bishop);
-        
+
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 4, 4);
         enemy.Owner = enemyOwner;
         enemy.HP = 1; // Низкое HP для гарантированного убийства
-        
+
         var allPieces = new List<Piece> { bishop, enemy };
-        
+
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
         var result = testAbilityService.UseAbility(bishop, "LightArrow", enemy.Position, allPieces);
@@ -198,7 +198,7 @@ public class AbilityServiceTests
         queen.Owner = owner;
         owner.Pieces.Add(queen);
         var originalPosition = queen.Position;
-        
+
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy1 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 4, 4);
         var enemy2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 5, 5);
@@ -206,9 +206,9 @@ public class AbilityServiceTests
         enemy2.Owner = enemyOwner;
         enemy1.HP = 1; // Низкое HP для убийства
         enemy2.HP = 1; // Низкое HP для убийства
-        
+
         var allPieces = new List<Piece> { queen, enemy1, enemy2 };
-        
+
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy1, enemy2 });
 
         var result = testAbilityService.UseAbility(queen, "MagicExplosion", new Position(4, 4), allPieces);
@@ -228,14 +228,14 @@ public class AbilityServiceTests
         pawn.Owner = owner;
         owner.Pieces.Add(pawn);
         var originalPosition = pawn.Position;
-        
+
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 3, 2);
         enemy.Owner = enemyOwner;
         enemy.HP = 100; // Высокое HP чтобы не убить
-        
+
         var allPieces = new List<Piece> { pawn, enemy };
-        
+
         var testAbilityService = CreateAbilityServiceWithConfiguredMocks(new List<Piece> { enemy });
 
         var result = testAbilityService.UseAbility(pawn, "ShieldBash", enemy.Position, allPieces);
@@ -255,7 +255,7 @@ public class AbilityServiceTests
             .ReturnsAsync((BalanceVersion?)null);
         var logger = Mock.Of<ILogger<BalanceConfigProvider>>();
         var provider = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
-        
+
         var pieceDomainService = new Mock<IPieceDomainService>();
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(x => x.GetService(typeof(IEnumerable<IDomainEventHandler<PieceKilledEvent>>)))
@@ -265,9 +265,9 @@ public class AbilityServiceTests
                 new BoardCleanupHandler(),
                 new PositionSwapHandler()
             });
-        
+
         var eventDispatcher = new DomainEventDispatcher(serviceProviderMock.Object);
-        
+
         return new AbilityService(provider, eventDispatcher, pieceDomainService.Object);
     }
 
@@ -275,7 +275,7 @@ public class AbilityServiceTests
     {
         var abilityService = CreateAbilityServiceWithMockedPieceDomainService();
         var pieceDomainServiceMock = new Mock<IPieceDomainService>();
-        
+
         foreach (var piece in piecesToKill)
         {
             pieceDomainServiceMock
@@ -285,7 +285,7 @@ public class AbilityServiceTests
                 .Setup(x => x.IsDead(piece))
                 .Returns(() => piece.HP <= 0);
         }
-        
+
         pieceDomainServiceMock
             .Setup(x => x.SetAbilityCooldown(It.IsAny<Piece>(), It.IsAny<string>(), It.IsAny<int>()))
             .Callback<Piece, string, int>((piece, ability, cooldown) => piece.AbilityCooldowns[ability] = cooldown);
@@ -304,10 +304,10 @@ public class AbilityServiceTests
                 PieceType.King => 25,
                 _ => 10
             });
-        
+
         var configProvider = abilityService.GetType().GetField("_configProvider", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(abilityService) as IBalanceConfigProvider;
         var eventDispatcher = abilityService.GetType().GetField("_eventDispatcher", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(abilityService) as IDomainEventDispatcher;
-        
+
         return new AbilityService(configProvider, eventDispatcher, pieceDomainServiceMock.Object);
     }
 }

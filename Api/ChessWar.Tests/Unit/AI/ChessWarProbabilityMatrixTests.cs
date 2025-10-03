@@ -117,7 +117,7 @@ public class ChessWarProbabilityMatrixTests
 
         _matrix.UpdatePolicy(session, action, -0.5); // Отрицательная вероятность
         var negativeResult = _matrix.GetActionProbability(session, action);
-        
+
         _matrix.UpdatePolicy(session, action, 1.5); // Больше 1
         var positiveResult = _matrix.GetActionProbability(session, action);
 
@@ -200,7 +200,7 @@ public class ChessWarProbabilityMatrixTests
         Assert.True(cornerResult > 0.0);
         Assert.True(centerResult <= 1.0);
         Assert.True(cornerResult <= 1.0);
-        
+
         var difference = System.Math.Abs(centerResult - cornerResult);
         Assert.True(difference < 0.1); // Разница должна быть небольшой
     }
@@ -211,26 +211,26 @@ public class ChessWarProbabilityMatrixTests
         piece1.HP = 10;
         piece1.ATK = 2;
         piece1.XP = 0;
-        
+
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(2, 2));
         piece2.HP = 10;
         piece2.ATK = 2;
         piece2.XP = 0;
-        
+
         var player1 = new Player("Player 1", new List<Piece>());
         var player2 = new Player("Player 2", new List<Piece>());
-        
+
         piece1.Owner = player1;
         piece2.Owner = player2;
-        
+
         player1.AddPiece(piece1);
         player2.AddPiece(piece2);
-        
+
         var session = new GameSession(player1, player2, "Test");
-        
+
         session.GetBoard().PlacePiece(piece1);
         session.GetBoard().PlacePiece(piece2);
-        
+
         return session;
     }
 }

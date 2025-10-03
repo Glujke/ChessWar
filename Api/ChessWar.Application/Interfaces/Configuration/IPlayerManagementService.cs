@@ -12,12 +12,12 @@ public interface IPlayerManagementService
     /// Создаёт игрока с начальными фигурами
     /// </summary>
     Player CreatePlayerWithInitialPieces(string name, Team team);
-    
+
     /// <summary>
     /// Создаёт ИИ с начальными фигурами
     /// </summary>
     ChessWar.Domain.Entities.AI CreateAIWithInitialPieces(Team team);
-    
+
     /// <summary>
     /// Находит фигуру по ID в сессии
     /// </summary>

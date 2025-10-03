@@ -1,7 +1,7 @@
 namespace ChessWar.Domain.Exceptions;
 
 /// <summary>
-/// Exception thrown when trying to use an ability that's currently on cooldown
+/// Исключение, возникающее при попытке использовать способность, находящуюся на кулдауне.
 /// </summary>
 public class AbilityOnCooldownException : GameException
 {

@@ -30,7 +30,7 @@ public class MovementCostTests
         _attackRulesServiceMock = new Mock<IAttackRulesService>();
         _evolutionServiceMock = new Mock<IEvolutionService>();
         _configProviderMock = new Mock<IBalanceConfigProvider>();
-        
+
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
         _turnService = new TurnService(_movementRulesServiceMock.Object, _attackRulesServiceMock.Object, _evolutionServiceMock.Object, _configProviderMock.Object, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
     }

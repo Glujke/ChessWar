@@ -7,7 +7,7 @@ using ChessWar.Domain.ValueObjects;
 namespace ChessWar.Api.Middleware;
 
 /// <summary>
-/// Middleware for handling exceptions and converting them to RFC 7807 ProblemDetails
+/// Промежуточный слой для обработки исключений и преобразования их в формат RFC 7807 (ProblemDetails)
 /// </summary>
 public class ProblemDetailsMiddleware
 {
@@ -20,6 +20,9 @@ public class ProblemDetailsMiddleware
         _logger = logger;
     }
 
+    /// <summary>
+    /// Выполняет обработку HTTP-запроса и перехватывает необработанные исключения
+    /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -33,14 +36,14 @@ public class ProblemDetailsMiddleware
     }
 
     /// <summary>
-    /// Handles exceptions and converts them to ProblemDetails
+    /// Обрабатывает исключение и формирует ответ в формате ProblemDetails
     /// </summary>
     public async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         _logger.LogError(exception, "An exception occurred: {ExceptionType}", exception.GetType().Name);
 
         var problemDetails = CreateProblemDetails(context, exception);
-        
+
         context.Response.StatusCode = problemDetails.Status ?? (int)HttpStatusCode.InternalServerError;
         context.Response.ContentType = "application/problem+json";
 
@@ -54,6 +57,9 @@ public class ProblemDetailsMiddleware
         await context.Response.WriteAsync(json);
     }
 
+    /// <summary>
+    /// Создаёт объект ProblemDetails на основе типа исключения и контекста запроса
+    /// </summary>
     private static ProblemDetails CreateProblemDetails(HttpContext context, Exception exception)
     {
         var problemDetails = new ProblemDetails

@@ -2,7 +2,7 @@ using ChessWar.Application.DTOs;
 using ChessWar.Application.Commands.GameActionCommands;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
-using ChessWar.Domain.Interfaces.TurnManagement; 
+using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.ValueObjects;
 using ChessWar.Domain.Services.TurnManagement;

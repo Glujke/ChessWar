@@ -22,10 +22,10 @@ public class TurnActionRecorder : ITurnActionRecorder
     {
         if (string.IsNullOrWhiteSpace(actionType))
             throw new ArgumentException("Action type cannot be null or empty", nameof(actionType));
-        
+
         if (string.IsNullOrWhiteSpace(pieceId))
             throw new ArgumentException("Piece ID cannot be null or empty", nameof(pieceId));
-        
+
         if (targetPosition == null)
             throw new ArgumentNullException(nameof(targetPosition));
 

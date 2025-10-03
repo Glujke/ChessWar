@@ -9,7 +9,7 @@ public enum ScenarioType
     /// Бой с ИИ (этап 1 и 2)
     /// </summary>
     Battle,
-    
+
     /// <summary>
     /// Бой с боссом (этап 3)
     /// </summary>

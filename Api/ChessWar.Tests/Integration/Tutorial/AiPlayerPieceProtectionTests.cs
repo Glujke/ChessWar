@@ -27,20 +27,20 @@ public class AiPlayerPieceProtectionTests : IClassFixture<WebApplicationFactory<
     public async Task AiTurn_ShouldNotMovePlayerPieces_InTutorialMode()
     {
         var createResponse = await _client.PostAsync("/api/v1/game/tutorial?embed=(game)", Json(new { playerId = "TestPlayer" }));
-        
+
         Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
         var createContent = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createContent);
         var gameSessionId = createDoc.RootElement.GetProperty("gameSessionId").GetString();
-        
+
         Assert.NotNull(gameSessionId);
 
         var sessionResponse = await _client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
         Assert.Equal(HttpStatusCode.OK, sessionResponse.StatusCode);
-        
+
         var sessionContent = await sessionResponse.Content.ReadAsStringAsync();
         using var sessionDoc = JsonDocument.Parse(sessionContent);
-        
+
         var playerPieces = new List<(int Id, int X, int Y)>();
         var pieces = sessionDoc.RootElement.GetProperty("player1").GetProperty("pieces");
         foreach (var piece in pieces.EnumerateArray())
@@ -55,18 +55,18 @@ public class AiPlayerPieceProtectionTests : IClassFixture<WebApplicationFactory<
                 playerPieces.Add((id, x, y));
             }
         }
-        
+
         Assert.True(playerPieces.Count > 0, "Player should have pieces");
 
         var playerPieceId = playerPieces.First().Id.ToString();
         var moveResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/move",
             Json(new { pieceId = playerPieceId, targetPosition = new { x = 0, y = 2 } }));
-        
+
         Assert.Equal(HttpStatusCode.OK, moveResponse.StatusCode);
 
         var beforeAiResponse = await _client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
         Assert.Equal(HttpStatusCode.OK, beforeAiResponse.StatusCode);
-        
+
         var beforeAiContent = await beforeAiResponse.Content.ReadAsStringAsync();
         using var beforeAiDoc = JsonDocument.Parse(beforeAiContent);
         var beforeAiPlayerPieces = GetPlayerPieces(beforeAiDoc.RootElement);
@@ -74,10 +74,10 @@ public class AiPlayerPieceProtectionTests : IClassFixture<WebApplicationFactory<
         var endTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{gameSessionId}/turn/end", Json(new { }));
 
         Assert.Equal(HttpStatusCode.OK, endTurnResponse.StatusCode);
-        
+
         var afterAiResponse = await _client.GetAsync($"/api/v1/gamesession/{gameSessionId}");
         Assert.Equal(HttpStatusCode.OK, afterAiResponse.StatusCode);
-        
+
         var afterAiContent = await afterAiResponse.Content.ReadAsStringAsync();
         using var afterAiDoc = JsonDocument.Parse(afterAiContent);
         var afterAiPlayerPieces = GetPlayerPieces(afterAiDoc.RootElement);

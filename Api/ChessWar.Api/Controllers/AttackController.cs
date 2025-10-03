@@ -40,12 +40,12 @@ public class AttackController : BaseController
     {
         try
         {
-            LogInformation("Checking attack for piece {AttackerId} to position ({X}, {Y})", 
+            LogInformation("Checking attack for piece {AttackerId} to position ({X}, {Y})",
                 request.AttackerId, request.TargetX, request.TargetY);
-                
+
             var targetPosition = _mapper.Map<Position>(request);
             var result = await _attackService.CheckAttackAsync(request.AttackerId, targetPosition, ct);
-            
+
             if (result.Attacker == null)
             {
                 LogWarning("Piece with ID {AttackerId} not found", request.AttackerId);
@@ -53,7 +53,7 @@ public class AttackController : BaseController
             }
 
             var response = _mapper.Map<AttackResponseDto>(result);
-            LogInformation("Attack check completed for piece {AttackerId}: {CanAttack}", 
+            LogInformation("Attack check completed for piece {AttackerId}: {CanAttack}",
                 request.AttackerId, result.CanAttack);
             return Ok(response);
         }
@@ -80,9 +80,9 @@ public class AttackController : BaseController
         try
         {
             LogInformation("Getting attackable positions for piece {AttackerId}", attackerId);
-            
+
             var attackablePositions = await _attackService.GetAttackablePositionsAsync(attackerId, ct);
-            
+
             if (!attackablePositions.Any())
             {
                 LogWarning("Piece with ID {AttackerId} not found", attackerId);
@@ -96,7 +96,7 @@ public class AttackController : BaseController
                 TotalCount = attackablePositions.Count()
             };
 
-            LogInformation("Found {Count} attackable positions for piece {AttackerId}", 
+            LogInformation("Found {Count} attackable positions for piece {AttackerId}",
                 attackablePositions.Count(), attackerId);
             return Ok(response);
         }
@@ -125,16 +125,16 @@ public class AttackController : BaseController
         try
         {
             LogInformation("Checking if piece {TargetId} is enemy of piece {AttackerId}", targetId, attackerId);
-            
+
             var isEnemy = await _attackService.IsEnemyAsync(attackerId, targetId, ct);
-            
-            LogInformation("Piece {TargetId} is enemy of piece {AttackerId}: {IsEnemy}", 
+
+            LogInformation("Piece {TargetId} is enemy of piece {AttackerId}: {IsEnemy}",
                 targetId, attackerId, isEnemy);
             return Ok(isEnemy);
         }
         catch (Exception ex)
         {
-            LogError(ex, "Error checking enemy status between pieces {AttackerId} and {TargetId}", 
+            LogError(ex, "Error checking enemy status between pieces {AttackerId} and {TargetId}",
                 attackerId, targetId);
             return _errorHandlingService.CreateValidationError("Failed to check enemy status", ex.Message);
         }
@@ -158,9 +158,9 @@ public class AttackController : BaseController
     {
         try
         {
-            LogInformation("Calculating Chebyshev distance from ({FromX}, {FromY}) to ({ToX}, {ToY})", 
+            LogInformation("Calculating Chebyshev distance from ({FromX}, {FromY}) to ({ToX}, {ToY})",
                 fromX, fromY, toX, toY);
-                
+
             var from = new Position(fromX, fromY);
             var to = new Position(toX, toY);
             var distance = _attackService.CalculateChebyshevDistance(from, to);
@@ -170,7 +170,7 @@ public class AttackController : BaseController
         }
         catch (Exception ex)
         {
-            LogError(ex, "Error calculating distance from ({FromX}, {FromY}) to ({ToX}, {ToY})", 
+            LogError(ex, "Error calculating distance from ({FromX}, {FromY}) to ({ToX}, {ToY})",
                 fromX, fromY, toX, toY);
             return _errorHandlingService.CreateValidationError("Failed to calculate distance", ex.Message);
         }
