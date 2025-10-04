@@ -101,8 +101,8 @@ public sealed class BalanceConfigProvider : IBalanceConfigProvider
                 ["Queen.MagicExplosion"] = new AbilitySpecModel { MpCost = 10, Cooldown = 3, Range = 3, IsAoe = true, Damage = 7 },
                 ["Queen.Resurrection"] = new AbilitySpecModel { MpCost = 10, Cooldown = 10, Range = 3, IsAoe = false, Heal = 20 },
                 ["King.RoyalCommand"] = new AbilitySpecModel { MpCost = 10, Cooldown = 6, Range = 8, IsAoe = false },
-                ["Pawn.ShieldBash"] = new AbilitySpecModel { MpCost = 2, Cooldown = 0, Range = 1, IsAoe = false, Damage = 2 },
-                ["Pawn.Breakthrough"] = new AbilitySpecModel { MpCost = 2, Cooldown = 0, Range = 1, IsAoe = false, Damage = 3 },
+                ["Pawn.ShieldBash"] = new AbilitySpecModel { MpCost = 2, Cooldown = 2, Range = 1, IsAoe = false, Damage = 2 },
+                ["Pawn.Breakthrough"] = new AbilitySpecModel { MpCost = 2, Cooldown = 2, Range = 1, IsAoe = false, Damage = 3 },
             },
             Evolution = new EvolutionSection
             {
