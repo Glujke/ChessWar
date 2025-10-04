@@ -30,6 +30,19 @@ services:
       - chesswar
     restart: unless-stopped
 
+  config-maker:
+    build:
+      context: ../config-maker
+      dockerfile: Dockerfile
+    container_name: config-maker
+    ports:
+      - "${CONFIG_MAKER_PORT:-4199}:4199" # config maker доступен с хоста
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - chesswar
+    restart: unless-stopped
+
 volumes:
   chesswar_data:
     name: chesswar_data

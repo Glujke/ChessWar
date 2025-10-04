@@ -9,6 +9,7 @@ public sealed class BalanceConfig
     public required EvolutionSection Evolution { get; init; }
     public required AiSection Ai { get; init; }
     public required KillRewardsSection KillRewards { get; init; }
+    public required ShieldSystemConfig ShieldSystem { get; init; }
 }
 
 

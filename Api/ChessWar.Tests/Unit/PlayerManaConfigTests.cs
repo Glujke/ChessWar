@@ -76,6 +76,11 @@ public class PlayerManaConfigTests
                 LastRankEdgeY = new Dictionary<string, int>(),
                 KingAura = new KingAuraConfig { Radius = 3, AtkBonus = 1 }
             },
+            ShieldSystem = new ShieldSystemConfig
+            {
+                King = new KingShieldConfig { BaseRegen = 10, ProximityBonus1 = new Dictionary<string, int>(), ProximityBonus2 = new Dictionary<string, int>() },
+                Ally = new AllyShieldConfig { NeighborContribution = new Dictionary<string, int>() }
+            },
             KillRewards = new KillRewardsSection
             {
                 Pawn = 10,

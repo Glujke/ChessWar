@@ -26,9 +26,9 @@ public class PiecesControllerTests
         _mapperMock = new Mock<IMapper>();
         _loggerMock = new Mock<ILogger<PiecesController>>();
 
-        _mapperMock.Setup(x => x.Map<List<PieceDto>>(It.IsAny<IEnumerable<Domain.Entities.Piece>>()))
+        _mapperMock.Setup(x => x.Map<List<PieceDto>>(It.IsAny<IEnumerable<ChessWar.Domain.Entities.Piece>>()))
             .Returns(new List<PieceDto>());
-        _mapperMock.Setup(x => x.Map<PieceDto>(It.IsAny<Domain.Entities.Piece>()))
+        _mapperMock.Setup(x => x.Map<PieceDto>(It.IsAny<ChessWar.Domain.Entities.Piece>()))
             .Returns(new PieceDto());
 
         _controller = new PiecesController(_pieceServiceMock.Object, _mapperMock.Object, _loggerMock.Object);

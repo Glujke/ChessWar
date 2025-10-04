@@ -43,6 +43,8 @@ public class PieceFactory : IPieceFactory
             Movement = stats.Movement,
             XP = 0,
             XPToEvolve = stats.XpToEvolve,
+            MaxShieldHP = stats.MaxShieldHP,
+            ShieldHP = 0,
             IsFirstMove = true,
             AbilityCooldowns = new Dictionary<string, int>()
         };

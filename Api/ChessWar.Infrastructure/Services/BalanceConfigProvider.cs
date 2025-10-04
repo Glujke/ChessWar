@@ -85,12 +85,12 @@ public sealed class BalanceConfigProvider : IBalanceConfigProvider
             },
             Pieces = new Dictionary<string, PieceStats>
             {
-                ["Pawn"] = new PieceStats { Hp = 10, Atk = 2, Range = 1, Movement = 1, XpToEvolve = 20 },
-                ["Knight"] = new PieceStats { Hp = 20, Atk = 4, Range = 1, Movement = 1, XpToEvolve = 40 },
-                ["Bishop"] = new PieceStats { Hp = 18, Atk = 3, Range = 4, Movement = 8, XpToEvolve = 40 },
-                ["Rook"] = new PieceStats { Hp = 25, Atk = 5, Range = 8, Movement = 8, XpToEvolve = 60 },
-                ["Queen"] = new PieceStats { Hp = 30, Atk = 7, Range = 3, Movement = 8, XpToEvolve = 0 },
-                ["King"] = new PieceStats { Hp = 50, Atk = 3, Range = 1, Movement = 1, XpToEvolve = 0 },
+                ["Pawn"] = new PieceStats { Hp = 10, Atk = 2, Range = 1, Movement = 1, XpToEvolve = 20, MaxShieldHP = 50 },
+                ["Knight"] = new PieceStats { Hp = 20, Atk = 4, Range = 1, Movement = 1, XpToEvolve = 40, MaxShieldHP = 80 },
+                ["Bishop"] = new PieceStats { Hp = 18, Atk = 3, Range = 4, Movement = 8, XpToEvolve = 40, MaxShieldHP = 80 },
+                ["Rook"] = new PieceStats { Hp = 25, Atk = 5, Range = 8, Movement = 8, XpToEvolve = 60, MaxShieldHP = 100 },
+                ["Queen"] = new PieceStats { Hp = 30, Atk = 7, Range = 3, Movement = 8, XpToEvolve = 0, MaxShieldHP = 150 },
+                ["King"] = new PieceStats { Hp = 50, Atk = 3, Range = 1, Movement = 1, XpToEvolve = 0, MaxShieldHP = 400 },
             },
             Abilities = new Dictionary<string, AbilitySpecModel>
             {
@@ -140,6 +140,43 @@ public sealed class BalanceConfigProvider : IBalanceConfigProvider
                 Rook = 30,
                 Queen = 50,
                 King = 100
+            },
+            ShieldSystem = new ShieldSystemConfig
+            {
+                King = new KingShieldConfig
+                {
+                    BaseRegen = 10,
+                    ProximityBonus1 = new Dictionary<string, int>
+                    {
+                        ["King"] = 30,
+                        ["Queen"] = 30,
+                        ["Rook"] = 20,
+                        ["Bishop"] = 15,
+                        ["Knight"] = 15,
+                        ["Pawn"] = 10
+                    },
+                    ProximityBonus2 = new Dictionary<string, int>
+                    {
+                        ["King"] = 60,
+                        ["Queen"] = 60,
+                        ["Rook"] = 40,
+                        ["Bishop"] = 30,
+                        ["Knight"] = 30,
+                        ["Pawn"] = 10
+                    }
+                },
+                Ally = new AllyShieldConfig
+                {
+                    NeighborContribution = new Dictionary<string, int>
+                    {
+                        ["King"] = 30,
+                        ["Queen"] = 25,
+                        ["Rook"] = 20,
+                        ["Bishop"] = 15,
+                        ["Knight"] = 15,
+                        ["Pawn"] = 5
+                    }
+                }
             }
         };
     }

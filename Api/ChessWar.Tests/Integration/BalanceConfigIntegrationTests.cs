@@ -61,7 +61,7 @@ public class BalanceConfigIntegrationTests : IDisposable
             },
             Pieces = new Dictionary<string, PieceStats>
             {
-                ["Pawn"] = new PieceStats { Hp = 12, Atk = 3, Range = 1, Movement = 1, XpToEvolve = 25 }
+                ["Pawn"] = new PieceStats { Hp = 12, Atk = 3, Range = 1, Movement = 1, XpToEvolve = 25, MaxShieldHP = 50 }
             },
             Abilities = new Dictionary<string, AbilitySpecModel>
             {
@@ -78,6 +78,11 @@ public class BalanceConfigIntegrationTests : IDisposable
                 NearEvolutionXp = 24,
                 LastRankEdgeY = new Dictionary<string, int> { ["Elves"] = 6, ["Orcs"] = 1 },
                 KingAura = new KingAuraConfig { Radius = 4, AtkBonus = 2 }
+            },
+            ShieldSystem = new ShieldSystemConfig
+            {
+                King = new KingShieldConfig { BaseRegen = 10, ProximityBonus1 = new Dictionary<string, int>(), ProximityBonus2 = new Dictionary<string, int>() },
+                Ally = new AllyShieldConfig { NeighborContribution = new Dictionary<string, int>() }
             },
             KillRewards = new KillRewardsSection
             {

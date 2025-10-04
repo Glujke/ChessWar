@@ -22,6 +22,22 @@ public class Piece
     public int XP { get; set; }
     public int XPToEvolve { get; set; }
 
+    /// <summary>
+    /// Текущее значение энергетического щита фигуры
+    /// </summary>
+    private int _shieldHP;
+    public int ShieldHP
+    {
+        get => _shieldHP;
+        set => _shieldHP = Math.Max(0, Math.Min(value, MaxShieldHP));
+    }
+
+    /// <summary>
+    /// Максимальное значение щита (загружается из BalanceConfig)
+    /// King=400, Queen=150, Rook=100, Bishop/Knight=80, Pawn=50
+    /// </summary>
+    public int MaxShieldHP { get; set; }
+
     public bool CanEvolve => XP >= XPToEvolve;
     public bool IsAlive => HP > 0;
     public bool IsFirstMove { get; set; } = true;

@@ -69,7 +69,8 @@ public class ConfigServiceValidationTests : IDisposable
               "atk": 2,
               "range": 1,
               "movement": 1,
-              "xpToEvolve": 20
+              "xpToEvolve": 20,
+              "maxShieldHP": 50
             }
           },
           "abilities": {
@@ -91,6 +92,16 @@ public class ConfigServiceValidationTests : IDisposable
           },
           "ai": {
             "nearEvolutionXp": 19
+          },
+          "shieldSystem": {
+            "king": {
+              "baseRegen": 10,
+              "proximityBonus1": {},
+              "proximityBonus2": {}
+            },
+            "ally": {
+              "neighborContribution": {}
+            }
           },
           "killRewards": {
             "pawn": 10,
@@ -162,7 +173,8 @@ public class ConfigServiceValidationTests : IDisposable
               "atk": 2,
               "range": 1,
               "movement": 1,
-              "xpToEvolve": 20
+              "xpToEvolve": 20,
+              "maxShieldHP": 50
             }
           },
           "abilities": {},

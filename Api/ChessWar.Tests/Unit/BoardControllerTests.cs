@@ -28,7 +28,7 @@ public class BoardControllerTests
 
         _mapperMock.Setup(x => x.Map<GameBoardDto>(It.IsAny<GameBoard>()))
             .Returns(new GameBoardDto());
-        _mapperMock.Setup(x => x.Map<PieceDto>(It.IsAny<Domain.Entities.Piece>()))
+        _mapperMock.Setup(x => x.Map<PieceDto>(It.IsAny<ChessWar.Domain.Entities.Piece>()))
             .Returns(new PieceDto());
 
         _controller = new BoardController(_boardServiceMock.Object, _mapperMock.Object, _loggerMock.Object);

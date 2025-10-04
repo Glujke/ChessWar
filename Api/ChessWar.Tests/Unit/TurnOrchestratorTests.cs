@@ -75,6 +75,19 @@ public class TurnOrchestratorTests
                     Rook = 30,
                     Queen = 50,
                     King = 100
+                },
+                ShieldSystem = new ShieldSystemConfig
+                {
+                    King = new KingShieldConfig
+                    {
+                        BaseRegen = 10,
+                        ProximityBonus1 = new Dictionary<string, int>(),
+                        ProximityBonus2 = new Dictionary<string, int>()
+                    },
+                    Ally = new AllyShieldConfig
+                    {
+                        NeighborContribution = new Dictionary<string, int>()
+                    }
                 }
             });
 

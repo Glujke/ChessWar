@@ -3,7 +3,7 @@
   "type": "object",
   "title": "BalanceConfig",
   "description": "Configuration for game balance including pieces, abilities, evolution rules and AI settings",
-  "required": ["globals", "playerMana", "pieces", "abilities", "evolution", "ai", "killRewards"],
+  "required": ["globals", "playerMana", "pieces", "abilities", "evolution", "ai", "shieldSystem", "killRewards"],
   "properties": {
     "version": {
       "type": "string",
@@ -74,7 +74,7 @@
       "patternProperties": {
         "^(Pawn|Knight|Bishop|Rook|Queen|King)$": {
           "type": "object",
-          "required": ["hp", "atk", "range", "movement", "xpToEvolve"],
+          "required": ["hp", "atk", "range", "movement", "xpToEvolve", "maxShieldHP"],
           "properties": {
             "hp": {
               "type": "integer",
@@ -100,6 +100,11 @@
               "type": "integer",
               "minimum": 0,
               "description": "XP required to evolve"
+            },
+            "maxShieldHP": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum shield HP for Collective Shield system (King=400, Queen=150, Rook=100, Bishop/Knight=80, Pawn=50)"
             }
           },
           "additionalProperties": false
@@ -257,6 +262,59 @@
               "type": "integer",
               "minimum": 0,
               "description": "Attack bonus"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "shieldSystem": {
+      "type": "object",
+      "description": "Configuration for collective shield system",
+      "required": ["king", "ally"],
+      "properties": {
+        "king": {
+          "type": "object",
+          "description": "King shield configuration",
+          "required": ["baseRegen", "proximityBonus1", "proximityBonus2"],
+          "properties": {
+            "baseRegen": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Base shield regeneration per turn"
+            },
+            "proximityBonus1": {
+              "type": "object",
+              "description": "Shield bonus from allies at distance <= 1",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "proximityBonus2": {
+              "type": "object",
+              "description": "Shield bonus from allies at distance = 2",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "ally": {
+          "type": "object",
+          "description": "Regular pieces shield configuration",
+          "required": ["neighborContribution"],
+          "properties": {
+            "neighborContribution": {
+              "type": "object",
+              "description": "Shield contribution from each piece type at distance <= 1",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           },
           "additionalProperties": false

@@ -11,14 +11,32 @@ namespace ChessWar.Domain.Services.GameLogic;
 public class PieceDomainService : IPieceDomainService
 {
     /// <summary>
-    /// Применяет урон к фигуре и не допускает значения ниже нуля.
+    /// Применяет урон к фигуре с учётом энергетического щита
+    /// Урон сначала наносится по ShieldHP, остаток (если есть) - по HP
     /// </summary>
     public void TakeDamage(Piece piece, int damage)
     {
         if (piece == null) throw new ArgumentNullException(nameof(piece));
         if (damage < 0) throw new ArgumentException("Damage cannot be negative", nameof(damage));
 
-        piece.HP = Math.Max(0, piece.HP - damage);
+        if (damage == 0)
+        {
+            return; // Нулевой урон ничего не меняет
+        }
+
+        // Сначала урон наносится по щиту
+        if (piece.ShieldHP > 0)
+        {
+            var damageToShield = Math.Min(damage, piece.ShieldHP);
+            piece.ShieldHP -= damageToShield;
+            damage -= damageToShield;
+        }
+
+        // Если остался урон, наносим по реальному HP
+        if (damage > 0)
+        {
+            piece.HP = Math.Max(0, piece.HP - damage);
+        }
     }
 
     /// <summary>
