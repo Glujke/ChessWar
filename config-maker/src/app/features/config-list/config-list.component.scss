@@ -1,0 +1,269 @@
+.config-list-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+}
+
+// Breadcrumbs
+.breadcrumbs {
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  color: #666;
+
+  .breadcrumb-item {
+    &.active {
+      color: #1976d2;
+      font-weight: 500;
+    }
+  }
+}
+
+// Toolbar
+.page-toolbar {
+  background: white !important;
+  color: #333 !important;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 24px;
+  height: 80px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .toolbar-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #333;
+    }
+  }
+
+  .toolbar-right {
+    display: flex;
+    gap: 12px;
+
+    button {
+      height: 40px;
+      font-size: 14px;
+      font-weight: 500;
+
+      mat-icon {
+        margin-right: 8px;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
+// Page Content
+.page-content {
+  flex: 1;
+  padding: 24px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+// Loading
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+
+  p {
+    margin-top: 24px;
+    font-size: 16px;
+    color: #666;
+  }
+}
+
+// Filters Card
+.filters-card {
+  margin-bottom: 24px;
+
+  mat-card-content {
+    padding: 16px 24px !important;
+  }
+
+  .filters-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    mat-form-field {
+      min-width: 250px;
+    }
+
+    .results-count {
+      color: #666;
+      font-size: 14px;
+
+      strong {
+        color: #1976d2;
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+// Table Card
+.table-card {
+  overflow: hidden;
+
+  .config-table {
+    width: 100%;
+
+    th {
+      background: #fafafa;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(0, 0, 0, 0.87);
+      padding: 16px !important;
+    }
+
+    td {
+      padding: 16px !important;
+      font-size: 14px;
+    }
+
+    .table-row {
+      transition: background-color 0.2s;
+
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+
+    .version-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      strong {
+        font-size: 15px;
+        color: #333;
+      }
+
+      .active-badge {
+        font-size: 11px;
+        font-weight: 600;
+        height: 24px;
+      }
+    }
+
+    mat-chip {
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    .comment-text {
+      color: #666;
+      font-style: italic;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+
+      button {
+        min-width: 90px;
+
+        mat-icon {
+          margin-right: 4px;
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #999;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 18px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 960px) {
+  .page-toolbar {
+    flex-direction: column;
+    height: auto;
+    padding: 16px;
+    gap: 16px;
+
+    .toolbar-left,
+    .toolbar-right {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .toolbar-right {
+      flex-wrap: wrap;
+    }
+  }
+
+  .filters-card .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .table-card .config-table {
+    .actions-cell {
+      flex-direction: column;
+      gap: 4px;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+

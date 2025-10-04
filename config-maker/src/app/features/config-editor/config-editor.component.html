@@ -1,0 +1,168 @@
+<div class="config-editor-page">
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumbs">
+    <a class="breadcrumb-item" (click)="goBack()">Главная</a>
+    <span class="separator">/</span>
+    <span class="breadcrumb-item">Конфигурация</span>
+    <span class="separator">/</span>
+    <span class="breadcrumb-item">{{ versionInfo()?.version || versionId() }}</span>
+    @if (isEditMode()) {
+      <span class="separator">/</span>
+      <span class="breadcrumb-item active">Редактирование</span>
+    } @else {
+      <span class="separator">/</span>
+      <span class="breadcrumb-item active">Просмотр</span>
+    }
+  </nav>
+
+  <!-- Toolbar -->
+  <mat-toolbar class="page-toolbar">
+    <div class="toolbar-left">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="version-info">
+        @if (isEditMode()) {
+          <mat-icon class="toolbar-icon">edit</mat-icon>
+          <h1>Редактирование конфигурации</h1>
+        } @else {
+          <mat-icon class="toolbar-icon">visibility</mat-icon>
+          <h1>Просмотр конфигурации</h1>
+        }
+        @if (versionInfo(); as info) {
+          <div class="version-meta">
+            <strong>{{ info.version }}</strong>
+            <mat-chip [color]="getStatusColor(info.status)" highlighted>
+              {{ info.status }}
+            </mat-chip>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="toolbar-right">
+      @if (isEditMode()) {
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="saveConfig()"
+          [disabled]="saving() || configForm.invalid">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            <mat-icon>save</mat-icon>
+          }
+          Сохранить черновик
+        </button>
+        <button 
+          mat-raised-button 
+          color="accent" 
+          (click)="publishConfig()"
+          [disabled]="configForm.invalid">
+          <mat-icon>publish</mat-icon>
+          Опубликовать
+        </button>
+      }
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content -->
+  <div class="page-content">
+    @if (loading()) {
+      <mat-card class="loading-card">
+        <mat-card-content>
+          <div class="loading-container">
+            <mat-spinner></mat-spinner>
+            <p>Загрузка конфигурации...</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <!-- Form Errors -->
+      @if (errors().length > 0) {
+        <mat-card class="errors-card">
+          <mat-card-content>
+            <div class="errors-container">
+              <mat-icon color="warn">error</mat-icon>
+              <h3>Ошибки конфигурации</h3>
+              <ul>
+                @for (error of errors(); track error) {
+                  <li>{{ error }}</li>
+                }
+              </ul>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Configuration Form -->
+      <mat-card class="form-card">
+        <mat-card-content>
+          <form [formGroup]="configForm">
+            <mat-tab-group 
+              [(selectedIndex)]="activeTab"
+              (selectedIndexChange)="onTabChange($event)"
+              class="config-tabs"
+              animationDuration="300ms">
+              
+              <!-- Globals Tab -->
+              <mat-tab [label]="formSections[0].title">
+                <ng-template matTabContent>
+                  <app-globals-form [globalsForm]="globalsForm"></app-globals-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- Player Mana Tab -->
+              <mat-tab [label]="formSections[1].title">
+                <ng-template matTabContent>
+                  <app-player-mana-form [playerManaForm]="playerManaForm"></app-player-mana-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- Pieces Tab -->
+              <mat-tab [label]="formSections[2].title">
+                <ng-template matTabContent>
+                  <app-pieces-form [piecesForm]="piecesForm"></app-pieces-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- Abilities Tab -->
+              <mat-tab [label]="formSections[3].title">
+                <ng-template matTabContent>
+                  <app-abilities-form [abilitiesForm]="abilitiesForm"></app-abilities-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- Evolution Tab -->
+              <mat-tab [label]="formSections[4].title">
+                <ng-template matTabContent>
+                  <app-evolution-form [evolutionForm]="evolutionForm"></app-evolution-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- AI Tab -->
+              <mat-tab [label]="formSections[5].title">
+                <ng-template matTabContent>
+                  <app-ai-form [aiForm]="aiForm"></app-ai-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- Shield System Tab -->
+              <mat-tab [label]="formSections[6].title">
+                <ng-template matTabContent>
+                  <app-shield-form [shieldForm]="shieldForm"></app-shield-form>
+                </ng-template>
+              </mat-tab>
+
+              <!-- Kill Rewards Tab -->
+              <mat-tab [label]="formSections[7].title">
+                <ng-template matTabContent>
+                  <app-kill-rewards-form [killRewardsForm]="killRewardsForm"></app-kill-rewards-form>
+                </ng-template>
+              </mat-tab>
+            </mat-tab-group>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+</div>

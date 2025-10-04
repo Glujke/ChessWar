@@ -1,0 +1,124 @@
+<div class="config-list-page">
+  <!-- Breadcrumbs -->
+  <nav class="breadcrumbs">
+    <span class="breadcrumb-item active">Главная</span>
+  </nav>
+
+  <!-- Toolbar -->
+  <mat-toolbar class="page-toolbar">
+    <div class="toolbar-left">
+      <mat-icon class="toolbar-icon">settings</mat-icon>
+      <h1>Менеджер конфигураций ChessWar</h1>
+    </div>
+    <div class="toolbar-right">
+      <button mat-raised-button color="accent" (click)="createVersion()">
+        <mat-icon>add</mat-icon>
+        Создать новую версию
+      </button>
+      <button mat-raised-button color="primary" (click)="loadVersions()">
+        <mat-icon>refresh</mat-icon>
+        Обновить
+      </button>
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content -->
+  <div class="page-content">
+    @if (loading()) {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Загрузка конфигураций...</p>
+      </div>
+    } @else {
+      <!-- Filters Card -->
+      <mat-card class="filters-card">
+        <mat-card-content>
+          <div class="filters-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Фильтр по статусу</mat-label>
+              <mat-select [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
+                <mat-option value="all">Все статусы</mat-option>
+                <mat-option value="active">Активная</mat-option>
+                <mat-option value="published">Опубликованная</mat-option>
+                <mat-option value="draft">Черновик</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="results-count">
+              <strong>{{ filteredVersions().length }}</strong> версий найдено
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Table Card -->
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="filteredVersions()" class="config-table">
+          <!-- Version Column -->
+          <ng-container matColumnDef="version">
+            <th mat-header-cell *matHeaderCellDef>Версия</th>
+            <td mat-cell *matCellDef="let version">
+              <div class="version-cell">
+                <strong>{{ version.version }}</strong>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Статус</th>
+            <td mat-cell *matCellDef="let version">
+              <mat-chip [color]="getStatusColor(version.status)" highlighted>
+                {{ version.status }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Created At Column -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Создано</th>
+            <td mat-cell *matCellDef="let version">
+              {{ version.createdAt | date: 'short' }}
+            </td>
+          </ng-container>
+
+          <!-- Comment Column -->
+          <ng-container matColumnDef="comment">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let version">
+              <span class="comment-text">{{ version.comment || 'No description' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Действия</th>
+            <td mat-cell *matCellDef="let version" class="actions-cell">
+              <button mat-button color="primary" (click)="viewConfig(version.id)">
+                <mat-icon>visibility</mat-icon>
+                Просмотр
+              </button>
+              <button mat-button color="accent" (click)="editConfig(version.id)">
+                <mat-icon>edit</mat-icon>
+                Редактировать
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+        </table>
+
+        @if (filteredVersions().length === 0) {
+          <div class="empty-state">
+            <mat-icon>folder_open</mat-icon>
+            <p>No configurations found</p>
+            <button mat-raised-button color="accent" (click)="createVersion()">
+              <mat-icon>add</mat-icon>
+              Create First Version
+            </button>
+          </div>
+        }
+      </mat-card>
+    }
+  </div>
+</div>
