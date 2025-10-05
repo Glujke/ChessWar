@@ -35,7 +35,7 @@ public class ExperienceAwardHandler : IDomainEventHandler<PieceKilledEvent>
             Enums.PieceType.Rook => killRewards.Rook,
             Enums.PieceType.Queen => killRewards.Queen,
             Enums.PieceType.King => killRewards.King,
-            _ => killRewards.Pawn // fallback to pawn reward
+            _ => killRewards.Pawn
         };
     }
 }

@@ -122,7 +122,7 @@ public class AIEfficiencyTests
             .Returns(1.0);
 
         _mockProbabilityMatrix.Setup(x => x.GetTransitionProbability(It.IsAny<GameSession>(), It.IsAny<GameAction>(), It.IsAny<GameSession>()))
-            .Returns(0.0); // Нет доступных действий
+            .Returns(0.0);
         _mockProbabilityMatrix.Setup(x => x.GetReward(It.IsAny<GameSession>(), It.IsAny<GameAction>()))
             .Returns(0.0);
 
@@ -131,7 +131,7 @@ public class AIEfficiencyTests
         Assert.False(result, "ИИ не должен выполнить ход при отсутствии доступных действий");
 
         var finalMana = session.GetCurrentTurn().RemainingMP;
-        Assert.Equal(initialMana, finalMana); // Ману не должна измениться
+        Assert.Equal(initialMana, finalMana);
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public class AIEfficiencyTests
         Assert.True(result, "ИИ должен успешно выполнить атаку");
 
         var finalHp = targetPiece?.HP ?? 0;
-        // Проверяем, что ИИ выполнил хотя бы одно действие (атака или движение)
+       
         var manaSpent = initialMana - session.GetCurrentTurn().RemainingMP;
         Assert.True(manaSpent > 0, $"ИИ должен потратить ману. Потрачено: {manaSpent}");
     }
@@ -175,7 +175,7 @@ public class AIEfficiencyTests
             .Returns(1.0);
 
         _mockProbabilityMatrix.Setup(x => x.GetTransitionProbability(It.IsAny<GameSession>(), It.IsAny<GameAction>(), It.IsAny<GameSession>()))
-            .Returns(0.0); // Все действия будут неуспешными
+            .Returns(0.0);
         _mockProbabilityMatrix.Setup(x => x.GetReward(It.IsAny<GameSession>(), It.IsAny<GameAction>()))
             .Returns(0.0);
 
@@ -184,7 +184,7 @@ public class AIEfficiencyTests
         Assert.False(result, "ИИ не должен выполнить ход при неуспешных действиях");
 
         var finalMana = session.GetCurrentTurn().RemainingMP;
-        Assert.Equal(initialMana, finalMana); // Ману не должна измениться
+        Assert.Equal(initialMana, finalMana);
     }
 
     [Fact]
@@ -199,8 +199,8 @@ public class AIEfficiencyTests
             .Returns(1.0);
 
         _mockProbabilityMatrix.SetupSequence(x => x.GetTransitionProbability(It.IsAny<GameSession>(), It.IsAny<GameAction>(), It.IsAny<GameSession>()))
-            .Returns(0.8)  // Первое действие успешно
-            .Returns(0.0); // Второе действие неуспешно
+            .Returns(0.8) 
+            .Returns(0.0);
 
         _mockProbabilityMatrix.Setup(x => x.GetReward(It.IsAny<GameSession>(), It.IsAny<GameAction>()))
             .Returns(1.0);
@@ -222,13 +222,13 @@ public class AIEfficiencyTests
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
 
         var aiPiece = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 6));
-        aiPiece.Id = 1; // Уникальный ID для ИИ
+        aiPiece.Id = 1;
         aiPiece.HP = 10;
         aiPiece.Owner = player2;
         player2.AddPiece(aiPiece);
 
         var playerPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 1));
-        playerPiece.Id = 2; // Уникальный ID для игрока
+        playerPiece.Id = 2;
         playerPiece.HP = 10;
         playerPiece.Owner = player1;
         player1.AddPiece(playerPiece);
@@ -236,7 +236,7 @@ public class AIEfficiencyTests
         player1.SetMana(50, 50);
         player2.SetMana(50, 50);
 
-        var session = new GameSession(player2, player1, "Test"); // AI первый, Player1 второй
+        var session = new GameSession(player2, player1, "Test");
         session.StartGame();
 
         session.GetBoard().PlacePiece(aiPiece);
@@ -272,14 +272,14 @@ public class AIEfficiencyTests
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
 
         var aiPiece = new Piece(PieceType.Pawn, Team.Orcs, new Position(0, 0));
-        aiPiece.Id = 1; // Уникальный ID для ИИ
+        aiPiece.Id = 1;
         aiPiece.HP = 10;
-        aiPiece.ATK = 5; // Высокая атака
+        aiPiece.ATK = 5;
         aiPiece.Owner = player2;
         player2.AddPiece(aiPiece);
 
         var targetPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 1));
-        targetPiece.Id = 2; // Уникальный ID для цели
+        targetPiece.Id = 2;
         targetPiece.HP = 10;
         targetPiece.Owner = player1;
         player1.AddPiece(targetPiece);
@@ -287,7 +287,7 @@ public class AIEfficiencyTests
         player1.SetMana(50, 50);
         player2.SetMana(50, 50);
 
-        var session = new GameSession(player2, player1, "Test"); // AI первый, Player1 второй
+        var session = new GameSession(player2, player1, "Test");
         session.StartGame();
 
         session.GetBoard().PlacePiece(aiPiece);
@@ -335,7 +335,7 @@ public class AIEfficiencyTests
         player1.SetMana(50, 50);
         player2.SetMana(50, 50);
 
-        var session = new GameSession(player2, player1, "Test"); // AI первый, Player1 второй
+        var session = new GameSession(player2, player1, "Test");
         session.StartGame();
 
         session.GetBoard().PlacePiece(aiPiece1);

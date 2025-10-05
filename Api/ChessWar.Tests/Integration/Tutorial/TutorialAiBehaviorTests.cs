@@ -88,7 +88,7 @@ public class TutorialAiBehaviorTests : IClassFixture<WebApplicationFactory<Progr
         foreach (var piece in pieces.EnumerateArray())
         {
             var team = piece.GetProperty("team").GetInt32();
-            if (team == 1) // Elves
+            if (team == 1)
             {
                 playerPieceId = piece.GetProperty("id").GetInt32().ToString();
                 break;
@@ -139,10 +139,10 @@ public class TutorialAiBehaviorTests : IClassFixture<WebApplicationFactory<Progr
 
         var currentTurn = finalSessionDoc.RootElement.GetProperty("currentTurn");
 
-        if (gameStatus == 2) // Finished
+        if (gameStatus == 2)
         {
             Assert.True(currentTurn.ValueKind == JsonValueKind.Null, "currentTurn должен быть null для завершенной игры");
-            return; // Завершаем тест, так как игра закончена
+            return;
         }
 
         var activeParticipant = currentTurn.GetProperty("activeParticipant");

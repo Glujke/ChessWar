@@ -20,8 +20,8 @@ public class MatrixOperationsTests
         var result = MatrixOperations.MatrixVectorMultiply(matrix, vector);
 
         Assert.Equal(2, result.Length);
-        Assert.Equal(14.0, result[0], 10); // 1*1 + 2*2 + 3*3 = 14
-        Assert.Equal(32.0, result[1], 10); // 4*1 + 5*2 + 6*3 = 32
+        Assert.Equal(14.0, result[0], 10);
+        Assert.Equal(32.0, result[1], 10);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class MatrixOperationsTests
             { 1.0, 2.0 },
             { 3.0, 4.0 }
         };
-        var vector = new double[] { 1.0, 2.0, 3.0 }; // Неправильный размер
+        var vector = new double[] { 1.0, 2.0, 3.0 };
 
         Assert.Throws<ArgumentException>(() => MatrixOperations.MatrixVectorMultiply(matrix, vector));
     }

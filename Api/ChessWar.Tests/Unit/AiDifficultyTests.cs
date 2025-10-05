@@ -83,7 +83,7 @@ public class AiDifficultyTests
                     target.HP -= piece.ATK;
                     if (target.HP <= 0)
                     {
-                        // target.IsAlive = false; // IsAlive только для чтения
+                       
                     }
                 }
                 turn.UpdateRemainingMP();
@@ -166,7 +166,7 @@ public class AiDifficultyTests
                     target.HP -= piece.ATK;
                     if (target.HP <= 0)
                     {
-                        // target.IsAlive = false; // IsAlive только для чтения
+                       
                     }
                 }
                 turn.UpdateRemainingMP();
@@ -214,7 +214,7 @@ public class AiDifficultyTests
 
         var movementRulesLogger = Mock.Of<ILogger<MovementRulesService>>();
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        var turnService = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
+        var turnService = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg, TestHelpers.CreatePieceFactory()), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), Mock.Of<ICollectiveShieldService>(), turnServiceLogger);
         var evaluator = new GameStateEvaluator();
         var probabilityMatrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyLevelProvider = new Mock<IAIDifficultyLevel>();
@@ -246,11 +246,11 @@ public class AiDifficultyTests
         var aiPlayer = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
         var aiQueen = TestHelpers.CreatePiece(PieceType.Queen, Team.Orcs, new Position(3, 3), aiPlayer);
         aiPlayer.Pieces.Add(aiQueen);
-        aiPlayer.SetMana(50, 50); // Полная мана
+        aiPlayer.SetMana(50, 50);
 
         var session = new GameSession(p1, aiPlayer, "AI");
         session.StartGame();
-        session.EndCurrentTurn(); // ход ИИ
+        session.EndCurrentTurn();
 
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
@@ -261,7 +261,7 @@ public class AiDifficultyTests
 
         var movementRulesLogger = Mock.Of<ILogger<MovementRulesService>>();
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        var turnService = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
+        var turnService = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg, TestHelpers.CreatePieceFactory()), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), Mock.Of<ICollectiveShieldService>(), turnServiceLogger);
         var evaluator = new GameStateEvaluator();
         var probabilityMatrix = new ChessWarProbabilityMatrix(evaluator);
         var difficultyLevelProvider = new Mock<IAIDifficultyLevel>();

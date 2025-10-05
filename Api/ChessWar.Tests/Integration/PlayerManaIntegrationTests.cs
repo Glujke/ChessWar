@@ -32,8 +32,8 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var gameSession = await response.Content.ReadFromJsonAsync<GameSessionDto>();
         gameSession.Should().NotBeNull();
 
-        gameSession!.Player1.MP.Should().Be(10); // Начальная мана
-        gameSession.Player1.MaxMP.Should().Be(50); // Максимальная мана
+        gameSession!.Player1.MP.Should().Be(10);
+        gameSession.Player1.MaxMP.Should().Be(50);
         gameSession.Player2.MP.Should().Be(10);
         gameSession.Player2.MaxMP.Should().Be(50);
     }
@@ -68,7 +68,7 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var afterMoveResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterSession = await afterMoveResponse.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        afterSession!.Player1.MP.Should().Be(9); // 10 - 1
+        afterSession!.Player1.MP.Should().Be(9);
         afterSession.Player1.MaxMP.Should().Be(50);
     }
 
@@ -89,7 +89,7 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var session = await getResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         var king = session!.Player1.Pieces.First(p => p.Type == Domain.Enums.PieceType.King);
 
-        for (int i = 0; i < 10; i++) // Делаем 10 ходов пешками (10 мана)
+        for (int i = 0; i < 10; i++)
         {
             var pawn = session.Player1.Pieces.FirstOrDefault(p => p.Type == Domain.Enums.PieceType.Pawn && p.Position.Y == 1);
             if (pawn != null)
@@ -145,7 +145,7 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        afterSession!.Player1.MP.Should().Be(19); // 10 - 1 + 10 = 19
+        afterSession!.Player1.MP.Should().Be(19);
         afterSession.Player1.MaxMP.Should().Be(50);
     }
 
@@ -180,7 +180,7 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
         var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        afterSession!.Player1.MP.Should().BeLessOrEqualTo(50); // Не больше максимума
+        afterSession!.Player1.MP.Should().BeLessOrEqualTo(50);
         afterSession.Player1.MaxMP.Should().Be(50);
     }
 
@@ -214,26 +214,26 @@ public class PlayerManaIntegrationTests : IClassFixture<TestWebApplicationFactor
 
         endTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Проверяем, что активный игрок - Player1 (после автоматического AI хода)
+       
         var afterEndTurnResponse = await _client.GetAsync($"/api/v1/gamesession/{sessionId}");
         var afterEndTurnSession = await afterEndTurnResponse.Content.ReadFromJsonAsync<GameSessionDto>();
         afterEndTurnSession!.CurrentTurn.ActiveParticipant.Name.Should().Be("Player1");
 
-        // Добавляем действие "Pass" для AI
+       
         var passAction = new { type = "Pass", pieceId = "0" };
         var passResponse = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionId}/turn/action", passAction);
         passResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Вызываем завершение хода (асинхронный путь)
+       
         var aiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
         aiTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Добавляем действие "Pass" для Player1
+       
         var passAction2 = new { type = "Pass", pieceId = "0" };
         var passResponse2 = await _client.PostAsJsonAsync($"/api/v1/gamesession/{sessionId}/turn/action", passAction2);
         passResponse2.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Завершаем ход ИИ
+       
         var endAiTurnResponse = await _client.PostAsync($"/api/v1/gamesession/{sessionId}/turn/end", null);
         endAiTurnResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 

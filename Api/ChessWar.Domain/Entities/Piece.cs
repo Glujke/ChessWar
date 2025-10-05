@@ -38,6 +38,12 @@ public class Piece
     /// </summary>
     public int MaxShieldHP { get; set; }
 
+    /// <summary>
+    /// Количество соседних союзных фигур в радиусе 1
+    /// Используется для системы "Коллективный Щит"
+    /// </summary>
+    public int NeighborCount { get; set; }
+
     public bool CanEvolve => XP >= XPToEvolve;
     public bool IsAlive => HP > 0;
     public bool IsFirstMove { get; set; } = true;

@@ -20,6 +20,7 @@ public class TurnService : ITurnService
     private readonly IBalanceConfigProvider _configProvider;
     private readonly IDomainEventDispatcher _eventDispatcher;
     private readonly IPieceDomainService _pieceDomainService;
+    private readonly ICollectiveShieldService _collectiveShieldService;
     private readonly ILogger<TurnService> _logger;
 
     public TurnService(
@@ -29,6 +30,7 @@ public class TurnService : ITurnService
         IBalanceConfigProvider configProvider,
         IDomainEventDispatcher eventDispatcher,
         IPieceDomainService pieceDomainService,
+        ICollectiveShieldService collectiveShieldService,
         ILogger<TurnService> logger)
     {
         _movementRulesService = movementRulesService ?? throw new ArgumentNullException(nameof(movementRulesService));
@@ -37,6 +39,7 @@ public class TurnService : ITurnService
         _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
         _eventDispatcher = eventDispatcher ?? throw new ArgumentNullException(nameof(eventDispatcher));
         _pieceDomainService = pieceDomainService ?? throw new ArgumentNullException(nameof(pieceDomainService));
+        _collectiveShieldService = collectiveShieldService ?? throw new ArgumentNullException(nameof(collectiveShieldService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -77,6 +80,7 @@ public class TurnService : ITurnService
                 return false;
             }
 
+            var oldPosition = piece.Position;
             _pieceDomainService.MoveTo(piece, targetPosition);
 
             var movementCosts = _configProvider.GetActive().PlayerMana.MovementCosts;
@@ -85,6 +89,8 @@ public class TurnService : ITurnService
                 : 1;
             turn.SpendMP(moveCost);
             piece.Owner.Spend(moveCost);
+
+            RecalculateShieldsAfterMove(session, piece, oldPosition);
 
             turn.AddAction(new TurnAction("Move", piece.Id.ToString(), targetPosition));
 
@@ -127,6 +133,12 @@ public class TurnService : ITurnService
                 return false;
             }
 
+            if (!targetPiece.IsAlive)
+            {
+                _logger.LogWarning("Cannot attack dead piece at position ({X},{Y}) - HP: {HP}", targetPosition.X, targetPosition.Y, targetPiece.HP);
+                return false;
+            }
+
             _pieceDomainService.TakeDamage(targetPiece, attacker.Attack);
             var attackCost = _configProvider.GetActive().PlayerMana.AttackCost;
             turn.SpendMP(attackCost);
@@ -138,8 +150,11 @@ public class TurnService : ITurnService
                 var experienceReward = config.KillRewards.GetRewardForPieceType(targetPiece.Type);
                 attacker.GainExperience(experienceReward);
 
+                var oldPosition = attacker.Position;
                 session.GetBoard().RemovePiece(targetPiece);
                 session.GetBoard().MovePiece(attacker, targetPosition);
+
+                RecalculateShieldsAfterMove(session, attacker, oldPosition);
 
                 _logger.LogInformation("Target {TargetPieceId} killed, attacker {AttackerId} moved to position ({X},{Y}), gained {XP} XP",
                     targetPiece.Id, attacker.Id, targetPosition.X, targetPosition.Y, experienceReward);
@@ -267,5 +282,43 @@ public class TurnService : ITurnService
         return attacker.Attack;
     }
 
+    /// <summary>
+    /// Пересчитывает щиты после движения фигуры
+    /// </summary>
+    private void RecalculateShieldsAfterMove(GameSession session, Piece movedPiece, Position oldPosition)
+    {
+        try
+        {
+            var allPieces = session.GetBoard().Pieces.ToList();
+            
+            if (movedPiece.Type != PieceType.King)
+            {
+                var shieldDelta = _collectiveShieldService.RecalculateAllyShield(movedPiece, allPieces);
+            }
 
+            var oldNeighbors = allPieces
+                .Where(p => p.Team == movedPiece.Team && p.Id != movedPiece.Id)
+                .Where(p => _attackRulesService.CalculateChebyshevDistance(oldPosition, p.Position) <= 1)
+                .ToList();
+
+            var newNeighbors = allPieces
+                .Where(p => p.Team == movedPiece.Team && p.Id != movedPiece.Id)
+                .Where(p => _attackRulesService.CalculateChebyshevDistance(movedPiece.Position, p.Position) <= 1)
+                .ToList();
+
+            var affectedNeighbors = oldNeighbors.Union(newNeighbors).Distinct().ToList();
+
+            foreach (var neighbor in affectedNeighbors)
+            {
+                if (neighbor.Type != PieceType.King)
+                {
+                    var shieldDelta = _collectiveShieldService.RecalculateAllyShield(neighbor, allPieces);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error recalculating shields after move for piece {PieceId}", movedPiece.Id);
+        }
+    }
 }

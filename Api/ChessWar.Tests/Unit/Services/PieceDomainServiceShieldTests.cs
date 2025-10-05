@@ -37,15 +37,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_WithShield_ShouldDamageShieldFirst()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
         king.HP = 50;
         king.ShieldHP = 100;
 
-        // Act
+       
         _service.TakeDamage(king, 30);
 
-        // Assert
+       
         king.ShieldHP.Should().Be(70, "урон сначала по щиту");
         king.HP.Should().Be(50, "реальное HP не тронуто");
     }
@@ -56,15 +56,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_DamageExceedsShield_ShouldDamageHPAfterShield()
     {
-        // Arrange
+       
         var pawn = _pieceFactory.CreatePiece(PieceType.Pawn, Team.Elves, new Position(3, 3));
         pawn.HP = 10;
         pawn.ShieldHP = 20;
 
-        // Act
-        _service.TakeDamage(pawn, 30); // 20 по щиту, 10 по HP
+       
+        _service.TakeDamage(pawn, 30);
 
-        // Assert
+       
         pawn.ShieldHP.Should().Be(0, "щит полностью разрушен");
         pawn.HP.Should().Be(0, "остаток урона нанесён по HP");
     }
@@ -75,15 +75,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_NoShield_ShouldDamageHPDirectly()
     {
-        // Arrange
+       
         var rook = _pieceFactory.CreatePiece(PieceType.Rook, Team.Orcs, new Position(0, 0));
         rook.HP = 25;
         rook.ShieldHP = 0;
 
-        // Act
+       
         _service.TakeDamage(rook, 10);
 
-        // Assert
+       
         rook.ShieldHP.Should().Be(0, "щита не было");
         rook.HP.Should().Be(15, "урон нанесён напрямую по HP");
     }
@@ -94,15 +94,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_ShieldAbsorbsAllDamage_HPUntouched()
     {
-        // Arrange
+       
         var queen = _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 0));
         queen.HP = 30;
         queen.ShieldHP = 150;
 
-        // Act
+       
         _service.TakeDamage(queen, 50);
 
-        // Assert
+       
         queen.ShieldHP.Should().Be(100, "щит поглотил весь урон");
         queen.HP.Should().Be(30, "HP не тронуто");
     }
@@ -113,15 +113,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_MassiveDamage_ShouldKillPiece()
     {
-        // Arrange
+       
         var knight = _pieceFactory.CreatePiece(PieceType.Knight, Team.Elves, new Position(1, 0));
         knight.HP = 20;
         knight.ShieldHP = 30;
 
-        // Act
-        _service.TakeDamage(knight, 100); // 30 по щиту, 70 по HP (но HP всего 20)
+       
+        _service.TakeDamage(knight, 100);
 
-        // Assert
+       
         knight.ShieldHP.Should().Be(0, "щит разрушен");
         knight.HP.Should().Be(0, "фигура убита");
         _service.IsDead(knight).Should().BeTrue("фигура мертва");
@@ -133,15 +133,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_ZeroDamage_ShouldNotChangeState()
     {
-        // Arrange
+       
         var bishop = _pieceFactory.CreatePiece(PieceType.Bishop, Team.Orcs, new Position(2, 7));
         bishop.HP = 18;
         bishop.ShieldHP = 40;
 
-        // Act
+       
         _service.TakeDamage(bishop, 0);
 
-        // Assert
+       
         bishop.ShieldHP.Should().Be(40, "щит не изменён");
         bishop.HP.Should().Be(18, "HP не изменено");
     }
@@ -152,15 +152,15 @@ public class PieceDomainServiceShieldTests
     [Fact]
     public void TakeDamage_ShieldCannotBeNegative()
     {
-        // Arrange
+       
         var pawn = _pieceFactory.CreatePiece(PieceType.Pawn, Team.Elves, new Position(4, 1));
         pawn.HP = 10;
         pawn.ShieldHP = 5;
 
-        // Act
-        _service.TakeDamage(pawn, 20); // 5 по щиту, 15 по HP
+       
+        _service.TakeDamage(pawn, 20);
 
-        // Assert
+       
         pawn.ShieldHP.Should().Be(0, "щит не может быть отрицательным");
         pawn.HP.Should().Be(0, "остаток урона убил фигуру");
     }

@@ -46,7 +46,7 @@ public class AiPlayerPieceProtectionTests : IClassFixture<WebApplicationFactory<
         foreach (var piece in pieces.EnumerateArray())
         {
             var team = piece.GetProperty("team").GetInt32();
-            if (team == 1) // Elves
+            if (team == 1)
             {
                 var id = piece.GetProperty("id").GetInt32();
                 var position = piece.GetProperty("position");
@@ -98,7 +98,7 @@ public class AiPlayerPieceProtectionTests : IClassFixture<WebApplicationFactory<
         foreach (var piece in pieces.EnumerateArray())
         {
             var team = piece.GetProperty("team").GetInt32();
-            if (team == 1) // Elves
+            if (team == 1)
             {
                 var id = piece.GetProperty("id").GetInt32();
                 var position = piece.GetProperty("position");

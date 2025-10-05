@@ -137,7 +137,7 @@ public class TurnOrchestratorTests
 
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // Проверяем постановку в очередь вместо прямого вызова AI
+       
         _turnQueueMock.Verify(x => x.EnqueueTurnAsync(It.IsAny<ChessWar.Application.Services.Board.TurnRequest>()), Times.Once);
     }
 
@@ -199,7 +199,7 @@ public class TurnOrchestratorTests
         AddActionToCurrentTurn(gameSession);
         await _turnOrchestrator.EndTurnAsync(gameSession);
 
-        // На юнит-уровне фаза не должна меняться синхронно — только постановка в очередь
+       
         var activeAfter = gameSession.GetCurrentTurn().ActiveParticipant;
         activeAfter.Should().Be(activeBefore);
     }

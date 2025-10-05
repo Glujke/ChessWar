@@ -1,6 +1,7 @@
 using ChessWar.Application.Interfaces.Board;
 using ChessWar.Application.Interfaces.AI;
 using ChessWar.Domain.Entities;
+using ChessWar.Domain.Enums;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.Interfaces.DataAccess;
 using ChessWar.Domain.Interfaces.Configuration;
@@ -18,6 +19,7 @@ public class TurnProcessor : ITurnProcessor
     private readonly IGameSessionRepository _sessionRepository;
     private readonly IBalanceConfigProvider _configProvider;
     private readonly IAITurnService _aiTurnService;
+    private readonly ICollectiveShieldService _collectiveShieldService;
     private readonly ILogger<TurnProcessor> _logger;
 
     public TurnProcessor(
@@ -25,12 +27,14 @@ public class TurnProcessor : ITurnProcessor
         IGameSessionRepository sessionRepository,
         IBalanceConfigProvider configProvider,
         IAITurnService aiTurnService,
+        ICollectiveShieldService collectiveShieldService,
         ILogger<TurnProcessor> logger)
     {
         _turnService = turnService ?? throw new ArgumentNullException(nameof(turnService));
         _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
         _aiTurnService = aiTurnService ?? throw new ArgumentNullException(nameof(aiTurnService));
+        _collectiveShieldService = collectiveShieldService ?? throw new ArgumentNullException(nameof(collectiveShieldService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -60,6 +64,8 @@ public class TurnProcessor : ITurnProcessor
             }
 
             await TickCooldownsForAllPieces(gameSession);
+
+            await RegenerateKingShields(gameSession);
 
             await _sessionRepository.SaveAsync(gameSession, cancellationToken);
 
@@ -160,5 +166,17 @@ public class TurnProcessor : ITurnProcessor
     private Participant GetNextPlayer(GameSession gameSession, Participant currentPlayer)
     {
         return currentPlayer == gameSession.Player1 ? gameSession.Player2 : gameSession.Player1;
+    }
+
+    private async Task RegenerateKingShields(GameSession gameSession)
+    {
+        var allPieces = gameSession.Board.Pieces.ToList();
+        var kings = allPieces.Where(p => p.Type == PieceType.King).ToList();
+        
+        foreach (var king in kings)
+        {
+            var allyPieces = allPieces.Where(p => p.Owner == king.Owner && p.Id != king.Id).ToList();
+            _collectiveShieldService.RegenerateKingShield(king, allyPieces);
+        }
     }
 }

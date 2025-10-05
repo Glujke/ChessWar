@@ -42,7 +42,7 @@ public class MovementEdgeCasesTests
 
         var moves = _movementService.GetPossibleMoves(bishop, boardPieces);
 
-        moves.Should().HaveCount(7); // только одна диагональ
+        moves.Should().HaveCount(7);
         moves.Should().Contain(new Position(1, 1));
         moves.Should().Contain(new Position(7, 7));
     }
@@ -55,7 +55,7 @@ public class MovementEdgeCasesTests
 
         var moves = _movementService.GetPossibleMoves(rook, boardPieces);
 
-        moves.Should().HaveCount(14); // 7 горизонтально + 7 вертикально
+        moves.Should().HaveCount(14);
         moves.Should().Contain(new Position(7, 0));
         moves.Should().Contain(new Position(0, 7));
     }
@@ -86,10 +86,10 @@ public class MovementEdgeCasesTests
 
         var moves = _movementService.GetPossibleMoves(rook, boardPieces);
 
-        moves.Should().NotContain(new Position(8, 7)); // за границей
-        moves.Should().NotContain(new Position(7, 8)); // за границей
-        moves.Should().Contain(new Position(0, 7)); // в пределах доски
-        moves.Should().Contain(new Position(7, 0)); // в пределах доски
+        moves.Should().NotContain(new Position(8, 7));
+        moves.Should().NotContain(new Position(7, 8));
+        moves.Should().Contain(new Position(0, 7));
+        moves.Should().Contain(new Position(7, 0));
     }
 
     [Fact]

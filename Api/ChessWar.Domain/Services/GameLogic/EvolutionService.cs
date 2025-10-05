@@ -11,9 +11,9 @@ public class EvolutionService : IEvolutionService
 {
     private readonly IBalanceConfigProvider _configProvider;
     private readonly List<EvolutionRecord> _evolutionHistory;
-    private readonly IPieceFactory? _pieceFactory;
+    private readonly IPieceFactory _pieceFactory;
 
-    public EvolutionService(IBalanceConfigProvider configProvider, IPieceFactory? pieceFactory = null)
+    public EvolutionService(IBalanceConfigProvider configProvider, IPieceFactory pieceFactory)
     {
         _configProvider = configProvider;
         _evolutionHistory = new List<EvolutionRecord>();
@@ -88,11 +88,7 @@ public class EvolutionService : IEvolutionService
 
     private Piece CreateEvolvedPiece(PieceType newType, Team team, Position position)
     {
-        if (_pieceFactory != null)
-        {
-            return _pieceFactory.CreatePiece(newType, team, position);
-        }
-        return new Piece(newType, team, position);
+        return _pieceFactory.CreatePiece(newType, team, position);
     }
 
     private void LogEvolution(int pieceId, PieceType newType)

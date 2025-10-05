@@ -168,7 +168,7 @@ public class ActionGenerator : IActionGenerator
     /// </summary>
     private List<string> GetAvailableAbilityNames(Piece piece)
     {
-        // Возвращаем известные способности для каждого типа фигуры
+       
         return piece.Type switch
         {
             Enums.PieceType.Pawn => new List<string> { "ShieldBash", "Breakthrough" },

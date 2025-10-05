@@ -21,10 +21,10 @@ public class PieceDomainService : IPieceDomainService
 
         if (damage == 0)
         {
-            return; // Нулевой урон ничего не меняет
+            return;
         }
 
-        // Сначала урон наносится по щиту
+       
         if (piece.ShieldHP > 0)
         {
             var damageToShield = Math.Min(damage, piece.ShieldHP);
@@ -32,7 +32,7 @@ public class PieceDomainService : IPieceDomainService
             damage -= damageToShield;
         }
 
-        // Если остался урон, наносим по реальному HP
+       
         if (damage > 0)
         {
             piece.HP = Math.Max(0, piece.HP - damage);

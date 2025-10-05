@@ -6,7 +6,7 @@ using ChessWar.Domain.Interfaces.DataAccess;
 using ChessWar.Domain.Interfaces.Configuration;
 using ChessWar.Domain.Events;
 using ChessWar.Domain.Events.Handlers;
-using ChessWar.Domain.Services.GameLogic; // Планируемый интерфейс IAbilityService (TDD)
+using ChessWar.Domain.Services.GameLogic;
 using FluentAssertions;
 using Moq;
 using ChessWar.Infrastructure.Services;
@@ -16,7 +16,7 @@ namespace ChessWar.Tests.Unit;
 
 public class AbilityServiceTests
 {
-    private readonly IAbilityService _abilityService; // будет внедрён после реализации
+    private readonly IAbilityService _abilityService;
 
     public AbilityServiceTests()
     {
@@ -46,7 +46,7 @@ public class AbilityServiceTests
     public void UseAbility_ShouldFail_WhenNotEnoughMp()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(0, 50); // У игрока нет маны
+        owner.SetMana(0, 50);
         var piece = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
         piece.Owner = owner;
         owner.Pieces.Add(piece);
@@ -60,11 +60,11 @@ public class AbilityServiceTests
     public void UseAbility_ShouldSetCooldown_AndSpendMp_OnSuccess()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var piece = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
         piece.Owner = owner;
         owner.Pieces.Add(piece);
-        var target = new Position(4, 4); // в радиусе 4
+        var target = new Position(4, 4);
 
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, target.X, target.Y);
@@ -76,16 +76,16 @@ public class AbilityServiceTests
         var result = testAbilityService.UseAbility(piece, "LightArrow", target, allPieces);
 
         result.Should().BeTrue();
-        owner.MP.Should().BeLessThan(50); // Игрок потратил ману
+        owner.MP.Should().BeLessThan(50);
         piece.AbilityCooldowns.GetValueOrDefault("LightArrow").Should().BeGreaterThan(0);
-        enemy.HP.Should().BeLessThan(10); // нанесён урон
+        enemy.HP.Should().BeLessThan(10);
     }
 
     [Fact]
     public void Heal_ShouldIncreaseHp_WithinRange()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var bishop = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
         var ally = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, 3, 3);
         bishop.Owner = owner; ally.Owner = owner;
@@ -105,7 +105,7 @@ public class AbilityServiceTests
     public void UseAbility_ShouldFail_WhenOnCooldown()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var piece = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, 2, 2);
         piece.Owner = owner;
         owner.Pieces.Add(piece);
@@ -120,7 +120,7 @@ public class AbilityServiceTests
     public void UseAbility_Aoe_ShouldIgnoreLineOfSight()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var queen = TestHelpers.CreatePiece(PieceType.Queen, Team.Elves, 3, 3);
         queen.Owner = owner;
         owner.Pieces.Add(queen);
@@ -128,8 +128,8 @@ public class AbilityServiceTests
         var blockers = new List<Piece>
         {
             queen,
-            TestHelpers.CreatePiece(PieceType.Rook, Team.Elves, 4, 3), // блокер по прямой
-            TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 5, 3)   // цель за блокером
+            TestHelpers.CreatePiece(PieceType.Rook, Team.Elves, 4, 3),
+            TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 5, 3)  
         };
 
         var result = _abilityService.UseAbility(queen, "MagicExplosion", new Position(5, 3), blockers);
@@ -151,7 +151,7 @@ public class AbilityServiceTests
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 3, 2);
         enemy.Owner = enemyOwner;
-        enemy.HP = 1; // Низкое HP для гарантированного убийства
+        enemy.HP = 1;
 
         var allPieces = new List<Piece> { pawn, enemy };
 
@@ -176,7 +176,7 @@ public class AbilityServiceTests
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 4, 4);
         enemy.Owner = enemyOwner;
-        enemy.HP = 1; // Низкое HP для гарантированного убийства
+        enemy.HP = 1;
 
         var allPieces = new List<Piece> { bishop, enemy };
 
@@ -204,8 +204,8 @@ public class AbilityServiceTests
         var enemy2 = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 5, 5);
         enemy1.Owner = enemyOwner;
         enemy2.Owner = enemyOwner;
-        enemy1.HP = 1; // Низкое HP для убийства
-        enemy2.HP = 1; // Низкое HP для убийства
+        enemy1.HP = 1;
+        enemy2.HP = 1;
 
         var allPieces = new List<Piece> { queen, enemy1, enemy2 };
 
@@ -232,7 +232,7 @@ public class AbilityServiceTests
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, 3, 2);
         enemy.Owner = enemyOwner;
-        enemy.HP = 100; // Высокое HP чтобы не убить
+        enemy.HP = 100;
 
         var allPieces = new List<Piece> { pawn, enemy };
 

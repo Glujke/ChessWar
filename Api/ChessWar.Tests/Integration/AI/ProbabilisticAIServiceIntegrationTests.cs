@@ -170,12 +170,12 @@ public class ProbabilisticAIServiceIntegrationTests
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
-        piece1.HP = 10; // Устанавливаем HP для живой фигуры
+        piece1.HP = 10;
         piece1.Owner = player1;
         player1.AddPiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(3, 1));
-        piece2.HP = 10; // Устанавливаем HP для живой фигуры
+        piece2.HP = 10;
         piece2.Owner = player2;
         player2.AddPiece(piece2);
 
@@ -213,12 +213,12 @@ public class ProbabilisticAIServiceIntegrationTests
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
 
         var piece1 = new Piece(PieceType.Queen, Team.Elves, new Position(3, 3));
-        piece1.HP = 10; // Устанавливаем HP для живой фигуры
+        piece1.HP = 10;
         piece1.Owner = player1;
         player1.AddPiece(piece1);
 
         var piece2 = new Piece(PieceType.Queen, Team.Orcs, new Position(4, 4));
-        piece2.HP = 10; // Устанавливаем HP для живой фигуры
+        piece2.HP = 10;
         piece2.Owner = player2;
         player2.AddPiece(piece2);
 
@@ -243,12 +243,12 @@ public class ProbabilisticAIServiceIntegrationTests
         var player2 = new ChessWar.Domain.Entities.AI("AI", Team.Orcs);
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
-        piece1.HP = 10; // Устанавливаем HP для живой фигуры
+        piece1.HP = 10;
         piece1.Owner = player1;
         player1.AddPiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(3, 1));
-        piece2.HP = 10; // Устанавливаем HP для живой фигуры
+        piece2.HP = 10;
         piece2.Owner = player2;
         player2.AddPiece(piece2);
 

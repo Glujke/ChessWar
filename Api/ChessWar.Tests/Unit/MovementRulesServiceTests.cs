@@ -423,7 +423,7 @@ public class MovementRulesServiceTests
 
         var moves = _movementService.GetPossibleMoves(queen, boardPieces);
 
-        moves.Should().HaveCount(27); // 14 горизонтально/вертикально + 13 диагонально
+        moves.Should().HaveCount(27);
     }
 
     #endregion

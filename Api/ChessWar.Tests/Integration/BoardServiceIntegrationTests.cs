@@ -57,13 +57,13 @@ public class BoardServiceIntegrationTests : IntegrationTestBase, IClassFixture<T
         await _boardService.SetupInitialPositionAsync();
 
         var result = await _boardService.GetBoardAsync();
-        result.Pieces.Should().HaveCount(18); // 8 pawns + 1 king for each team
+        result.Pieces.Should().HaveCount(18);
 
         var elvesPieces = result.Pieces.Where(p => p.Team == Team.Elves).ToList();
         var orcsPieces = result.Pieces.Where(p => p.Team == Team.Orcs).ToList();
 
-        elvesPieces.Should().HaveCount(9); // 8 pawns + 1 king
-        orcsPieces.Should().HaveCount(9); // 8 pawns + 1 king
+        elvesPieces.Should().HaveCount(9);
+        orcsPieces.Should().HaveCount(9);
 
         var elvesPawns = elvesPieces.Where(p => p.Type == PieceType.Pawn).ToList();
         var elvesKings = elvesPieces.Where(p => p.Type == PieceType.King).ToList();

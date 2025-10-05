@@ -46,15 +46,15 @@ public class CollectiveShieldServiceTests
     [Fact]
     public void RegenerateKingShield_NoAllies_ShouldApplyBaseRegen()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
         king.ShieldHP = 0;
         var allies = new List<Piece>();
 
-        // Act
+       
         var regenAmount = _service.RegenerateKingShield(king, allies);
 
-        // Assert
+       
         regenAmount.Should().Be(10, "базовая регенерация = 10");
         king.ShieldHP.Should().Be(10, "щит короля должен увеличиться на 10");
     }
@@ -65,26 +65,26 @@ public class CollectiveShieldServiceTests
     [Fact]
     public void RegenerateKingShield_WithAlliesInRange_ShouldApplyProximityBonus()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
         king.ShieldHP = 0;
         
         var allies = new List<Piece>
         {
-            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 3)), // Расстояние = 1
-            _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(3, 4)),  // Расстояние = 1
-            _pieceFactory.CreatePiece(PieceType.Pawn, Team.Elves, new Position(5, 5))   // Расстояние = 1
+            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 3)),
+            _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(3, 4)), 
+            _pieceFactory.CreatePiece(PieceType.Pawn, Team.Elves, new Position(5, 5))  
         };
 
-        // Act
+       
         var regenAmount = _service.RegenerateKingShield(king, allies);
 
-        // Assert
-        // Базовая регенерация = 10
-        // Queen (близость ≤1): +30
-        // Rook (близость ≤1): +20
-        // Pawn (близость ≤1): +10
-        // Итого: 10 + 30 + 20 + 10 = 70
+       
+       
+       
+       
+       
+       
         regenAmount.Should().Be(70, "базовая регенерация + бонус от близких союзников");
         king.ShieldHP.Should().Be(70);
     }
@@ -95,24 +95,24 @@ public class CollectiveShieldServiceTests
     [Fact]
     public void RegenerateKingShield_AlliesAtDistance2_ShouldApplySpecialBonus()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
         king.ShieldHP = 0;
         
         var allies = new List<Piece>
         {
-            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 2)), // Расстояние = 2
-            _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(2, 4))   // Расстояние = 2
+            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 2)),
+            _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(2, 4))  
         };
 
-        // Act
+       
         var regenAmount = _service.RegenerateKingShield(king, allies);
 
-        // Assert
-        // Базовая регенерация = 10
-        // Queen (близость =2): +60 (специальный бонус)
-        // Rook (близость =2): +40 (специальный бонус)
-        // Итого: 10 + 60 + 40 = 110
+       
+       
+       
+       
+       
         regenAmount.Should().Be(110, "базовая регенерация + специальный бонус от союзников на расстоянии 2");
         king.ShieldHP.Should().Be(110);
     }
@@ -123,9 +123,9 @@ public class CollectiveShieldServiceTests
     [Fact]
     public void RegenerateKingShield_CannotExceedMaxShieldHP()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
-        king.ShieldHP = 350; // Уже близко к максимуму (400)
+        king.ShieldHP = 350;
         
         var allies = new List<Piece>
         {
@@ -135,10 +135,10 @@ public class CollectiveShieldServiceTests
             _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(5, 4))
         };
 
-        // Act
+       
         var regenAmount = _service.RegenerateKingShield(king, allies);
 
-        // Assert
+       
         king.ShieldHP.Should().Be(400, "щит не может превышать MaxShieldHP");
         regenAmount.Should().BeLessThanOrEqualTo(50, "регенерация была ограничена максимумом");
     }
@@ -149,20 +149,20 @@ public class CollectiveShieldServiceTests
     [Fact]
     public void RegenerateKingShield_AlliesBeyondRadius_ShouldNotGiveBonus()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
         king.ShieldHP = 0;
         
         var allies = new List<Piece>
         {
-            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(1, 1)), // Расстояние = 3 (слишком далеко)
-            _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(7, 7))   // Расстояние = 3 (слишком далеко)
+            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(1, 1)),
+            _pieceFactory.CreatePiece(PieceType.Rook, Team.Elves, new Position(7, 7))  
         };
 
-        // Act
+       
         var regenAmount = _service.RegenerateKingShield(king, allies);
 
-        // Assert
+       
         regenAmount.Should().Be(10, "только базовая регенерация, союзники слишком далеко");
         king.ShieldHP.Should().Be(10);
     }
@@ -173,24 +173,24 @@ public class CollectiveShieldServiceTests
     [Fact]
     public void RegenerateKingShield_EnemyPieces_ShouldBeIgnored()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4));
         king.ShieldHP = 0;
         
         var allies = new List<Piece>
         {
-            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 3)),  // Союзник
-            _pieceFactory.CreatePiece(PieceType.Rook, Team.Orcs, new Position(3, 4))     // ВРАГ! Не должен давать бонус
+            _pieceFactory.CreatePiece(PieceType.Queen, Team.Elves, new Position(4, 3)), 
+            _pieceFactory.CreatePiece(PieceType.Rook, Team.Orcs, new Position(3, 4))    
         };
 
-        // Act
+       
         var regenAmount = _service.RegenerateKingShield(king, allies);
 
-        // Assert
-        // Базовая регенерация = 10
-        // Queen (близость ≤1): +30
-        // Rook (ВРАГ) = 0
-        // Итого: 10 + 30 = 40
+       
+       
+       
+       
+       
         regenAmount.Should().Be(40, "вражеские фигуры не дают бонус");
         king.ShieldHP.Should().Be(40);
     }

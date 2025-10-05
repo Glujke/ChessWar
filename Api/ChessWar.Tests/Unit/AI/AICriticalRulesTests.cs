@@ -245,8 +245,8 @@ public class AICriticalRulesTests
         var result = service.MakeAiTurn(session);
 
         Assert.True(result, "AI should respect turn order");
-        // ИИ не должен переключать ход - это делает TurnOrchestrator
-        // Проверяем, что ИИ выполнил ход успешно
+       
+       
         var nextTurn = session.GetCurrentTurn();
         Assert.Equal(activePlayer.Id, nextTurn.ActiveParticipant.Id);
     }
@@ -356,13 +356,13 @@ public class AICriticalRulesTests
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.Owner = player1;
-        piece1.HP = 10; // Живая фигура
+        piece1.HP = 10;
         player1.AddPiece(piece1);
         session.GetBoard().PlacePiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         piece2.Owner = player2;
-        piece2.HP = 10; // Живая фигура
+        piece2.HP = 10;
         player2.AddPiece(piece2);
         session.GetBoard().PlacePiece(piece2);
 
@@ -383,13 +383,13 @@ public class AICriticalRulesTests
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.Owner = player1;
-        piece1.HP = 0; // Мёртвая фигура
+        piece1.HP = 0;
         player1.AddPiece(piece1);
         session.GetBoard().PlacePiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         piece2.Owner = player2;
-        piece2.HP = 0; // Мёртвая фигура
+        piece2.HP = 0;
         player2.AddPiece(piece2);
         session.GetBoard().PlacePiece(piece2);
 
@@ -410,13 +410,13 @@ public class AICriticalRulesTests
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.Owner = player1;
-        piece1.HP = 10; // Живая фигура
+        piece1.HP = 10;
         player1.AddPiece(piece1);
         session.GetBoard().PlacePiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         piece2.Owner = player2;
-        piece2.HP = 10; // Живая фигура
+        piece2.HP = 10;
         player2.AddPiece(piece2);
         session.GetBoard().PlacePiece(piece2);
 
@@ -435,13 +435,13 @@ public class AICriticalRulesTests
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.Owner = player1;
-        piece1.HP = 10; // Живая фигура
+        piece1.HP = 10;
         player1.AddPiece(piece1);
         session.GetBoard().PlacePiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         piece2.Owner = player2;
-        piece2.HP = 10; // Живая фигура
+        piece2.HP = 10;
         player2.AddPiece(piece2);
         session.GetBoard().PlacePiece(piece2);
 
@@ -462,13 +462,13 @@ public class AICriticalRulesTests
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.Owner = player1;
-        piece1.HP = 10; // Живая фигура
+        piece1.HP = 10;
         player1.AddPiece(piece1);
         session.GetBoard().PlacePiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         piece2.Owner = player2;
-        piece2.HP = 10; // Живая фигура
+        piece2.HP = 10;
         player2.AddPiece(piece2);
         session.GetBoard().PlacePiece(piece2);
 
@@ -489,13 +489,13 @@ public class AICriticalRulesTests
 
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         piece1.Owner = player1;
-        piece1.HP = 10; // Живая фигура
+        piece1.HP = 10;
         player1.AddPiece(piece1);
         session.GetBoard().PlacePiece(piece1);
 
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
         piece2.Owner = player2;
-        piece2.HP = 10; // Живая фигура
+        piece2.HP = 10;
         player2.AddPiece(piece2);
         session.GetBoard().PlacePiece(piece2);
 

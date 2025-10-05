@@ -99,6 +99,8 @@ public class PieceRepository : IPieceRepository
             existingDto.Movement = piece.Movement;
             existingDto.Range = piece.Range;
             existingDto.AbilityCooldownsJson = System.Text.Json.JsonSerializer.Serialize(piece.AbilityCooldowns);
+            existingDto.ShieldHp = piece.ShieldHP;
+            existingDto.NeighborCount = piece.NeighborCount;
 
             await _context.SaveChangesAsync(cancellationToken);
         }
@@ -128,7 +130,9 @@ public class PieceRepository : IPieceRepository
             Movement = dto.Movement,
             XP = dto.XP,
             XPToEvolve = dto.XPToEvolve,
-            IsFirstMove = dto.IsFirstMove
+            IsFirstMove = dto.IsFirstMove,
+            ShieldHP = dto.ShieldHp,
+            NeighborCount = dto.NeighborCount
         };
 
         try
@@ -159,7 +163,9 @@ public class PieceRepository : IPieceRepository
             XP = piece.XP,
             XPToEvolve = piece.XPToEvolve,
             IsFirstMove = piece.IsFirstMove,
-            AbilityCooldownsJson = JsonSerializer.Serialize(piece.AbilityCooldowns)
+            AbilityCooldownsJson = JsonSerializer.Serialize(piece.AbilityCooldowns),
+            ShieldHp = piece.ShieldHP,
+            NeighborCount = piece.NeighborCount
         };
     }
 }

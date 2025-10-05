@@ -104,7 +104,7 @@ public class PlayerTests
 
         var alivePieces = player.GetAlivePieces();
 
-        alivePieces.Should().HaveCount(7); // 9 - 2 = 7
+        alivePieces.Should().HaveCount(7);
         alivePieces.Should().AllSatisfy(piece => piece.IsAlive.Should().BeTrue());
     }
 

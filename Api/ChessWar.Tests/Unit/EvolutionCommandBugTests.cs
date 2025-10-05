@@ -27,15 +27,16 @@ public class EvolutionCommandBugTests
             .ReturnsAsync((BalanceVersion?)null);
         var logger = Mock.Of<ILogger<BalanceConfigProvider>>();
         _configProvider = new BalanceConfigProvider(versionRepo.Object, payloadRepo.Object, logger);
-        _evolutionService = new ChessWar.Domain.Services.GameLogic.EvolutionService(_configProvider);
+        var pieceFactory = TestHelpers.CreatePieceFactory();
+        _evolutionService = new ChessWar.Domain.Services.GameLogic.EvolutionService(_configProvider, pieceFactory);
     }
 
     [Fact]
     public async Task EvolutionCommand_ShouldNotAllowPawnToEvolveToQueen()
     {
         var gameSession = CreateMockGameSession();
-        var pawn = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        pawn.XP = 20; // Достаточно XP для эволюции в коня/слона, но НЕ в ферзя
+        var pawn = gameSession.Player1.Pieces.First();
+        pawn.XP = 20;
 
         var evolutionCommand = new EvolutionCommand(gameSession, pawn, PieceType.Queen, _evolutionService);
 
@@ -46,8 +47,8 @@ public class EvolutionCommandBugTests
     public async Task EvolutionCommand_ShouldNotAllowPawnToEvolveToRook()
     {
         var gameSession = CreateMockGameSession();
-        var pawn = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        pawn.XP = 20; // Достаточно XP для эволюции в коня/слона, но НЕ в ладью
+        var pawn = gameSession.Player1.Pieces.First();
+        pawn.XP = 20;
 
         var evolutionCommand = new EvolutionCommand(gameSession, pawn, PieceType.Rook, _evolutionService);
 
@@ -58,8 +59,8 @@ public class EvolutionCommandBugTests
     public async Task EvolutionCommand_ShouldAllowPawnToEvolveToKnight()
     {
         var gameSession = CreateMockGameSession();
-        var pawn = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        pawn.XP = 20; // Достаточно XP для эволюции в коня
+        var pawn = gameSession.Player1.Pieces.First();
+        pawn.XP = 20;
 
         var evolutionCommand = new EvolutionCommand(gameSession, pawn, PieceType.Knight, _evolutionService);
 
@@ -72,8 +73,8 @@ public class EvolutionCommandBugTests
     public async Task EvolutionCommand_ShouldAllowPawnToEvolveToBishop()
     {
         var gameSession = CreateMockGameSession();
-        var pawn = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        pawn.XP = 20; // Достаточно XP для эволюции в слона
+        var pawn = gameSession.Player1.Pieces.First();
+        pawn.XP = 20;
 
         var evolutionCommand = new EvolutionCommand(gameSession, pawn, PieceType.Bishop, _evolutionService);
 
@@ -86,9 +87,9 @@ public class EvolutionCommandBugTests
     public async Task EvolutionCommand_ShouldNotAllowKnightToEvolveToQueen()
     {
         var gameSession = CreateMockGameSession();
-        var knight = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        knight.Type = PieceType.Knight; // Меняем тип на коня
-        knight.XP = 40; // Достаточно XP для эволюции в ладью, но НЕ в ферзя
+        var knight = gameSession.Player1.Pieces.First();
+        knight.Type = PieceType.Knight;
+        knight.XP = 40;
 
         var evolutionCommand = new EvolutionCommand(gameSession, knight, PieceType.Queen, _evolutionService);
 
@@ -99,9 +100,9 @@ public class EvolutionCommandBugTests
     public async Task EvolutionCommand_ShouldAllowKnightToEvolveToRook()
     {
         var gameSession = CreateMockGameSession();
-        var knight = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        knight.Type = PieceType.Knight; // Меняем тип на коня
-        knight.XP = 40; // Достаточно XP для эволюции в ладью
+        var knight = gameSession.Player1.Pieces.First();
+        knight.Type = PieceType.Knight;
+        knight.XP = 40;
 
         var evolutionCommand = new EvolutionCommand(gameSession, knight, PieceType.Rook, _evolutionService);
 
@@ -114,9 +115,9 @@ public class EvolutionCommandBugTests
     public async Task EvolutionCommand_ShouldAllowRookToEvolveToQueen()
     {
         var gameSession = CreateMockGameSession();
-        var rook = gameSession.Player1.Pieces.First(); // Используем фигуру из GameSession
-        rook.Type = PieceType.Rook; // Меняем тип на ладью
-        rook.XP = 60; // Достаточно XP для эволюции в ферзя
+        var rook = gameSession.Player1.Pieces.First();
+        rook.Type = PieceType.Rook;
+        rook.XP = 60;
 
         var evolutionCommand = new EvolutionCommand(gameSession, rook, PieceType.Queen, _evolutionService);
 

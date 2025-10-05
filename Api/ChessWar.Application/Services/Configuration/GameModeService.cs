@@ -1,6 +1,7 @@
 using AutoMapper;
 using ChessWar.Application.DTOs;
 using ChessWar.Application.Interfaces.Configuration;
+using ChessWar.Application.Interfaces.GameManagement;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.Interfaces.DataAccess;
 using ChessWar.Domain.Entities;
@@ -16,13 +17,15 @@ public class GameModeService : IGameModeService
     private readonly IGameSessionRepository _gameSessionRepository;
     private readonly IGameModeRepository _gameModeRepository;
     private readonly IGameHubClient _gameHubClient;
+    private readonly IGameSessionManagementService _sessionManagementService;
 
-    public GameModeService(IMapper mapper, IGameSessionRepository gameSessionRepository, IGameModeRepository gameModeRepository, IGameHubClient gameHubClient)
+    public GameModeService(IMapper mapper, IGameSessionRepository gameSessionRepository, IGameModeRepository gameModeRepository, IGameHubClient gameHubClient, IGameSessionManagementService sessionManagementService)
     {
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _gameSessionRepository = gameSessionRepository ?? throw new ArgumentNullException(nameof(gameSessionRepository));
         _gameModeRepository = gameModeRepository ?? throw new ArgumentNullException(nameof(gameModeRepository));
         _gameHubClient = gameHubClient ?? throw new ArgumentNullException(nameof(gameHubClient));
+        _sessionManagementService = sessionManagementService ?? throw new ArgumentNullException(nameof(sessionManagementService));
     }
 
     public async Task<TutorialSessionDto> StartTutorialAsync(CreateTutorialSessionDto dto, CancellationToken cancellationToken = default)
@@ -54,7 +57,27 @@ public class GameModeService : IGameModeService
 
     public async Task<AiSessionDto> StartAiGameAsync(CreateAiSessionDto dto, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("AI sessions are not implemented yet");
+        var createGameSessionDto = new CreateGameSessionDto
+        {
+            Player1Name = dto.PlayerId,
+            Player2Name = "AI",
+            Mode = "AI"
+        };
+
+        var gameSession = await _sessionManagementService.CreateGameSessionAsync(createGameSessionDto, cancellationToken);
+        await _sessionManagementService.StartGameAsync(gameSession, cancellationToken);
+
+        var result = new AiSessionDto
+        {
+            Id = gameSession.Id,
+            Mode = "Ai",
+            Status = "Active",
+            Difficulty = dto.Difficulty.ToString(),
+            PlayerId = dto.PlayerId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        return result;
     }
 
     public async Task<GameSessionDto> StartLocalGameAsync(CreateLocalSessionDto dto, CancellationToken cancellationToken = default)

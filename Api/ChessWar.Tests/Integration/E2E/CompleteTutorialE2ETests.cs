@@ -187,7 +187,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var typeElement = p.GetProperty("type");
             return typeElement.ValueKind == JsonValueKind.String ?
                 typeElement.GetString() == "King" :
-                typeElement.GetInt32() == 5; // King = 5 в enum
+                typeElement.GetInt32() == 5;
         });
         king.Should().NotBeNull();
         king.GetProperty("position").GetProperty("x").GetInt32().Should().Be(4);
@@ -198,7 +198,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var typeElement = p.GetProperty("type");
             var isPawn = typeElement.ValueKind == JsonValueKind.String ?
                 typeElement.GetString() == "Pawn" :
-                typeElement.GetInt32() == 0; // Pawn = 0 в enum
+                typeElement.GetInt32() == 0;
             return isPawn && p.GetProperty("position").GetProperty("y").GetInt32() == 6;
         }).Count();
         pawns.Should().BeGreaterOrEqualTo(6);
@@ -459,7 +459,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var typeElement = p.GetProperty("type");
             return typeElement.ValueKind == JsonValueKind.String ?
                 typeElement.GetString() == "Pawn" :
-                typeElement.GetInt32() == 0; // Pawn = 0 в enum
+                typeElement.GetInt32() == 0;
         });
 
         if (pawn.ValueKind == JsonValueKind.Undefined)
@@ -479,7 +479,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             Json(new
             {
                 pieceId = pawnId,
-                targetPosition = new { x = pawnX, y = pawnY + 1 }  // ВПЕРЁД
+                targetPosition = new { x = pawnX, y = pawnY + 1 } 
             }));
 
         if (moveResponse.StatusCode == HttpStatusCode.OK)
@@ -537,7 +537,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             _logger.LogError($"Ошибка умного хода игрока на ходу {moveNumber}: {ex.Message}");
         }
 
-        // Если игрок не смог сделать ход, добавляем Pass действие
+       
         var gameResponseAfter = await _client.GetAsync($"/api/v1/gamesession/{gameId}");
         if (gameResponseAfter.IsSuccessStatusCode)
         {
@@ -579,7 +579,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
                 var distance = Math.Max(Math.Abs(enemyX - currentX), Math.Abs(enemyY - currentY));
 
-                var attackRange = pieceType == 0 ? 1 : 1; // Пешка и король = 1
+                var attackRange = pieceType == 0 ? 1 : 1;
 
                 if (distance <= attackRange)
                 {
@@ -604,7 +604,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
 
     private async Task<bool> TryDefendKing(string gameId, List<JsonElement> playerPieces, List<JsonElement> enemyPieces, int moveNumber)
     {
-        var king = playerPieces.FirstOrDefault(p => p.GetProperty("type").GetInt32() == 5); // King = 5
+        var king = playerPieces.FirstOrDefault(p => p.GetProperty("type").GetInt32() == 5);
         if (king.ValueKind == JsonValueKind.Undefined) return false;
 
         var kingPos = king.GetProperty("position");
@@ -617,7 +617,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var enemyX = enemyPos.GetProperty("x").GetInt32();
             var enemyY = enemyPos.GetProperty("y").GetInt32();
             var distance = Math.Max(Math.Abs(enemyX - kingX), Math.Abs(enemyY - kingY));
-            return distance <= 2; // Враги в радиусе 2 от короля
+            return distance <= 2;
         }).ToList();
 
         if (threatsNearKing.Any())
@@ -649,7 +649,7 @@ public class CompleteTutorialE2ETests : IClassFixture<WebApplicationFactory<Prog
             var type = p.GetProperty("type").GetInt32();
             var pos = p.GetProperty("position");
             var x = pos.GetProperty("x").GetInt32();
-            return type == 0 && x >= 3 && x <= 5; // Пешки в центре
+            return type == 0 && x >= 3 && x <= 5;
         }).ToList();
 
         foreach (var pawn in centerPawns)

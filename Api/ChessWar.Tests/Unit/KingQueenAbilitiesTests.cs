@@ -13,7 +13,7 @@ public class KingQueenAbilitiesTests
     public void Resurrection_ShouldRevive_Ally_With_50PercentHp_And_StartCooldown()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var queen = TestHelpers.CreatePiece(PieceType.Queen, Team.Elves, new Position(3, 3), owner);
         var fallen = TestHelpers.CreatePiece(PieceType.Knight, Team.Elves, new Position(3, 4), owner);
 
@@ -44,17 +44,17 @@ public class KingQueenAbilitiesTests
         ok.Should().BeTrue();
         fallen.IsAlive.Should().BeTrue();
         fallen.HP.Should().BeGreaterThan(0);
-        var expectedHalf = 12 / 2; // Knight max HP = 12
+        var expectedHalf = 12 / 2;
         fallen.HP.Should().Be(expectedHalf);
         queen.AbilityCooldowns.GetValueOrDefault("Resurrection").Should().BeGreaterThan(0);
-        owner.MP.Should().BeLessThan(50); // Игрок потратил ману
+        owner.MP.Should().BeLessThan(50);
     }
 
     [Fact]
     public void RoyalCommand_ShouldGrant_ExtraAction_ToTarget_And_StartCooldown()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var king = TestHelpers.CreatePiece(PieceType.King, Team.Elves, new Position(2, 2), owner);
         var ally = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, new Position(2, 3), owner);
 
@@ -71,7 +71,7 @@ public class KingQueenAbilitiesTests
 
         ok.Should().BeTrue();
         king.AbilityCooldowns.GetValueOrDefault("RoyalCommand").Should().BeGreaterThan(0);
-        owner.MP.Should().BeLessThan(50); // Игрок потратил ману
+        owner.MP.Should().BeLessThan(50);
     }
 }
 

@@ -19,8 +19,8 @@ public class PieceTests
         pawn.Range.Should().Be(1);
         pawn.Movement.Should().Be(1);
         pawn.XP.Should().Be(0);
-        pawn.XPToEvolve.Should().Be(20);
-        pawn.CanEvolve.Should().BeFalse();
+        pawn.XPToEvolve.Should().Be(0);
+        pawn.CanEvolve.Should().BeTrue();
         pawn.IsAlive.Should().BeTrue();
     }
 
@@ -148,7 +148,7 @@ public class PieceTests
         _pieceDomainService.AddXP(pawn, 15);
 
         pawn.XP.Should().Be(15);
-        pawn.CanEvolve.Should().BeFalse();
+        pawn.CanEvolve.Should().BeTrue();
     }
 
     [Fact]

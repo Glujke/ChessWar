@@ -34,7 +34,12 @@ public static class DependencyInjection
             var logger = provider.GetRequiredService<ILogger<MovementRulesService>>();
             return new MovementRulesService(logger);
         });
-        services.AddScoped<IEvolutionService, EvolutionService>();
+        services.AddScoped<IEvolutionService>(provider =>
+        {
+            var configProvider = provider.GetRequiredService<IBalanceConfigProvider>();
+            var pieceFactory = provider.GetRequiredService<IPieceFactory>();
+            return new EvolutionService(configProvider, pieceFactory);
+        });
         services.AddScoped<IAbilityService, AbilityService>();
 
         services.AddScoped<IGameStateService, GameStateService>();
@@ -63,6 +68,8 @@ public static class DependencyInjection
         services.AddScoped<IActionSelector, ChessWar.Domain.Services.AI.ActionSelector>();
         services.AddScoped<IActionExecutor, ChessWar.Domain.Services.AI.ActionExecutor>();
         services.AddScoped<IAIService, ChessWar.Domain.Services.AI.AIService>();
+
+        services.AddScoped<ICollectiveShieldService, CollectiveShieldService>();
 
         return services;
     }

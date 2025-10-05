@@ -20,4 +20,6 @@ public class PieceDto
     public bool IsAlive { get; set; }
     public bool IsFirstMove { get; set; }
     public Dictionary<string, int> AbilityCooldowns { get; set; } = new();
+    public int ShieldHp { get; set; }
+    public int NeighborCount { get; set; }
 }

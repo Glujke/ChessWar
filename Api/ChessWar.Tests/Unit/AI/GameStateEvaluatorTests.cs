@@ -35,13 +35,13 @@ public class GameStateEvaluatorTests
         var player = session.Player1;
 
         var king = new Piece(PieceType.King, Team.Elves, new Position(0, 0));
-        king.HP = 10; // Устанавливаем HP для живой фигуры
+        king.HP = 10;
         king.Owner = player;
         player.AddPiece(king);
         session.GetBoard().PlacePiece(king);
 
         var piece = new Piece(PieceType.Queen, Team.Elves, new Position(3, 3));
-        piece.HP = 10; // Устанавливаем HP для живой фигуры
+        piece.HP = 10;
         piece.Owner = player;
         player.AddPiece(piece);
         session.GetBoard().PlacePiece(piece);
@@ -59,7 +59,7 @@ public class GameStateEvaluatorTests
         var enemy = session.Player2;
 
         var enemyPiece = new Piece(PieceType.Queen, Team.Orcs, new Position(3, 3));
-        enemyPiece.HP = 10; // Устанавливаем HP для живой фигуры
+        enemyPiece.HP = 10;
         enemyPiece.Owner = enemy;
         enemy.AddPiece(enemyPiece);
         session.GetBoard().PlacePiece(enemyPiece);
@@ -107,7 +107,7 @@ public class GameStateEvaluatorTests
 
         var result = _evaluator.EvaluateKingThreat(session, player);
 
-        Assert.True(result <= 0); // Нет угроз = 0 или небольшой бонус
+        Assert.True(result <= 0);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class GameStateEvaluatorTests
 
         var result = _evaluator.EvaluateKingThreat(session, player);
 
-        Assert.True(result < 0); // Есть угроза = отрицательное значение
+        Assert.True(result < 0);
     }
 
     [Fact]
@@ -138,12 +138,12 @@ public class GameStateEvaluatorTests
 
         var deadKing = new Piece(PieceType.King, Team.Elves, new Position(3, 3));
         deadKing.Owner = player;
-        deadKing.HP = 0; // Мёртвый король
+        deadKing.HP = 0;
         player.AddPiece(deadKing);
 
         var result = _evaluator.EvaluateKingThreat(session, player);
 
-        Assert.Equal(-1000.0, result); // Очень плохо
+        Assert.Equal(-1000.0, result);
     }
 
     [Fact]
@@ -154,13 +154,13 @@ public class GameStateEvaluatorTests
         var enemy = session.Player2;
 
         var playerPiece = new Piece(PieceType.Queen, Team.Elves, new Position(0, 0));
-        playerPiece.HP = 10; // Устанавливаем HP для живой фигуры
+        playerPiece.HP = 10;
         playerPiece.Owner = player;
         player.AddPiece(playerPiece);
         session.GetBoard().PlacePiece(playerPiece);
 
         var enemyPiece = new Piece(PieceType.Queen, Team.Orcs, new Position(7, 7));
-        enemyPiece.HP = 10; // Устанавливаем HP для живой фигуры
+        enemyPiece.HP = 10;
         enemyPiece.Owner = enemy;
         enemy.AddPiece(enemyPiece);
         session.GetBoard().PlacePiece(enemyPiece);
@@ -178,13 +178,13 @@ public class GameStateEvaluatorTests
         var enemy = session.Player2;
 
         var playerQueen = new Piece(PieceType.Queen, Team.Elves, new Position(0, 0));
-        playerQueen.HP = 10; // Устанавливаем HP для живой фигуры
+        playerQueen.HP = 10;
         playerQueen.Owner = player;
         player.AddPiece(playerQueen);
         session.GetBoard().PlacePiece(playerQueen);
 
         var enemyPawn = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
-        enemyPawn.HP = 10; // Устанавливаем HP для живой фигуры
+        enemyPawn.HP = 10;
         enemyPawn.Owner = enemy;
         enemy.AddPiece(enemyPawn);
         session.GetBoard().PlacePiece(enemyPawn);
@@ -202,13 +202,13 @@ public class GameStateEvaluatorTests
         var enemy = session.Player2;
 
         var playerPawn = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
-        playerPawn.HP = 10; // Устанавливаем HP для живой фигуры
+        playerPawn.HP = 10;
         playerPawn.Owner = player;
         player.AddPiece(playerPawn);
         session.GetBoard().PlacePiece(playerPawn);
 
         var enemyQueen = new Piece(PieceType.Queen, Team.Orcs, new Position(7, 7));
-        enemyQueen.HP = 10; // Устанавливаем HP для живой фигуры
+        enemyQueen.HP = 10;
         enemyQueen.Owner = enemy;
         enemy.AddPiece(enemyQueen);
         session.GetBoard().PlacePiece(enemyQueen);

@@ -9,6 +9,7 @@ using FluentAssertions;
 using ChessWar.Tests.Helpers;
 using ChessWar.Domain.Interfaces.Configuration;
 using ChessWar.Domain.Entities.Config;
+using ChessWar.Domain.Interfaces.GameLogic;
 
 namespace ChessWar.Tests.Unit;
 
@@ -19,14 +20,14 @@ public class KingAuraAbilityTests
     {
         var owner = new Player("P1", new List<Piece>());
         var king = TestHelpers.CreatePiece(PieceType.King, Team.Elves, new Position(4, 4), owner);
-        var ally = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, new Position(6, 4), owner); // дистанция Чебышёва = 2
+        var ally = TestHelpers.CreatePiece(PieceType.Bishop, Team.Elves, new Position(6, 4), owner);
 
         var baseAtk = ally.ATK;
 
         var cfg = _TestConfig.CreateProvider();
         var movementRulesLogger = Mock.Of<ILogger<MovementRulesService>>();
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        var turnSvc = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
+        var turnSvc = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg, TestHelpers.CreatePieceFactory()), cfg, new MockDomainEventDispatcher(), new PieceDomainService(), Mock.Of<ICollectiveShieldService>(), turnServiceLogger);
         var enemy = new Player("P2", new List<Piece>());
         var session = new GameSession(owner, enemy);
         session.StartGame();
@@ -45,24 +46,24 @@ public class KingAuraAbilityTests
         var config = cfg.GetActive();
         var kingAuraConfig = config.Ai.KingAura;
 
-        // KingAura - это пассивная способность, которая должна работать автоматически
-        // Попробуем вызвать её напрямую через UseAbility
+       
+       
         var result = abilityService.UseAbility(king, "KingAura", king.Position, allPieces);
 
-        _ = kingAuraConfig; // используем переменную, чтобы не было предупреждений
+        _ = kingAuraConfig;
 
-        // Если способность не найдена в конфигурации, это нормально для пассивной способности
-        // Проверяем, что атака союзника увеличилась (временно)
+       
+       
         if (result)
         {
             ally.ATK.Should().Be(baseAtk + 1);
         }
         else
         {
-            // Если способность не найдена, это означает, что KingAura не определена в abilities — это допустимо для пассивной способности
+           
         }
 
-        ally.Position = new Position(0, 0); // далеко
+        ally.Position = new Position(0, 0);
         var nextTurn = session.GetCurrentTurn();
         nextTurn.SelectPiece(king);
         turnSvc.EndTurn(nextTurn);

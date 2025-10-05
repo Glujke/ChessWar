@@ -16,6 +16,7 @@ using ChessWar.Application.Services;
 using ChessWar.Domain.Interfaces.GameLogic;
 using ChessWar.Domain.Interfaces.TurnManagement;
 using ChessWar.Domain.Interfaces.Configuration;
+using ChessWar.Domain.Interfaces.DataAccess;
 using ChessWar.Domain.Services.TurnManagement;
 using ChessWar.Domain.Events;
 
@@ -29,7 +30,14 @@ public static class DependencyInjection
         services.AddScoped<IBoardService, BoardService>();
         services.AddScoped<IConfigService, ConfigService>();
 
-        services.AddScoped<IGameSessionManagementService, GameSessionManagementService>();
+        services.AddScoped<IGameSessionManagementService>(provider =>
+        {
+            var playerManagementService = provider.GetRequiredService<IPlayerManagementService>();
+            var sessionRepository = provider.GetRequiredService<IGameSessionRepository>();
+            var collectiveShieldService = provider.GetRequiredService<ICollectiveShieldService>();
+            
+            return new GameSessionManagementService(playerManagementService, sessionRepository, collectiveShieldService);
+        });
         services.AddScoped<IGameSessionFactory, GameSessionFactory>();
         services.AddScoped<IGameManagementService, GameManagementService>();
 
@@ -80,9 +88,10 @@ public static class DependencyInjection
             var configProvider = provider.GetRequiredService<IBalanceConfigProvider>();
             var eventDispatcher = provider.GetRequiredService<IDomainEventDispatcher>();
             var pieceDomainService = provider.GetRequiredService<IPieceDomainService>();
+            var collectiveShieldService = provider.GetRequiredService<ICollectiveShieldService>();
             var logger = provider.GetRequiredService<ILogger<TurnService>>();
 
-            return new TurnService(movementRulesService, attackRulesService, evolutionService, configProvider, eventDispatcher, pieceDomainService, logger);
+            return new TurnService(movementRulesService, attackRulesService, evolutionService, configProvider, eventDispatcher, pieceDomainService, collectiveShieldService, logger);
         });
 
         return services;

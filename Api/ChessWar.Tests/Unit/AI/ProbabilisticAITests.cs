@@ -67,7 +67,7 @@ public class ProbabilisticAITests
     public void MakeAiTurn_WithPieces_ShouldReturnTrue()
     {
         var session = CreateGameSession();
-        var activePlayer = session.GetCurrentTurn().ActiveParticipant; // Используем активного игрока из сессии
+        var activePlayer = session.GetCurrentTurn().ActiveParticipant;
 
         _mockDifficultyProvider.Setup(x => x.GetDifficultyLevel(activePlayer))
             .Returns(AIDifficultyLevel.Medium);
@@ -90,7 +90,7 @@ public class ProbabilisticAITests
     public void MakeAiTurn_WithDifferentDifficulties_ShouldWork(AIDifficultyLevel difficulty)
     {
         var session = CreateGameSession();
-        var activePlayer = session.GetCurrentTurn().ActiveParticipant; // Используем активного игрока из сессии
+        var activePlayer = session.GetCurrentTurn().ActiveParticipant;
 
         _mockDifficultyProvider.Setup(x => x.GetDifficultyLevel(activePlayer))
             .Returns(difficulty);
@@ -114,7 +114,7 @@ public class ProbabilisticAITests
         var piece1 = new Piece(PieceType.Pawn, Team.Elves, new Position(0, 0));
         var piece2 = new Piece(PieceType.Pawn, Team.Orcs, new Position(7, 7));
 
-        piece1.HP = 10; // HP пешки по умолчанию
+        piece1.HP = 10;
         piece2.HP = 10;
 
         piece1.Owner = player1;
@@ -127,7 +127,7 @@ public class ProbabilisticAITests
         player2.SetMana(10, 10);
 
         var session = new GameSession(player1, player2, "Test");
-        session.StartGame(); // Запускаем игру
+        session.StartGame();
 
         session.EndCurrentTurn();
 

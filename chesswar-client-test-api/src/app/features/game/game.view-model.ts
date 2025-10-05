@@ -28,6 +28,7 @@ export class GameViewModel {
   readonly showHints = signal(true);
   readonly logs = signal<{ ts: string; level: 'info' | 'error' | 'event'; source: string; message: string; data?: unknown }[]>([]);
   private justEvolvedPieceId: string | null = null;
+  readonly damagePulse = signal<Record<string, number>>({});
 
   private addLog(level: 'info' | 'error' | 'event', source: string, message: string, data?: unknown): void {
     const ts = new Date().toLocaleTimeString();
@@ -81,6 +82,16 @@ export class GameViewModel {
     const isDead = !targetAfter || targetHpAfter <= 0;
 
     if (damage > 0) {
+      const pulse = { ...this.damagePulse() };
+      pulse[String(targetPiece.id)] = Date.now();
+      this.damagePulse.set(pulse);
+      setTimeout(() => {
+        const current = { ...this.damagePulse() };
+        if (current[String(targetPiece.id)] && Date.now() - current[String(targetPiece.id)] > 450) {
+          delete current[String(targetPiece.id)];
+          this.damagePulse.set(current);
+        }
+      }, 500);
       const attackerName = typeof (attacker as any).type === 'number' ? 
         this.mapEnumToName((attacker as any).type as number) : 
         String((attacker as any).type);
@@ -195,12 +206,7 @@ export class GameViewModel {
       this.session.set(data);
       this.updateGameState(data);
       const live = this.getLivePieces(data);
-      if (live.length > 0) {
-        this.board.set({ pieces: live } as any);
-      } else {
-        const board = await this.api.getBoard();
-        this.board.set(board);
-      }
+      this.board.set({ pieces: live } as any);
       if ((data as any).status === 'Finished' || (data as any).status === 'finished') {
         this.isGameFinished.set(true);
         this.gameResult.set((data as any).result ?? null);
@@ -338,25 +344,19 @@ export class GameViewModel {
     this.abilityTargets.set([]);
     try {
       this.selectedPieceId.set(pieceId);
-      // Diagnostics: log request and responses for Move/Attack
-      // eslint-disable-next-line no-console
-      console.debug('[VM/selectPiece] pieceId=', pieceId);
+      
       this.addLog('info', 'HTTP', 'GET actions Move/Attack', { pieceId });
       const [moves, attacks] = await Promise.all([
         this.api.getAvailableActions(gameId, pieceId, 'Move'),
         this.api.getAvailableActions(gameId, pieceId, 'Attack')
       ]);
       this.addLog('info', 'HTTP', 'actions received', { moves, attacks });
-      // eslint-disable-next-line no-console
-      console.debug('[VM/selectPiece] moves=', moves);
-      // eslint-disable-next-line no-console
-      console.debug('[VM/selectPiece] attacks=', attacks);
+      
       this.highlighted.set(moves ?? []);
       this.highlightedAttacks.set(attacks ?? []);
       const board = this.board();
       const found = board?.pieces.find(p => String(p.id) === String(pieceId)) ?? null;
-      // eslint-disable-next-line no-console
-      console.debug('[VM/selectPiece] found piece on board =', found);
+      
       this.selectedPiece.set(found);
       // Hints: after selecting a piece, advance from step 1 to 2
       if (this.showHints() && this.tutorialStep() === 1) {

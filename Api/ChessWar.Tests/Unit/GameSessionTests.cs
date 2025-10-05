@@ -143,7 +143,7 @@ public class GameSessionTests
         var pieces = session.GetPlayer1Pieces();
 
         pieces.Should().NotBeNull();
-        pieces.Should().HaveCount(9); // 8 пешек + 1 король
+        pieces.Should().HaveCount(9);
         pieces.Should().AllSatisfy(piece => piece.Team.Should().Be(Team.Elves));
     }
 
@@ -155,7 +155,7 @@ public class GameSessionTests
         var pieces = session.GetPlayer2Pieces();
 
         pieces.Should().NotBeNull();
-        pieces.Should().HaveCount(9); // 8 пешек + 1 король
+        pieces.Should().HaveCount(9);
         pieces.Should().AllSatisfy(piece => piece.Team.Should().Be(Team.Elves));
     }
 

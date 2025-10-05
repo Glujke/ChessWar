@@ -44,6 +44,8 @@ export interface PieceDto {
   isAlive?: boolean;
   isFirstMove?: boolean;
   abilityCooldowns?: Record<string, number>;
+  shieldHp?: number;
+  neighborCount?: number;
 }
 
 export interface GameBoardDto {

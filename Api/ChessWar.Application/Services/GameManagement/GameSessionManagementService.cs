@@ -4,6 +4,7 @@ using ChessWar.Application.Interfaces.Configuration;
 using ChessWar.Domain.Entities;
 using ChessWar.Domain.Enums;
 using ChessWar.Domain.Interfaces.DataAccess;
+using ChessWar.Domain.Interfaces.GameLogic;
 
 namespace ChessWar.Application.Services.GameManagement;
 
@@ -14,13 +15,16 @@ public class GameSessionManagementService : IGameSessionManagementService
 {
     private readonly IPlayerManagementService _playerManagementService;
     private readonly IGameSessionRepository _sessionRepository;
+    private readonly ICollectiveShieldService _collectiveShieldService;
 
     public GameSessionManagementService(
         IPlayerManagementService playerManagementService,
-        IGameSessionRepository sessionRepository)
+        IGameSessionRepository sessionRepository,
+        ICollectiveShieldService collectiveShieldService)
     {
         _playerManagementService = playerManagementService ?? throw new ArgumentNullException(nameof(playerManagementService));
         _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
+        _collectiveShieldService = collectiveShieldService ?? throw new ArgumentNullException(nameof(collectiveShieldService));
     }
 
     public async Task<GameSession> CreateGameSessionAsync(CreateGameSessionDto dto, CancellationToken cancellationToken = default)
@@ -57,6 +61,7 @@ public class GameSessionManagementService : IGameSessionManagementService
 
         var gameSession = new GameSession(player1, player2, mode);
 
+        InitializeShieldsForAllPieces(gameSession);
 
         if (dto.TutorialSessionId.HasValue)
         {
@@ -88,6 +93,28 @@ public class GameSessionManagementService : IGameSessionManagementService
 
     public async Task<GameSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
-        return await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        return session;
+    }
+
+    /// <summary>
+    /// Инициализирует щиты для всех фигур в игровой сессии
+    /// </summary>
+    private void InitializeShieldsForAllPieces(GameSession gameSession)
+    {
+        var allPieces = gameSession.Board.Pieces.ToList();
+        
+        foreach (var piece in allPieces)
+        {
+            if (piece.Type == PieceType.King)
+            {
+                var allyPieces = allPieces.Where(p => p.Team == piece.Team && p.Id != piece.Id).ToList();
+                _collectiveShieldService.RegenerateKingShield(piece, allyPieces);
+            }
+            else
+            {
+                _collectiveShieldService.RecalculateAllyShield(piece, allPieces);
+            }
+        }
     }
 }

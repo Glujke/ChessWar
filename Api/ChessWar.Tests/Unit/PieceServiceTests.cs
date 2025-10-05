@@ -39,8 +39,8 @@ public class PieceServiceTests
         result.Type.Should().Be(type);
         result.Team.Should().Be(team);
         result.Position.Should().Be(position);
-        result.HP.Should().Be(10); // Default HP for Pawn
-        result.ATK.Should().Be(2); // Default ATK for Pawn
+        result.HP.Should().Be(10);
+        result.ATK.Should().Be(2);
 
         _pieceRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Piece>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -50,7 +50,7 @@ public class PieceServiceTests
     {
         var type = PieceType.Pawn;
         var team = Team.Elves;
-        var invalidPosition = new Position(-1, 1); // Invalid X coordinate
+        var invalidPosition = new Position(-1, 1);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _pieceService.CreatePieceAsync(type, team, invalidPosition));
@@ -131,7 +131,7 @@ public class PieceServiceTests
         var pieces = new List<Piece>
         {
             new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1)) { HP = 10 },
-            new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2)) { HP = 0 } // Dead
+            new Piece(PieceType.Knight, Team.Orcs, new Position(2, 2)) { HP = 0 }
         };
 
         _pieceRepositoryMock
@@ -169,7 +169,7 @@ public class PieceServiceTests
     public async Task UpdatePiecePositionAsync_WithInvalidPosition_ShouldThrowArgumentException()
     {
         var pieceId = 1;
-        var invalidPosition = new Position(10, 10); // Outside board
+        var invalidPosition = new Position(10, 10);
         var existingPiece = new Piece(PieceType.Pawn, Team.Elves, new Position(1, 1));
 
         _pieceRepositoryMock

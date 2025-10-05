@@ -52,8 +52,8 @@ public class TutorialServiceTests
         var result = await tutorialService.AdvanceToNextStageAsync(sessionId);
 
         Assert.NotNull(result);
-        Assert.Equal(TutorialStage.Battle1, result.CurrentStage); // Должен перейти к следующему этапу
-        Assert.Equal(25, result.Progress); // Прогресс должен обновиться
+        Assert.Equal(TutorialStage.Battle1, result.CurrentStage);
+        Assert.Equal(25, result.Progress);
 
         mockRepository.Verify(x => x.GetModeByIdAsync<ITutorialMode>(sessionId, It.IsAny<CancellationToken>()), Times.Once);
         mockRepository.Verify(x => x.SaveModeAsync(It.IsAny<ITutorialMode>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -68,14 +68,14 @@ public class TutorialServiceTests
         var tutorialService = new TutorialService(mockRepository.Object, mockHintService.Object, mockNotificationService.Object);
         var sessionId = Guid.NewGuid();
         var session = new TutorialSession(new Player("player123", new List<Piece>()));
-        session.AdvanceToNextStage(); // Переходим к Battle1 (25% прогресс)
+        session.AdvanceToNextStage();
 
         mockRepository.Setup(x => x.GetModeByIdAsync<ITutorialMode>(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
 
         var result = await tutorialService.GetTutorialProgressAsync(sessionId);
 
-        Assert.Equal(25, result); // Ожидаем 25% для Battle1
+        Assert.Equal(25, result);
 
         mockRepository.Verify(x => x.GetModeByIdAsync<ITutorialMode>(sessionId, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -117,9 +117,9 @@ public class TutorialServiceTests
         var sessionId = Guid.NewGuid();
         var session = new TutorialSession(new Player("player123", new List<Piece>()));
 
-        session.AdvanceToNextStage(); // Introduction -> Battle1
-        session.AdvanceToNextStage(); // Battle1 -> Battle2  
-        session.AdvanceToNextStage(); // Battle2 -> Boss
+        session.AdvanceToNextStage();
+        session.AdvanceToNextStage();
+        session.AdvanceToNextStage();
 
         mockRepository.Setup(x => x.GetModeByIdAsync<ITutorialMode>(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
@@ -129,9 +129,9 @@ public class TutorialServiceTests
         var result = await tutorialService.CompleteTutorialAsync(sessionId);
 
         Assert.NotNull(result);
-        Assert.True(result.IsCompleted); // Должно быть завершено
-        Assert.Equal(TutorialStage.Completed, result.CurrentStage); // Должен быть Completed
-        Assert.Equal(100, result.Progress); // Прогресс должен быть 100%
+        Assert.True(result.IsCompleted);
+        Assert.Equal(TutorialStage.Completed, result.CurrentStage);
+        Assert.Equal(100, result.Progress);
 
         mockRepository.Verify(x => x.GetModeByIdAsync<ITutorialMode>(sessionId, It.IsAny<CancellationToken>()), Times.Once);
         mockRepository.Verify(x => x.SaveModeAsync(It.IsAny<ITutorialMode>(), It.IsAny<CancellationToken>()), Times.Once);

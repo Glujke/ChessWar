@@ -16,12 +16,12 @@ public class AiBehaviorIntegrationTests : IntegrationTestBase, IClassFixture<Tes
         var respAi = await _client.PostAsJsonAsync("/api/v1/gamesession", createAi);
         var sessionAi = await respAi.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        // Проверяем, что сессия создана правильно
+       
         respAi.StatusCode.Should().Be(HttpStatusCode.OK);
         sessionAi.Should().NotBeNull();
         sessionAi!.Mode.Should().Be("AI");
 
-        // Сначала выполняем действие игрока, чтобы переключиться на ИИ
+       
         var stateResp = await _client.GetAsync($"/api/v1/gamesession/{sessionAi.Id}");
         var state = await stateResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var piece = state!.Player1.Pieces.First();
@@ -39,7 +39,7 @@ public class AiBehaviorIntegrationTests : IntegrationTestBase, IClassFixture<Tes
         var endTurn = await _client.PostAsync($"/api/v1/gamesession/{sessionAi.Id}/turn/end", null);
         endTurn.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Добавляем действие для Player1 перед вторым EndTurn
+       
         var passAction = new ExecuteActionDto
         {
             Type = "Pass",
@@ -55,7 +55,7 @@ public class AiBehaviorIntegrationTests : IntegrationTestBase, IClassFixture<Tes
         var respLc = await _client.PostAsJsonAsync("/api/v1/gamesession", createLc);
         var sessionLc = await respLc.Content.ReadFromJsonAsync<GameSessionDto>();
 
-        // В LocalCoop режиме AI ходы не поддерживаются - только /turn/end для смены хода между игроками
+       
         respLc.StatusCode.Should().Be(HttpStatusCode.OK);
         sessionLc.Should().NotBeNull();
         sessionLc!.Mode.Should().Be("LocalCoop");

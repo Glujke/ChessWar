@@ -22,20 +22,20 @@ public class AIRealBehaviorTests
         var session = CreateRealGameSession();
         var aiService = CreateRealAIService();
 
-        var initialPositions = GetPiecePositions(session.Player2); // AI это Player2
+        var initialPositions = GetPiecePositions(session.Player2);
         var initialMana = session.GetCurrentTurn().RemainingMP;
 
         var result = aiService.MakeAiTurn(session);
 
         Assert.True(result, "ИИ должен успешно выполнить ход");
 
-        var finalPositions = GetPiecePositions(session.Player2); // AI это Player2
+        var finalPositions = GetPiecePositions(session.Player2);
 
-        // Проверяем, что ИИ выполнил хотя бы одно действие
+       
         var aiMana = session.Player2.MP;
         var movedPieces = CountMovedPieces(initialPositions, finalPositions);
 
-        // ИИ должен потратить ману или сдвинуть фигуры, или хотя бы попытаться
+       
         Assert.True(aiMana < 50 || movedPieces > 0 || result,
             $"ИИ должен выполнить действие. Результат: {result}, Ману потрачено: {50 - aiMana}, фигур сдвинуто: {movedPieces}");
     }
@@ -48,16 +48,16 @@ public class AIRealBehaviorTests
 
         var targetPiece = session.Player1.Pieces.First(p => p.IsAlive);
         var initialHp = targetPiece.HP;
-        var initialMana = session.Player2.MP; // Проверяем ману у ИИ
+        var initialMana = session.Player2.MP;
 
         var result = aiService.MakeAiTurn(session);
 
         Assert.True(result, "ИИ должен успешно выполнить атаку");
 
         var finalHp = targetPiece.HP;
-        var finalMana = session.Player2.MP; // Проверяем ману у ИИ
+        var finalMana = session.Player2.MP;
 
-        // Проверяем, что ИИ потратил ману или нанес урон
+       
         Assert.True(finalMana < initialMana || finalHp < initialHp,
             $"ИИ должен потратить ману или нанести урон. Ману: {initialMana} -> {finalMana}, HP: {initialHp} -> {finalHp}");
     }
@@ -76,8 +76,8 @@ public class AIRealBehaviorTests
         var finalMana = session.GetCurrentTurn().RemainingMP;
         var finalPositions = GetPiecePositions(session.Player2);
 
-        Assert.Equal(initialMana, finalMana); // Ману не должна измениться
-        Assert.Equal(initialPositions, finalPositions); // Позиции не должны измениться
+        Assert.Equal(initialMana, finalMana);
+        Assert.Equal(initialPositions, finalPositions);
 
         if (result)
         {
@@ -92,7 +92,7 @@ public class AIRealBehaviorTests
         var session = CreateGameSessionWithAbilities();
         var aiService = CreateRealAIService();
 
-        var initialMana = session.Player2.MP; // Проверяем ману у ИИ
+        var initialMana = session.Player2.MP;
         var pieceWithAbility = session.Player2.Pieces.First(p => p.AbilityCooldowns.ContainsKey("__AuraBuff"));
         var initialCooldown = pieceWithAbility.AbilityCooldowns["__AuraBuff"];
 
@@ -100,10 +100,10 @@ public class AIRealBehaviorTests
 
         Assert.True(result, "ИИ должен успешно выполнить ход");
 
-        var finalMana = session.Player2.MP; // Проверяем ману у ИИ
+        var finalMana = session.Player2.MP;
         var finalCooldown = pieceWithAbility.AbilityCooldowns["__AuraBuff"];
 
-        // Проверяем, что ИИ потратил ману или использовал способность
+       
         Assert.True(finalMana < initialMana || finalCooldown != initialCooldown,
             $"ИИ должен потратить ману или использовать способность. Ману: {initialMana} -> {finalMana}, Кулдаун: {initialCooldown} -> {finalCooldown}");
     }

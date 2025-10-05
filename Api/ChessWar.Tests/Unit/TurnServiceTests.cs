@@ -20,6 +20,7 @@ public class TurnServiceTests
     private readonly Mock<IAttackRulesService> _attackRulesServiceMock;
     private readonly Mock<IEvolutionService> _evolutionServiceMock;
     private readonly Mock<IPieceDomainService> _pieceDomainServiceMock;
+    private readonly Mock<ICollectiveShieldService> _collectiveShieldServiceMock;
     private readonly TurnService _turnService;
     private readonly IBalanceConfigProvider _configProvider;
     private readonly GameSession _gameSession;
@@ -30,6 +31,7 @@ public class TurnServiceTests
         _attackRulesServiceMock = new Mock<IAttackRulesService>();
         _evolutionServiceMock = new Mock<IEvolutionService>();
         _pieceDomainServiceMock = new Mock<IPieceDomainService>();
+        _collectiveShieldServiceMock = new Mock<ICollectiveShieldService>();
 
         var versionRepo = new Mock<IBalanceVersionRepository>();
         var payloadRepo = new Mock<IBalancePayloadRepository>();
@@ -58,6 +60,7 @@ public class TurnServiceTests
             _configProvider,
             eventDispatcher,
             _pieceDomainServiceMock.Object,
+            _collectiveShieldServiceMock.Object,
             turnServiceLogger);
 
         var player1 = CreateTestPlayer("Player1");
@@ -85,7 +88,7 @@ public class TurnServiceTests
     {
         var gameSession = CreateTestGameSession();
         var activeParticipant = gameSession.Player1;
-        activeParticipant.SetMana(0, 50); // У игрока нет маны
+        activeParticipant.SetMana(0, 50);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), activeParticipant);
 
         var turn = _turnService.StartTurn(gameSession, activeParticipant);
@@ -114,7 +117,7 @@ public class TurnServiceTests
     public void ExecuteMove_WithValidMove_ShouldReturnTrue()
     {
         var player = CreateTestPlayer("TestPlayer");
-        player.SetMana(10, 10); // Устанавливаем ману для игрока
+        player.SetMana(10, 10);
         var turn = new Turn(1, player);
         var piece = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
@@ -159,13 +162,13 @@ public class TurnServiceTests
     public void ExecuteAttack_WithValidAttack_ShouldReturnTrue()
     {
         var player = CreateTestPlayer("TestPlayer");
-        player.SetMana(10, 10); // Устанавливаем ману для игрока
+        player.SetMana(10, 10);
         var turn = new Turn(1, player);
         var attacker = CreateTestPiece("piece1", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
         var targetPosition = new Position(1, 2);
 
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
-        target.HP = 10; // Устанавливаем HP для живой фигуры
+        target.HP = 10;
 
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);
@@ -222,7 +225,7 @@ public class TurnServiceTests
     public void EndTurn_ShouldRegenerateMpForActivePlayer()
     {
         var player = CreateTestPlayer("TestPlayer");
-        player.SetMana(0, 50); // У игрока нет маны
+        player.SetMana(0, 50);
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
 
@@ -230,15 +233,15 @@ public class TurnServiceTests
 
         _turnService.EndTurn(turn);
 
-        player.MP.Should().Be(0); // Игрок не получил ману в EndTurn
-        turn.Should().NotBeNull(); // Просто проверяем, что метод не падает
+        player.MP.Should().Be(0);
+        turn.Should().NotBeNull();
     }
 
     [Fact]
     public void EndTurn_ShouldNotExceedMaxMp()
     {
         var player = CreateTestPlayer("TestPlayer");
-        player.SetMana(48, 50); // У игрока почти полная мана
+        player.SetMana(48, 50);
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
 
@@ -246,8 +249,8 @@ public class TurnServiceTests
 
         _turnService.EndTurn(turn);
 
-        player.MP.Should().Be(48); // Мана не изменилась в EndTurn
-        turn.Should().NotBeNull(); // Просто проверяем, что метод не падает
+        player.MP.Should().Be(48);
+        turn.Should().NotBeNull();
     }
 
     [Fact]
@@ -269,7 +272,7 @@ public class TurnServiceTests
     public void EndTurn_ShouldNotChangeCooldowns_ForActivePlayerPieces()
     {
         var player = CreateTestPlayer("TestPlayer");
-        player.SetMana(0, 50); // У игрока нет маны
+        player.SetMana(0, 50);
         var turn = new Turn(1, player);
         var p1 = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
         var p2 = CreateTestPiece("p2", PieceType.Pawn, Team.Elves, new Position(1, 1), player);
@@ -304,7 +307,7 @@ public class TurnServiceTests
     public void EndTurn_MultipleEnds_ShouldAccumulateMpUpToCap()
     {
         var player = CreateTestPlayer("TestPlayer");
-        player.SetMana(0, 50); // У игрока нет маны
+        player.SetMana(0, 50);
         var turn = new Turn(1, player);
         var pawn = CreateTestPiece("p1", PieceType.Pawn, Team.Elves, new Position(0, 1), player);
 
@@ -314,7 +317,7 @@ public class TurnServiceTests
         _turnService.EndTurn(turn);
 
         player.MP.Should().Be(0);
-        turn.Should().NotBeNull(); // Просто проверяем, что метод не падает
+        turn.Should().NotBeNull();
     }
 
     [Fact]
@@ -356,7 +359,7 @@ public class TurnServiceTests
         var targetPosition = new Position(1, 2);
 
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
-        target.HP = 1; // Низкое HP для гарантированного убийства
+        target.HP = 1;
 
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);
@@ -392,7 +395,7 @@ public class TurnServiceTests
         var originalPosition = attacker.Position;
 
         var target = CreateTestPiece("piece2", PieceType.Pawn, Team.Orcs, targetPosition, _gameSession.Player2);
-        target.HP = 100; // Высокое HP чтобы не убить
+        target.HP = 100;
 
         _gameSession.GetBoard().PlacePiece(attacker);
         _gameSession.GetBoard().PlacePiece(target);

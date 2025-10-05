@@ -29,8 +29,7 @@ export const withLoggingInterceptor: HttpInterceptorFn = (req: HttpRequest<unkno
       error: () => void 0,
       complete: () => {
         const ms = Math.round(performance.now() - started);
-        // eslint-disable-next-line no-console
-        console.debug(`[HTTP] ${req.method} ${req.url} - ${ms}ms`);
+        void ms;
       }
     })
   );

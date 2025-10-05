@@ -9,7 +9,7 @@ namespace ChessWar.Domain.Services.GameLogic;
 /// Сервис для управления системой "Коллективный Щит"
 /// ВСЕ фигуры имеют энергетический щит, зависящий от близости к союзникам
 /// </summary>
-public class CollectiveShieldService
+public class CollectiveShieldService : ICollectiveShieldService
 {
     private readonly IBalanceConfigProvider _configProvider;
     private readonly IAttackRulesService _attackRulesService;
@@ -59,6 +59,12 @@ public class CollectiveShieldService
         var actualRegen = newShield - initialShield;
         
         king.ShieldHP = newShield;
+        
+       
+        var nearbyAllies = allies
+            .Where(p => _attackRulesService.CalculateChebyshevDistance(king.Position, p.Position) <= 2)
+            .ToList();
+        king.NeighborCount = nearbyAllies.Count;
 
         return actualRegen;
     }
@@ -93,6 +99,7 @@ public class CollectiveShieldService
         }
 
         ally.ShieldHP = Math.Max(0, Math.Min(totalContribution, ally.MaxShieldHP));
+        ally.NeighborCount = nearbyAllies.Count;
 
         return ally.ShieldHP - initialShield;
     }

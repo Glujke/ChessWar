@@ -55,7 +55,7 @@ public class TurnManaTests
         var result = turn.SpendMP(10);
 
         result.Should().BeFalse();
-        turn.RemainingMP.Should().Be(5); // Не изменилось
+        turn.RemainingMP.Should().Be(5);
     }
 
     [Fact]
@@ -97,6 +97,6 @@ public class TurnManaTests
         turn.SpendMP(10);
 
         turn.RemainingMP.Should().Be(10);
-        player.MP.Should().Be(20); // Игрок не изменился
+        player.MP.Should().Be(20);
     }
 }

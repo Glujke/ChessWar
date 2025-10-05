@@ -75,7 +75,7 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
     }
 
     [Fact]
-    public async Task StartAiGame_ShouldReturnNotImplemented()
+    public async Task StartAiGame_ShouldReturnOk()
     {
         var request = new CreateAiSessionDto
         {
@@ -87,7 +87,7 @@ public class GameModeIntegrationTests : IClassFixture<WebApplicationFactory<Prog
 
         var response = await _client.PostAsync("/api/v1/game/ai", content);
 
-        Assert.Equal(System.Net.HttpStatusCode.NotImplemented, response.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

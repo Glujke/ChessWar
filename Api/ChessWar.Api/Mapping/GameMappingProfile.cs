@@ -25,7 +25,9 @@ public class GameMappingProfile : Profile
             .ForMember(dest => dest.XPToEvolve, opt => opt.MapFrom(src => src.XPToEvolve))
             .ForMember(dest => dest.IsAlive, opt => opt.MapFrom(src => src.IsAlive))
             .ForMember(dest => dest.IsFirstMove, opt => opt.MapFrom(src => src.IsFirstMove))
-            .ForMember(dest => dest.AbilityCooldowns, opt => opt.MapFrom(src => src.AbilityCooldowns));
+            .ForMember(dest => dest.AbilityCooldowns, opt => opt.MapFrom(src => src.AbilityCooldowns))
+            .ForMember(dest => dest.ShieldHp, opt => opt.MapFrom(src => src.ShieldHP))
+            .ForMember(dest => dest.NeighborCount, opt => opt.MapFrom(src => src.NeighborCount));
 
         CreateMap<GameBoard, GameBoardDto>()
             .ForMember(dest => dest.Pieces, opt => opt.MapFrom(src => src.Pieces))

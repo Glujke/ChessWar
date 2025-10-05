@@ -131,7 +131,7 @@ public class AIDifficultyProviderTests
 
         var result = _provider.GetTemperature(invalidLevel);
 
-        Assert.Equal(1.0, result); // Default value
+        Assert.Equal(1.0, result);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class AIDifficultyProviderTests
 
         var result = _provider.GetPlanningDepth(invalidLevel);
 
-        Assert.Equal(1, result); // Default value
+        Assert.Equal(1, result);
     }
 
     [Fact]
@@ -151,6 +151,6 @@ public class AIDifficultyProviderTests
 
         var result = _provider.GetDiscountFactor(invalidLevel);
 
-        Assert.Equal(0.9, result); // Default value
+        Assert.Equal(0.9, result);
     }
 }

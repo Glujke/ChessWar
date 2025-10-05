@@ -76,10 +76,10 @@ public class PieceShieldTests
     [Fact]
     public void King_ShouldHave_ShieldProperties()
     {
-        // Arrange & Act
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 0));
         
-        // Assert
+       
         king.Should().NotBeNull();
         king.ShieldHP.Should().Be(0, "щит изначально пустой");
         king.MaxShieldHP.Should().Be(400, "максимальный щит короля = 400");
@@ -96,10 +96,10 @@ public class PieceShieldTests
     [InlineData(PieceType.Pawn, 50)]
     public void AllPieces_ShouldHave_MaxShieldHP(PieceType type, int expectedMaxShield)
     {
-        // Arrange & Act
+       
         var piece = _pieceFactory.CreatePiece(type, Team.Elves, new Position(0, 0));
         
-        // Assert
+       
         piece.ShieldHP.Should().Be(0, "щит изначально пустой");
         piece.MaxShieldHP.Should().Be(expectedMaxShield, $"{type} должна иметь MaxShieldHP = {expectedMaxShield}");
     }
@@ -110,13 +110,13 @@ public class PieceShieldTests
     [Fact]
     public void King_ShieldHP_CanBeSet()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 0));
         
-        // Act
+       
         king.ShieldHP = 100;
         
-        // Assert
+       
         king.ShieldHP.Should().Be(100);
     }
 
@@ -126,13 +126,13 @@ public class PieceShieldTests
     [Fact]
     public void King_ShieldHP_CannotBeNegative()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 0));
         
-        // Act
+       
         king.ShieldHP = -50;
         
-        // Assert
+       
         king.ShieldHP.Should().Be(0, "щит не может быть отрицательным");
     }
 
@@ -142,13 +142,13 @@ public class PieceShieldTests
     [Fact]
     public void King_ShieldHP_CannotExceedMax()
     {
-        // Arrange
+       
         var king = _pieceFactory.CreatePiece(PieceType.King, Team.Elves, new Position(4, 0));
         
-        // Act
+       
         king.ShieldHP = 500;
         
-        // Assert
+       
         king.ShieldHP.Should().Be(400, "щит не может превышать максимум");
     }
 
@@ -161,11 +161,11 @@ public class PieceShieldTests
     [InlineData(PieceType.Rook, 100)]
     public void MaxShieldHP_SameForBothTeams(PieceType type, int expectedMax)
     {
-        // Arrange
+       
         var elvesPiece = _pieceFactory.CreatePiece(type, Team.Elves, new Position(0, 0));
         var orcsPiece = _pieceFactory.CreatePiece(type, Team.Orcs, new Position(0, 7));
         
-        // Assert
+       
         elvesPiece.MaxShieldHP.Should().Be(expectedMax);
         orcsPiece.MaxShieldHP.Should().Be(expectedMax);
     }

@@ -11,32 +11,82 @@ import { GameViewModel } from './game.view-model';
   standalone: true,
   imports: [NgIf, NgFor, GameStatusComponent, PieceContextComponent, ResultOverlayComponent],
   template: `
-    <h2>Game Session: {{ gameId() }}</h2>
-    <p *ngIf="vm.error()" style="color: red;">{{ vm.error() }}</p>
-    <p *ngIf="vm.isLoading()">Загрузка...</p>
-    
-    <div *ngIf="vm.gameState() === 'ai-thinking'" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; margin: 8px 0; border-radius: 4px; color: #856404;">
-      🤖 ИИ думает...
-    </div>
-    
-    <div *ngIf="vm.session() as s">
-      <app-game-status [gameId]="gameId()" />
-      <button type="button" (click)="vm.endTurn(gameId())" [disabled]="vm.isLoading() || !vm.canControlPieces()">Завершить ход</button>
-        <button type="button" (click)="vm.enableHints(true)" [disabled]="vm.isLoading()" style="margin-left:8px;">Показать подсказки</button>
-      <div *ngIf="vm.board() as b" style="margin-top: 12px; display: flex; gap: 16px; align-items: flex-start;">
-        <div style="display: grid; gap: 2px; width: fit-content;" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 40px)'">
-          <ng-container *ngFor="let y of [].constructor(b.size || b.height || 8); let row = index">
-            <ng-container *ngFor="let x of [].constructor(b.size || b.width || 8); let col = index">
-              <div (click)="onCellClick(col, row)" [style.width.px]="40" [style.height.px]="40" [style.display]="'flex'" [style.alignItems]="'center'" [style.justifyContent]="'center'" [style.background]="cellBg(col, row)" [style.cursor]="'pointer'" [style.color]="pieceColor(col, row)" [style.fontWeight]="pieceWeight(col, row)">
-                {{ pieceGlyph(col, row) }}
+    <div [style.maxWidth]="'1280px'" [style.margin]="'0 auto'" [style.padding]="'24px'">
+      <div [style.background]="'#ffffff'" [style.borderRadius]="'12px'" [style.boxShadow]="'0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'" [style.padding]="'24px'" [style.border]="'1px solid #e2e8f0'">
+        <h2 [style.background]="'linear-gradient(135deg, #2563eb, #f59e0b)'" [style.webkitBackgroundClip]="'text'" [style.webkitTextFillColor]="'transparent'" [style.backgroundClip]="'text'" [style.fontSize]="'30px'" [style.fontWeight]="'bold'" [style.marginBottom]="'24px'">🎮 Chess War - {{ gameId() }}</h2>
+        
+        <div *ngIf="vm.error()" [style.background]="'#fef2f2'" [style.border]="'1px solid #fecaca'" [style.color]="'#b91c1c'" [style.padding]="'12px 16px'" [style.borderRadius]="'8px'" [style.marginBottom]="'16px'">
+          ⚠️ {{ vm.error() }}
+        </div>
+        
+        <div *ngIf="vm.isLoading()" [style.display]="'flex'" [style.alignItems]="'center'" [style.gap]="'8px'" [style.color]="'#2563eb'" [style.marginBottom]="'16px'">
+          <div [style.animation]="'pulse 2s infinite'">⏳</div>
+          <span>Загрузка...</span>
+        </div>
+        
+        <div *ngIf="vm.gameState() === 'ai-thinking'" [style.background]="'#fffbeb'" [style.border]="'1px solid #fde68a'" [style.color]="'#92400e'" [style.padding]="'12px 16px'" [style.borderRadius]="'8px'" [style.marginBottom]="'16px'" [style.animation]="'pulse 2s infinite'">
+          🤖 ИИ думает...
+        </div>
+        
+        <div *ngIf="vm.session() as s">
+          <app-game-status [gameId]="gameId()" />
+          
+          <div [style.display]="'flex'" [style.gap]="'12px'" [style.marginBottom]="'24px'">
+            <button type="button" 
+                    [style.display]="'inline-flex'" [style.alignItems]="'center'" [style.justifyContent]="'center'" [style.gap]="'8px'" [style.padding]="'8px 16px'" [style.border]="'none'" [style.borderRadius]="'8px'" [style.fontWeight]="'500'" [style.fontSize]="'14px'" [style.textDecoration]="'none'" [style.cursor]="'pointer'" [style.transition]="'all 0.2s'" [style.boxShadow]="'0 1px 2px 0 rgb(0 0 0 / 0.05)'" [style.background]="'#2563eb'" [style.color]="'white'"
+                    (click)="vm.endTurn(gameId())" 
+                    [disabled]="vm.isLoading() || !vm.canControlPieces()">
+              ✅ Завершить ход
+            </button>
+            <button type="button" 
+                    [style.display]="'inline-flex'" [style.alignItems]="'center'" [style.justifyContent]="'center'" [style.gap]="'8px'" [style.padding]="'8px 16px'" [style.border]="'1px solid #e2e8f0'" [style.borderRadius]="'8px'" [style.fontWeight]="'500'" [style.fontSize]="'14px'" [style.textDecoration]="'none'" [style.cursor]="'pointer'" [style.transition]="'all 0.2s'" [style.boxShadow]="'0 1px 2px 0 rgb(0 0 0 / 0.05)'" [style.background]="'#f8fafc'" [style.color]="'#1e293b'"
+                    (click)="vm.enableHints(true)" 
+                    [disabled]="vm.isLoading()">
+              💡 Показать подсказки
+            </button>
+          </div>
+          
+          <div *ngIf="vm.board() as b" [style.display]="'flex'" [style.gap]="'24px'" [style.alignItems]="'flex-start'">
+            <div [style.background]="'linear-gradient(45deg, #f0d9b5, #b58863)'" [style.borderRadius]="'12px'" [style.boxShadow]="'0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)'" [style.padding]="'16px'">
+              <div [style.display]="'grid'" [style.gap]="'4px'" [style.gridTemplateColumns]="'repeat(' + (b.size || b.width || 8) + ', 48px)'">
+                <ng-container *ngFor="let y of [].constructor(b.size || b.height || 8); let row = index">
+                  <ng-container *ngFor="let x of [].constructor(b.size || b.width || 8); let col = index">
+                    <div (click)="onCellClick(col, row)" 
+                         [style.width.px]="48" 
+                         [style.height.px]="48"
+                         [style.display]="'flex'"
+                         [style.alignItems]="'center'"
+                         [style.justifyContent]="'center'"
+                         [style.background]="cellBg(col, row)"
+                         [style.cursor]="'pointer'"
+                         [style.borderRadius]="'4px'"
+                         [style.transition]="'all 0.2s'"
+                         [style.position]="'relative'">
+                      <div [style.display]="'flex'" [style.flexDirection]="'column'" [style.alignItems]="'center'" [style.gap]="'2px'">
+                        <span [style.fontSize]="'18px'" [style.fontWeight]="'bold'" [style.color]="pieceColor(col, row)">{{ pieceGlyph(col, row) }}</span>
+                        <div *ngIf="getPieceShield(col, row) > 0" [style.display]="'flex'" [style.alignItems]="'center'" [style.gap]="'2px'" [style.fontSize]="'10px'" [style.color]="'#3b82f6'" [style.fontWeight]="'bold'" [style.background]="'rgba(59, 130, 246, 0.1)'" [style.padding]="'2px 6px'" [style.borderRadius]="'4px'">
+                          <span>🛡️</span>
+                          <span>{{ getPieceShield(col, row) }}</span>
+                        </div>
+                        <div *ngIf="getPieceHp(col, row) > 0" [style.display]="'flex'" [style.alignItems]="'center'" [style.gap]="'2px'" [style.fontSize]="'10px'" [style.color]="'#ef4444'" [style.fontWeight]="'bold'" [style.background]="vm.damagePulse()[getPieceId(col, row)] ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.1)'" [style.padding]="'2px 6px'" [style.borderRadius]="'4px'" [style.transition]="'background 0.2s ease'">
+                          <span>❤</span>
+                          <span>{{ getPieceHp(col, row) }}</span>
+                        </div>
+                        <div *ngIf="getPieceNeighbors(col, row) > 0" [style.fontSize]="'8px'" [style.color]="'#6b7280'" [style.fontWeight]="'normal'" [style.background]="'rgba(107, 114, 128, 0.1)'" [style.padding]="'1px 4px'" [style.borderRadius]="'3px'">
+                          <span>👥</span>
+                          <span>{{ getPieceNeighbors(col, row) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </ng-container>
               </div>
-            </ng-container>
-          </ng-container>
-        </div>
-        <div style="min-width: 220px;">
-          <app-piece-context [gameId]="gameId()" />
-        </div>
-      </div>
+            </div>
+            
+            <div [style.minWidth]="'256px'">
+              <app-piece-context [gameId]="gameId()" />
+            </div>
+          </div>
       <!-- Диалог эволюции -->
       <div *ngIf="vm.isEvolutionDialogOpen()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
         <div style="background: #fff; padding: 16px; border-radius: 8px; min-width: 280px;">
@@ -127,11 +177,11 @@ export class GameComponent implements OnInit {
 
   cellBg(x: number, y: number): string {
     const idx = (x + y) % 2;
-    const base = idx === 0 ? '#eee' : '#bbb';
+    const base = idx === 0 ? '#f0d9b5' : '#b58863';
     const isMove = this.vm.highlighted().some(c => c.x === x && c.y === y);
     const isAttack = this.vm.highlightedAttacks().some(c => c.x === x && c.y === y);
-    if (isAttack) return '#ff8a80'; // красный для атак
-    if (isMove) return '#90ee90';  // зелёный для ходов
+    if (isAttack) return '#ef4444'; // красный для атак
+    if (isMove) return '#10b981';  // зелёный для ходов
     return base;
   }
 
@@ -172,6 +222,40 @@ export class GameComponent implements OnInit {
   private mapEnumToName(enumValue: number): string {
     const map: Record<number, string> = { 0: 'Pawn', 1: 'Knight', 2: 'Bishop', 3: 'Rook', 4: 'Queen', 5: 'King' };
     return map[enumValue] ?? String(enumValue);
+  }
+
+  getPieceShield(x: number, y: number): number {
+    const b = this.vm.board();
+    const piece = b?.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
+    return (piece as any)?.shieldHp || 0;
+  }
+
+  getPieceNeighbors(x: number, y: number): number {
+    const b = this.vm.board();
+    const piece = b?.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
+    return (piece as any)?.neighborCount || 0;
+  }
+
+  getPieceHp(x: number, y: number): number {
+    const b = this.vm.board();
+    const piece = b?.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
+    return (piece as any)?.hp ?? 0;
+  }
+
+  getPieceId(x: number, y: number): string {
+    const b = this.vm.board();
+    const piece = b?.pieces.find(p => (p as any).position?.x === x && (p as any).position?.y === y);
+    return String((piece as any)?.id ?? '');
+  }
+
+  isHighlighted(x: number, y: number): boolean {
+    const hi = this.vm.highlighted();
+    return hi.some(c => c.x === x && c.y === y);
+  }
+
+  isAttack(x: number, y: number): boolean {
+    const attacks = this.vm.highlightedAttacks();
+    return attacks.some(c => c.x === x && c.y === y);
   }
 }
 

@@ -71,17 +71,17 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             foreach (var service in notificationBatcherInterface)
                 services.Remove(service);
 
-            // Remove any INotificationBatcher registrations (by type), regardless of how they were registered
+           
             var toRemove = services.Where(d => d.ServiceType == typeof(ChessWar.Application.Interfaces.Board.INotificationBatcher)).ToList();
             foreach (var d in toRemove)
             {
                 services.Remove(d);
             }
 
-            // Ensure stub registration (scoped to be safe with scoped deps, though it is no-op)
+           
             services.AddScoped<ChessWar.Application.Interfaces.Board.INotificationBatcher, TestNotificationBatcherStub>();
 
-            // Remove any INotificationDispatcher registrations and replace with a scoped stub
+           
             var dispatcherDescriptors = services.Where(d => d.ServiceType == typeof(ChessWar.Application.Interfaces.Board.INotificationDispatcher)).ToList();
             foreach (var d in dispatcherDescriptors)
             {
@@ -101,7 +101,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         });
 
-        // Ensure final override after the app registers all services
+       
         builder.ConfigureTestServices(services =>
         {
             var batchers = services.Where(d => d.ServiceType == typeof(ChessWar.Application.Interfaces.Board.INotificationBatcher)).ToList();
@@ -113,7 +113,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             services.AddSingleton<ChessWar.Application.Interfaces.Board.INotificationDispatcher, TestNotificationDispatcherStub>();
         });
 
-        // Disable scope validation to avoid singleton->scoped checks in test host
+       
         builder.UseDefaultServiceProvider((context, options) =>
         {
             options.ValidateScopes = false;

@@ -20,4 +20,6 @@ public class PieceDto
     public bool IsFirstMove { get; set; } = true;
 
     public string AbilityCooldownsJson { get; set; } = "{}";
+    public int ShieldHp { get; set; }
+    public int NeighborCount { get; set; }
 }

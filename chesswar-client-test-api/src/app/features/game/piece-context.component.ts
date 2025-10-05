@@ -7,22 +7,68 @@ import { GameViewModel } from './game.view-model';
   standalone: true,
   imports: [NgIf, NgFor],
   template: `
-    <div *ngIf="vm.selectedPiece() as p; else noPiece">
-      <h4>Фигура</h4>
-      <div>Тип: {{ typeName(p) }}</div>
-      <div>HP: {{ hpOf(p) }}</div>
-      <div>ATK: {{ atkOf(p) }}</div>
-      <div>Move: {{ moveOf(p) }}</div>
-      <div>Range: {{ rangeOf(p) }}</div>
-      <h4 style="margin-top:12px;">Способности</h4>
-      <button *ngFor="let a of vm.getAbilitiesForSelected(); trackBy: trackAbility" type="button" style="display:block; margin:4px 0;"
-              (click)="vm.showAbilityTargets(gameId, a.name)" [disabled]="(a.cooldown ?? 0) > 0">
-        {{ a.name }} ({{ a.manaCost }} MP) <span *ngIf="(a.cooldown ?? 0) > 0">CD {{ a.cooldown }}</span>
-      </button>
+    <div class="card animate-slide-in">
+      <div *ngIf="vm.selectedPiece() as p; else noPiece">
+        <h4 class="text-xl font-bold mb-4 text-gradient">🎯 Информация о фигуре</h4>
+        
+        <div class="space-y-3">
+          <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <span class="font-medium">Тип:</span>
+            <span class="font-bold text-blue-600">{{ typeName(p) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+            <span class="font-medium">❤️ HP:</span>
+            <span class="font-bold text-red-600">{{ hpOf(p) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+            <span class="font-medium">⚔️ Атака:</span>
+            <span class="font-bold text-orange-600">{{ atkOf(p) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+            <span class="font-medium">🏃 Движение:</span>
+            <span class="font-bold text-green-600">{{ moveOf(p) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+            <span class="font-medium">🎯 Дальность:</span>
+            <span class="font-bold text-purple-600">{{ rangeOf(p) }}</span>
+          </div>
+          
+          <div *ngIf="shieldOf(p) > 0" class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+            <span class="font-medium">🛡️ Щит:</span>
+            <span class="font-bold text-blue-600">{{ shieldOf(p) }}</span>
+          </div>
+          
+          <div *ngIf="neighborsOf(p) > 0" class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <span class="font-medium text-sm">👥 Соседи:</span>
+            <span class="font-bold text-gray-600">{{ neighborsOf(p) }}</span>
+          </div>
+        </div>
+        
+        <h4 class="text-lg font-bold mt-6 mb-4 text-gradient">✨ Способности</h4>
+        <div class="space-y-2">
+          <button *ngFor="let a of vm.getAbilitiesForSelected(); trackBy: trackAbility" 
+                  type="button" 
+                  class="btn btn-secondary w-full text-left justify-start"
+                  (click)="vm.showAbilityTargets(gameId, a.name)" 
+                  [disabled]="(a.cooldown ?? 0) > 0">
+            <span class="font-medium">{{ a.name }}</span>
+            <span class="text-sm text-gray-500 ml-2">({{ a.manaCost }} MP)</span>
+            <span *ngIf="(a.cooldown ?? 0) > 0" class="text-red-500 ml-2">CD {{ a.cooldown }}</span>
+          </button>
+        </div>
+      </div>
+      
+      <ng-template #noPiece>
+        <div class="text-center text-gray-500 py-8">
+          <div class="text-4xl mb-2">🎯</div>
+          <p>Выберите фигуру для просмотра информации</p>
+        </div>
+      </ng-template>
     </div>
-    <ng-template #noPiece>
-      <div style="color:#666;">Выберите фигуру</div>
-    </ng-template>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -45,6 +91,8 @@ export class PieceContextComponent {
   atkOf(p: unknown): number | string { return (p as any)?.attack ?? (p as any)?.atk ?? '?'; }
   moveOf(p: unknown): number | string { return (p as any)?.movement ?? '?'; }
   rangeOf(p: unknown): number | string { return (p as any)?.range ?? '?'; }
+  shieldOf(p: unknown): number { return (p as any)?.shieldHp ?? 0; }
+  neighborsOf(p: unknown): number { return (p as any)?.neighborCount ?? 0; }
 }
 
 

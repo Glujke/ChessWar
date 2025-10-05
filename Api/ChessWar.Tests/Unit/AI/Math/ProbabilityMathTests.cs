@@ -62,7 +62,7 @@ public class ProbabilityMathTests
     public void SelectByProbability_WithValidProbabilities_ShouldSelectCorrectly()
     {
         var probabilities = new double[] { 0.1, 0.3, 0.6 };
-        var random = new Random(42); // Фиксированный seed для воспроизводимости
+        var random = new Random(42);
 
         var selectedIndex = ProbabilityMath.SelectByProbability(probabilities, random);
 
@@ -122,8 +122,8 @@ public class ProbabilityMathTests
         var result = ProbabilityMath.Normalize(values);
 
         Assert.Equal(5, result.Length);
-        Assert.Equal(0.0, result[0], 10); // Минимальное значение
-        Assert.Equal(1.0, result[4], 10); // Максимальное значение
+        Assert.Equal(0.0, result[0], 10);
+        Assert.Equal(1.0, result[4], 10);
     }
 
     [Theory]

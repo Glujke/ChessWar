@@ -30,11 +30,11 @@ public class ChessWarProbabilityMatrixTests
         var nextSession = CreateGameSession();
 
         var foundPiece = session.GetPieceById(piece1.Id.ToString());
-        Assert.NotNull(foundPiece); // Фигура должна быть найдена
+        Assert.NotNull(foundPiece);
 
         var result = _matrix.GetTransitionProbability(session, action, nextSession);
 
-        Assert.True(result > 0.3); // Движение должно иметь достаточно высокую вероятность (с учётом модификаторов)
+        Assert.True(result > 0.3);
         Assert.True(result <= 1.0);
     }
 
@@ -61,12 +61,12 @@ public class ChessWarProbabilityMatrixTests
         var nextSession = CreateGameSession();
 
         var foundPiece = session.GetPieceById(piece1.Id.ToString());
-        Assert.NotNull(foundPiece); // Фигура должна быть найдена
+        Assert.NotNull(foundPiece);
 
         var result = _matrix.GetTransitionProbability(session, action, nextSession);
 
 
-        Assert.True(result >= 0.7); // Эволюция должна иметь высокую вероятность (с учётом модификаторов)
+        Assert.True(result >= 0.7);
         Assert.True(result <= 1.0);
     }
 
@@ -87,7 +87,7 @@ public class ChessWarProbabilityMatrixTests
     {
         var session = CreateGameSession();
         var piece1 = session.GetPlayer1Pieces().First();
-        var action = new GameAction("Move", piece1.Id.ToString(), new Position(3, 3)); // К центру
+        var action = new GameAction("Move", piece1.Id.ToString(), new Position(3, 3));
 
         var result = _matrix.GetReward(session, action);
 
@@ -115,10 +115,10 @@ public class ChessWarProbabilityMatrixTests
         var piece1 = session.GetPlayer1Pieces().First();
         var action = new GameAction("Move", piece1.Id.ToString(), new Position(1, 1));
 
-        _matrix.UpdatePolicy(session, action, -0.5); // Отрицательная вероятность
+        _matrix.UpdatePolicy(session, action, -0.5);
         var negativeResult = _matrix.GetActionProbability(session, action);
 
-        _matrix.UpdatePolicy(session, action, 1.5); // Больше 1
+        _matrix.UpdatePolicy(session, action, 1.5);
         var positiveResult = _matrix.GetActionProbability(session, action);
 
         Assert.Equal(0.0, negativeResult);
@@ -190,7 +190,7 @@ public class ChessWarProbabilityMatrixTests
         var nextSession = CreateGameSession();
 
         var foundPiece = session.GetPieceById(piece1.Id.ToString());
-        Assert.NotNull(foundPiece); // Фигура должна быть найдена
+        Assert.NotNull(foundPiece);
 
         var centerResult = _matrix.GetTransitionProbability(session, centerAction, nextSession);
         var cornerResult = _matrix.GetTransitionProbability(session, cornerAction, nextSession);
@@ -202,7 +202,7 @@ public class ChessWarProbabilityMatrixTests
         Assert.True(cornerResult <= 1.0);
 
         var difference = System.Math.Abs(centerResult - cornerResult);
-        Assert.True(difference < 0.1); // Разница должна быть небольшой
+        Assert.True(difference < 0.1);
     }
 
     private GameSession CreateGameSession()

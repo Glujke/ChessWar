@@ -7,6 +7,7 @@ using ChessWar.Domain.Services.TurnManagement;
 using ChessWar.Domain.ValueObjects;
 using FluentAssertions;
 using ChessWar.Tests.Helpers;
+using ChessWar.Domain.Interfaces.GameLogic;
 
 namespace ChessWar.Tests.Unit;
 
@@ -16,7 +17,7 @@ public class RookFortressAbilityTests
     public void Fortress_ShouldDoubleHp_Until_EndOfTurn_Then_Revert()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var rook = TestHelpers.CreatePiece(PieceType.Rook, Team.Elves, new Position(1, 1), owner);
         var eventDispatcher = new Mock<ChessWar.Domain.Events.IDomainEventDispatcher>();
         var pieceDomainService = new Mock<ChessWar.Domain.Interfaces.GameLogic.IPieceDomainService>();
@@ -44,7 +45,7 @@ public class RookFortressAbilityTests
         var cfg = _TestConfig.CreateProvider();
         var movementRulesLogger = Mock.Of<ILogger<MovementRulesService>>();
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        var turnSvc = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg), cfg, new MockDomainEventDispatcher(), pieceDomainService.Object, turnServiceLogger);
+        var turnSvc = new TurnService(new MovementRulesService(movementRulesLogger), new AttackRulesService(), new EvolutionService(cfg, TestHelpers.CreatePieceFactory()), cfg, new MockDomainEventDispatcher(), pieceDomainService.Object, Mock.Of<ICollectiveShieldService>(), turnServiceLogger);
         var enemy = new Player("P2", new List<Piece>());
         var dummySession = new GameSession(owner, enemy);
         dummySession.StartGame();
@@ -56,7 +57,7 @@ public class RookFortressAbilityTests
 
         turnSvc.EndTurn(turn);
 
-        rook.HP.Should().BeLessOrEqualTo(15); // Максимальное HP ладьи
+        rook.HP.Should().BeLessOrEqualTo(15);
     }
 }
 

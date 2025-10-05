@@ -32,7 +32,7 @@ public class MovementCostTests
         _configProviderMock = new Mock<IBalanceConfigProvider>();
 
         var turnServiceLogger = Mock.Of<ILogger<TurnService>>();
-        _turnService = new TurnService(_movementRulesServiceMock.Object, _attackRulesServiceMock.Object, _evolutionServiceMock.Object, _configProviderMock.Object, new MockDomainEventDispatcher(), new PieceDomainService(), turnServiceLogger);
+        _turnService = new TurnService(_movementRulesServiceMock.Object, _attackRulesServiceMock.Object, _evolutionServiceMock.Object, _configProviderMock.Object, new MockDomainEventDispatcher(), new PieceDomainService(), Mock.Of<ICollectiveShieldService>(), turnServiceLogger);
     }
 
     [Fact]
@@ -52,8 +52,8 @@ public class MovementCostTests
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, pawn, new Position(1, 2));
 
         result.Should().BeTrue();
-        turn.RemainingMP.Should().Be(4); // 5 - 1 (стоимость пешки)
-        player.MP.Should().Be(4); // Игрок тоже должен потратить ману
+        turn.RemainingMP.Should().Be(4);
+        player.MP.Should().Be(4);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class MovementCostTests
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, knight, new Position(2, 3));
 
         result.Should().BeTrue();
-        turn.RemainingMP.Should().Be(3); // 5 - 2 (стоимость коня)
+        turn.RemainingMP.Should().Be(3);
         player.MP.Should().Be(3);
     }
 
@@ -81,7 +81,7 @@ public class MovementCostTests
     public void ExecuteMove_ShouldReturnFalse_WhenNotEnoughMana()
     {
         var player = new Player("TestPlayer", new List<Piece>());
-        player.SetMana(1, 50); // Недостаточно для короля (стоимость 4)
+        player.SetMana(1, 50);
         var turn = new Turn(1, player);
         var king = CreateTestPiece(PieceType.King, Team.Elves, new Position(1, 1), player);
         turn.SelectPiece(king);
@@ -92,8 +92,8 @@ public class MovementCostTests
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, king, new Position(1, 2));
 
         result.Should().BeFalse();
-        turn.RemainingMP.Should().Be(1); // Не изменилось
-        player.MP.Should().Be(1); // Не изменилось
+        turn.RemainingMP.Should().Be(1);
+        player.MP.Should().Be(1);
     }
 
     [Fact]
@@ -108,13 +108,13 @@ public class MovementCostTests
         var config = CreateTestConfig();
         _configProviderMock.Setup(x => x.GetActive()).Returns(config);
         _movementRulesServiceMock.Setup(x => x.CanMoveTo(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
-            .Returns(false); // Правила движения не позволяют
+            .Returns(false);
 
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, pawn, new Position(1, 2));
 
         result.Should().BeFalse();
-        turn.RemainingMP.Should().Be(10); // Не изменилось
-        player.MP.Should().Be(10); // Не изменилось
+        turn.RemainingMP.Should().Be(10);
+        player.MP.Should().Be(10);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class MovementCostTests
         turn.SelectPiece(piece);
 
         var config = CreateTestConfig();
-        config.PlayerMana.MovementCosts.Clear(); // Убираем все стоимости
+        config.PlayerMana.MovementCosts.Clear();
         _configProviderMock.Setup(x => x.GetActive()).Returns(config);
         _movementRulesServiceMock.Setup(x => x.CanMoveTo(It.IsAny<Piece>(), It.IsAny<Position>(), It.IsAny<List<Piece>>()))
             .Returns(true);
@@ -135,7 +135,7 @@ public class MovementCostTests
         var result = _turnService.ExecuteMove(new GameSession(player, new Player("Enemy", new List<Piece>())), turn, piece, new Position(1, 2));
 
         result.Should().BeTrue();
-        turn.RemainingMP.Should().Be(4); // 5 - 1 (дефолтная стоимость)
+        turn.RemainingMP.Should().Be(4);
         player.MP.Should().Be(4);
     }
 

@@ -26,7 +26,7 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
         actions.Should().NotBeNull();
         if (actions!.Count == 0)
         {
-            return; // если нет доступных ходов для стартовой фигуры, пропускаем (редкий конфиг)
+            return;
         }
 
         var actionDto = new ExecuteActionDto
@@ -92,7 +92,7 @@ public class ActionContractTests : IntegrationTestBase, IClassFixture<TestWebApp
         var ability = new AbilityRequestDto
         {
             PieceId = session!.Player1.Pieces[0].Id.ToString(),
-            AbilityName = "MagicExplosion", // у ферзя дорого, но даже если фигура не ферзь — ожидаем 400 по правилам
+            AbilityName = "MagicExplosion",
             Target = new PositionDto { X = session.Player2.Pieces[0].Position.X, Y = session.Player2.Pieces[0].Position.Y }
         };
 

@@ -13,7 +13,7 @@ public class PawnAbilitiesTests
     public void ShieldBash_ShouldDeal2Damage_Cost2Mp_Range1_AndCooldownHandled()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var pawn = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, new Position(2, 2), owner);
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 2), enemyOwner);
@@ -35,15 +35,15 @@ public class PawnAbilitiesTests
 
         ok.Should().BeTrue();
         enemy.HP.Should().BeLessThan(10);
-        owner.MP.Should().BeLessThan(50); // Игрок потратил ману
-        pawn.AbilityCooldowns.GetValueOrDefault("ShieldBash").Should().BeGreaterThanOrEqualTo(0); // CD может быть 0
+        owner.MP.Should().BeLessThan(50);
+        pawn.AbilityCooldowns.GetValueOrDefault("ShieldBash").Should().BeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
     public void Breakthrough_ShouldDeal3Damage_Cost2Mp_DiagonalOnly()
     {
         var owner = new Player("P1", new List<Piece>());
-        owner.SetMana(50, 50); // У игрока есть мана
+        owner.SetMana(50, 50);
         var pawn = TestHelpers.CreatePiece(PieceType.Pawn, Team.Elves, new Position(2, 2), owner);
         var enemyOwner = new Player("P2", new List<Piece>());
         var enemy = TestHelpers.CreatePiece(PieceType.Pawn, Team.Orcs, new Position(3, 3), enemyOwner);
@@ -65,7 +65,7 @@ public class PawnAbilitiesTests
 
         ok.Should().BeTrue();
         enemy.HP.Should().BeLessThan(10);
-        owner.MP.Should().BeLessThan(50); // Игрок потратил ману
+        owner.MP.Should().BeLessThan(50);
     }
 }
 

@@ -45,7 +45,7 @@ public class GameSessionAbilityTests : IntegrationTestBase, IClassFixture<TestWe
         afterResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var after = await afterResp.Content.ReadFromJsonAsync<GameSessionDto>();
         var pieceAfter = after!.Player1.Pieces.First(p => p.Id == pieceId);
-        after!.Player1.MP.Should().BeLessThan(before!.Player1.MP); // Игрок потратил ману
+        after!.Player1.MP.Should().BeLessThan(before!.Player1.MP);
         pieceAfter.AbilityCooldowns.GetValueOrDefault("LightArrow").Should().BeGreaterThan(0);
     }
 
@@ -63,7 +63,7 @@ public class GameSessionAbilityTests : IntegrationTestBase, IClassFixture<TestWe
         var abilityReq = new
         {
             pieceId = pawn.Id.ToString(),
-            abilityName = "LightArrow", // не её способность, ожидаем отказ по правилам/MP
+            abilityName = "LightArrow",
             target = new { x = pawn.Position.X, y = pawn.Position.Y + 1 }
         };
 

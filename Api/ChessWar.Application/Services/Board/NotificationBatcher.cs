@@ -131,7 +131,7 @@ public class NotificationBatcher : INotificationBatcher
                 }
             }
 
-            _ = batch.Count; // сохранить переменную, чтобы не было предупреждений
+            _ = batch.Count;
         }
         catch (Exception ex)
         {
